@@ -1,0 +1,12 @@
+{
+  "hsds":
+  {
+    "endpoint": "https://developer.nrel.gov/api/hsds",
+    "domain": "/nrel/wtk-us.h5",
+    "username": null,
+    "password": null,
+    "api_key": "3K3JQbjZmWctY0xmIfSYvYgtIcM3CN0cb1Y2w9bf",
+    "__info__": "These credentials are for demo, rate-limited usage."
+  },
+  "html_home": "<h1>DW-TAP Project's API Endpoint</h1><p> This endpoint supports the following requests:<br><br>GET /v1/timeseries/windspeed?height=50m&lat=40.7128&lon=-74.0059&start_date=20100302&stop_date=20120101&vertical_interpolation=poly2&spatial_interpolation=idw&bias_correction=default&unit=m/s</p>"
+}
