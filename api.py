@@ -7,6 +7,8 @@ from pyproj import Proj
 import numpy as np
 import pandas as pd
 import cartopy.crs as ccrs
+import dateutil
+from scipy.interpolate import griddata
 
 app = flask.Flask(__name__)
 app.config["DEBUG"] = True
@@ -185,7 +187,17 @@ def validated_params(request):
         raise InvalidUsage(("Error: No stop_date field provided. "
                             "Please specify stop_date."))
 
-    return height, lat, lon, start_date, stop_date
+    if 'spatial_interpolation' in request.args:
+        spatial_interpolation = request.args['spatial_interpolation']
+        si_allowed = ["nearest", "linear", "cubic", "idw"]
+        if spatial_interpolation not in si_allowed:
+            raise InvalidUsage(("Error: invalid spatial_interpolation. "
+                                "Choose one of: " + str(si_allowed)))
+    else:
+        raise InvalidUsage(("Error: No spatial_interpolation field provided. "
+                            "Please specify spatial_interpolation."))
+
+    return height, lat, lon, start_date, stop_date, spatial_interpolation
 
 
 # This function finds the nearest x/y indices for a given lat/lon.
@@ -233,26 +245,137 @@ def find_tile(f, lat, lon, radius=3, trim=16):
                               np.array(neighbors_latlon).reshape(-1, 2)[:, 1],
                               np.array(neighbors_latlon).reshape(-1, 2)[:, 0])
 
-    res = pd.DataFrame(columns=["x_idx", "y_idx", "lat", "lon", "d"])
+    res = pd.DataFrame(columns=["x_idx", "y_idx", "lat", "lon",
+                                "x_centered", "y_centered", "d"])
     for idx, latlon, xy in zip(neighbors_to_check,
                                neighbors_latlon, neighbors_xy):
 
         # Distance in meters calculated after applying projections
-        d = np.sqrt((xy[0] - point_xy[0]) ** 2 + (xy[1] - point_xy[1]) ** 2)
-        res.loc[len(res)] = [idx[0], idx[1], latlon[0], latlon[1], d]
+        dx = xy[0] - point_xy[0]
+        dy = xy[1] - point_xy[1]
+        d = np.sqrt(dx ** 2 + dy ** 2)
+        res.loc[len(res)] = [idx[0], idx[1],
+                             latlon[0], latlon[1], dx, dy, d]
 
-    return res.sort_values("d")[:trim]
+    res["x_idx"] = pd.to_numeric(res["x_idx"], downcast='integer')
+    res["y_idx"] = pd.to_numeric(res["y_idx"], downcast='integer')
+    return res.sort_values("d")[:trim].reset_index(drop=True)
+
+
+def available_heights(f, height):
+    """ Return list of all heights available in resource f --
+    datasets named "windspeed_XXm", where XX is a number.
+    """
+    try:
+        heights = [int(attr.replace("windspeed_", "").rstrip("m")) for attr in
+                   list(f) if "windspeed_" in attr]
+    except ValueError:
+        raise("Problem with processing WTK heights.")
+    return heights
+
+
+def time_indices(f, start_date, stop_date):
+    """ Return list of time indices corresponding to the the
+    requested time interval: [start_date, stop_date].
+    """
+    dt = f["datetime"]
+    dt = pd.DataFrame({"datetime": dt[:]}, index=range(0, dt.shape[0]))
+    dt['datetime'] = dt['datetime'].apply(dateutil.parser.parse)
+    selected = dt.loc[(dt.datetime >= start_date) &
+                      (dt.datetime <= stop_date)].index.tolist()
+    return selected
+
+
+def extract_ts_for_neighbors(tile_df, tidx, dset):
+    """ Extract WTK timeseries for all neighbor points in tile_df dataframe.
+    Only extract values for times that correspond to time indices in tidx.
+    Extract values from dataset dset corresponding to a specific height.
+    Columns in the returned dataframe will match rows in tile_df
+    and the *order will be preserved*.
+    """
+
+    res_df = pd.DataFrame(index=tidx)
+
+    # # TODO: consider parallelizing the code below (make it more efficient
+    # than extracting timeseries one-at-a-time
+    for idx, row in tile_df.iterrows():
+
+        neighbor_data = dset[np.array(tidx).min():np.array(tidx).max()+1,
+                             row.x_idx, row.y_idx]
+        column_name = "%d-%d" % (row.x_idx, row.y_idx)
+        res_df[column_name] = neighbor_data
+
+    return res_df
+
+
+def interpolate_spatially_row(row, neighbor_xy_centered, method='nearest'):
+    """ This function provides per-row spatial interpolatoin using
+    nearest, linear, cubic, and IDW (inverse-distance weighting) methods.
+    It is conveninet to use this function with df.apply().
+    """
+    if method in ["nearest", "linear", "cubic"]:
+        result = griddata(neighbor_xy_centered, row.values,
+                          ([0], [0]), method=method)[0]
+    elif method == "idw":
+        numerator = 0
+        denominator = 0
+        for idx in range(len(row.values)):
+            w = 1.0 / np.sqrt(neighbor_xy_centered[idx][0] ** 2 +
+                              neighbor_xy_centered[idx][1] ** 2)
+            numerator += w * row.values[idx]
+            denominator += w
+        result = numerator/denominator
+
+    return result
+
+
+def interpolate_spatially(tile_df, neighbor_ts_df,
+                          method='nearest', neighbors_number=16):
+    """ Process a single-height dataframe for
+    single location with timeseries for neighboring gridpoints.
+    Method should be validated in validated_params()."""
+
+    res_df = pd.DataFrame(index=neighbor_ts_df.index)
+
+    # This assumes that tile_df is sorted by distance, which should be
+    # handled in find_tile()
+    res_df["min_dist"] = tile_df.loc[0]["d"]
+
+    neighbor_xy_centered = [(row.x_centered, row.y_centered)
+                            for idx, row in tile_df.iterrows()]
+
+    if method == "nearest":
+        # Nearest is the only method for which the results don't change
+        # if we change number of neighbors used; no trimming needed
+        res_df["spatially_interpolated"] = \
+            neighbor_ts_df.apply(interpolate_spatially_row,
+                                 args=(neighbor_xy_centered, 'nearest'),
+                                 axis=1)
+    else:
+        # "neighbor_ii[:neighbors_number]" below is used to make sure
+        # that first/closest n=neighbors_number points are used;
+        # the same with: neighbor_xy_centered[:neighbors_number]
+        res_df["spatially_interpolated"] = \
+            neighbor_ts_df.apply(interpolate_spatially_row,
+                                 args=(neighbor_xy_centered[:neighbors_number],
+                                       method),
+                                 axis=1)
+    return res_df
 
 # "About" route
 @app.route('/', methods=['GET'])
 def home():
     return config["html_home"]
 
-# Fully functional route (currently only prints validated parameters)
+# Fully functional route
 @app.route('/v1/timeseries/windspeed', methods=['GET'])
 def v1_ws():
-    height, lat, lon, start_date, stop_date = validated_params(request)
+    height, lat, lon,\
+                     start_date, stop_date,\
+                     spatial_interpolation = validated_params(request)
     hsds_f = connected_hsds_file(request)
+    heights = available_heights(hsds_f, height)
+    tidx = time_indices(hsds_f, start_date, stop_date)
 
     result = []
     result.append("Specified height: %f" % height)
@@ -260,19 +383,30 @@ def v1_ws():
     result.append("Specified lon: %f" % lon)
     result.append("Specified start_date: %s" % str(start_date))
     result.append("Specified stop_date: %s" % str(stop_date))
-
-    # # DEBUG:
-    NewYorkCity_idx = indicesForCoord(hsds_f, lat, lon)
-    result.append(("y,x indices for New York City: "
-                   "\t\t {}".format(NewYorkCity_idx)))
-    result.append("Coordinates of New York City: \t {}".format((lat, lon)))
-    result.append(("Coordinates of nearest point: "
-                   "\t {}".format(hsds_f["coordinates"][NewYorkCity_idx])))
+    result.append("Available heights: %s" % str(heights))
+    result.append("Time indices: %s" % str(tidx))
 
     tile_df = find_tile(hsds_f, lat, lon)
-    # # DEBUG:
+
+    # DEBUG:
     for idx, row in tile_df.iterrows():
         result.append(str(row))
+
+    for h in heights:
+        dset = hsds_f["windspeed_%dm" % h]
+
+        neighbor_ts_df = extract_ts_for_neighbors(tile_df, tidx, dset)
+
+        interpolated_df = interpolate_spatially(tile_df, neighbor_ts_df,
+                                                method=spatial_interpolation,
+                                                neighbors_number=16)
+
+        # DEBUG:
+        for idx, row in interpolated_df.iterrows():
+            result.append(str(row))
+
+        # Temporarily only look at single height
+        break
 
     return "".join([s + "<br>" for s in result])
 
