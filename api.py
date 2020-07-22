@@ -9,6 +9,8 @@ import pandas as pd
 import cartopy.crs as ccrs
 import dateutil
 from scipy.interpolate import griddata
+import time
+import concurrent.futures
 
 app = flask.Flask(__name__)
 app.config["DEBUG"] = True
@@ -57,6 +59,20 @@ def handle_invalid_usage(error):
     return response
 
 
+def timeit(method):
+    def timed(*args, **kw):
+        ts = time.time()
+        result = method(*args, **kw)
+        te = time.time()
+        if 'log_time' in kw:
+            name = kw.get('log_name', method.__name__.upper())
+            kw['log_time'][name] = int((te - ts) * 1000)
+        else:
+            print("%r  %2.2f ms" % (method.__name__, (te - ts) * 1000))
+        return result
+    return timed
+
+
 def validated_dt(date_str):
     """ Create and return a datetime object based on the given string.
     If the string is inappropriate, raise an error with helpful message.
@@ -66,7 +82,7 @@ def validated_dt(date_str):
     except ValueError:
         raise InvalidUsage("Incorrect date format, should be: YYYYMMDD")
 
-
+@timeit
 def connected_hsds_file(request):
     """ Return a file object that corresponds to the HSDS resource
     specified in the request (using domain, endpoint, username, password,
@@ -133,6 +149,7 @@ def connected_hsds_file(request):
                            status_code=403)
 
 
+@timeit
 def validated_params(request):
     """ Returns extracted, processed, and validated
     required request parameters.
@@ -220,6 +237,7 @@ def indicesForCoord(f, lat_index, lon_index):
     return tuple(reversed(ij))
 
 
+@timeit
 def find_tile(f, lat, lon, radius=3, trim=16):
     """ Return dataframe with information about gridpoints in resource f that
     are neighboring (lat, lon). At first, there will be (radius*2) ^ 2
@@ -267,45 +285,98 @@ def available_heights(f, height):
     datasets named "windspeed_XXm", where XX is a number.
     """
     try:
-        heights = [int(attr.replace("windspeed_", "").rstrip("m")) for attr in
-                   list(f) if "windspeed_" in attr]
+        heights = sorted([int(attr.replace("windspeed_", "").rstrip("m"))
+                         for attr in
+                         list(f) if "windspeed_" in attr])
     except ValueError:
         raise("Problem with processing WTK heights.")
     return heights
 
 
 def time_indices(f, start_date, stop_date):
-    """ Return list of time indices corresponding to the the
+    """ Return lists of time indices and timestamps corresponding to the the
     requested time interval: [start_date, stop_date].
     """
     dt = f["datetime"]
     dt = pd.DataFrame({"datetime": dt[:]}, index=range(0, dt.shape[0]))
     dt['datetime'] = dt['datetime'].apply(dateutil.parser.parse)
     selected = dt.loc[(dt.datetime >= start_date) &
-                      (dt.datetime <= stop_date)].index.tolist()
-    return selected
+                      (dt.datetime <= stop_date)]
+    selected_inices = selected.index.tolist()
+    selected_timestamps = selected.datetime.tolist()
+    return selected_inices, selected_timestamps
 
 
-def extract_ts_for_neighbors(tile_df, tidx, dset):
-    """ Extract WTK timeseries for all neighbor points in tile_df dataframe.
-    Only extract values for times that correspond to time indices in tidx.
-    Extract values from dataset dset corresponding to a specific height.
-    Columns in the returned dataframe will match rows in tile_df
-    and the *order will be preserved*.
+@timeit
+def extract_ts_for_neighbors_sequential(tile_df, tidx, dset):
+    """ Sequential (slow) implementation of extract_ts_for_neighbors().
     """
-
     res_df = pd.DataFrame(index=tidx)
 
-    # # TODO: consider parallelizing the code below (make it more efficient
-    # than extracting timeseries one-at-a-time
+    tidx_min = np.array(tidx).min()
+    tidx_max = np.array(tidx).max()
+
     for idx, row in tile_df.iterrows():
 
-        neighbor_data = dset[np.array(tidx).min():np.array(tidx).max()+1,
+        neighbor_data = dset[tidx_min:tidx_max+1,
                              row.x_idx, row.y_idx]
         column_name = "%d-%d" % (row.x_idx, row.y_idx)
         res_df[column_name] = neighbor_data
 
     return res_df
+
+
+def extract_ts_thread(args):
+    """ Function run in its own thread when multiple WTK subsets are extracted.
+    """
+    dset, tidx, x_idx, y_idx = args
+
+    res_df = pd.DataFrame(index=tidx)
+
+    tidx_min = np.array(tidx).min()
+    tidx_max = np.array(tidx).max()
+
+    neighbor_data = dset[tidx_min:tidx_max+1, x_idx, y_idx]
+    column_name = "%d-%d" % (x_idx, y_idx)
+
+    res_df[column_name] = neighbor_data
+
+    return res_df
+
+
+@timeit
+def extract_ts_for_neighbors_parallel(tile_df, tidx, dset):
+    """ Parallel (fast) implementation of extract_ts_for_neighbors().
+    """
+    tasks = [(dset, tidx, row.x_idx, row.y_idx)
+             for idx, row in tile_df.iterrows()]
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = [executor.submit(extract_ts_thread, t) for t in tasks]
+        results = [f.result() for f in futures]
+
+    res_df = pd.concat(results, axis=1)
+
+    return res_df
+
+
+@timeit
+def extract_ts_for_neighbors(tile_df, tidx, dset, impl="parallel"):
+    """ Extract WTK timeseries for all neighbor points in tile_df dataframe.
+    Only extract values for times that correspond to time indices in tidx.
+    Extract values from dataset dset corresponding to a specific height.
+    Columns in the returned dataframe will match rows in tile_df
+    and the *order will be preserved*.
+
+    Behind the scenes, a sequential or a parallel implementation is called.
+    """
+    if impl == "sequential":
+        return extract_ts_for_neighbors_sequential(tile_df, tidx, dset)
+    elif impl == "parallel":
+        return extract_ts_for_neighbors_parallel(tile_df, tidx, dset)
+    else:
+        raise ValueError(("Invalid usage of extract_ts_for_neighbors()."
+                          "Choose implementation: sequential or parallel."))
 
 
 def interpolate_spatially_row(row, neighbor_xy_centered, method='nearest'):
@@ -329,6 +400,7 @@ def interpolate_spatially_row(row, neighbor_xy_centered, method='nearest'):
     return result
 
 
+@timeit
 def interpolate_spatially(tile_df, neighbor_ts_df,
                           method='nearest', neighbors_number=16):
     """ Process a single-height dataframe for
@@ -375,7 +447,7 @@ def v1_ws():
                      spatial_interpolation = validated_params(request)
     hsds_f = connected_hsds_file(request)
     heights = available_heights(hsds_f, height)
-    tidx = time_indices(hsds_f, start_date, stop_date)
+    tidx, timestamps = time_indices(hsds_f, start_date, stop_date)
 
     result = []
     result.append("Specified height: %f" % height)
@@ -400,6 +472,7 @@ def v1_ws():
         interpolated_df = interpolate_spatially(tile_df, neighbor_ts_df,
                                                 method=spatial_interpolation,
                                                 neighbors_number=16)
+        interpolated_df["timestamp"] = timestamps
 
         # DEBUG:
         for idx, row in interpolated_df.iterrows():
@@ -411,4 +484,9 @@ def v1_ws():
     return "".join([s + "<br>" for s in result])
 
 
-app.run()
+def main():
+    app.run()
+
+
+if __name__ == "__main__":
+    main()
