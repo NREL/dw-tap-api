@@ -537,7 +537,17 @@ def v1_ws():
         for idx, row in interpolated_df.iterrows():
             result.append(str(row))
 
-    return "".join([s + "<br>" for s in result])
+    if bypass_vertical_interpolation:
+        interpolated_df["timestamp"] = interpolated_df["timestamp"].astype(str)
+        finalized_df = interpolated_df[["timestamp",
+                                        "spatially_interpolated"]]\
+                                        .reset_index(drop=True)\
+                                        .rename(columns={
+                                                "spatially_interpolated":
+                                                "windspeed"})
+        return finalized_df.to_json()
+    else:
+        return "".join([s + "<br>" for s in result])
 
 
 def main():
