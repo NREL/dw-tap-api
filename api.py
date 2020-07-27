@@ -82,6 +82,7 @@ def validated_dt(date_str):
     except ValueError:
         raise InvalidUsage("Incorrect date format, should be: YYYYMMDD")
 
+
 @timeit
 def connected_hsds_file(request):
     """ Return a file object that corresponds to the HSDS resource
@@ -280,7 +281,7 @@ def find_tile(f, lat, lon, radius=3, trim=16):
     return res.sort_values("d")[:trim].reset_index(drop=True)
 
 
-def available_heights(f, height):
+def available_heights(f):
     """ Return list of all heights available in resource f --
     datasets named "windspeed_XXm", where XX is a number.
     """
@@ -289,8 +290,18 @@ def available_heights(f, height):
                          for attr in
                          list(f) if "windspeed_" in attr])
     except ValueError:
-        raise("Problem with processing WTK heights.")
+        raise InvalidUsage("Problem with processing WTK heights.")
     return heights
+
+
+def available_datasets(f):
+    """ Return list of all datasets available in resource f.
+    """
+    try:
+        datasets = sorted(list(f))
+    except ValueError:
+        raise InvalidUsage("Problem with processing WTK datasets.")
+    return datasets
 
 
 def time_indices(f, start_date, stop_date):
@@ -434,6 +445,18 @@ def interpolate_spatially(tile_df, neighbor_ts_df,
                                  axis=1)
     return res_df
 
+
+def heights_below_and_above(all_heights, selected_height):
+    """ Out of the given list of all heights, return the two
+    that are below and above the specified height.
+    Cases where selected_height is exactly one of heights in the all_heights
+    list (including edges) are handled outside of this function.
+    """
+    arr = np.array(all_heights)
+    height_below = arr[arr < selected_height].max()
+    height_above = arr[arr > selected_height].min()
+    return height_below, height_above
+
 # "About" route
 @app.route('/', methods=['GET'])
 def home():
@@ -446,10 +469,26 @@ def v1_ws():
                      start_date, stop_date,\
                      spatial_interpolation = validated_params(request)
     hsds_f = connected_hsds_file(request)
-    heights = available_heights(hsds_f, height)
+    heights = available_heights(hsds_f)
+    datasets = available_datasets(hsds_f)
+
+    bypass_vertical_interpolation = False
+    if height.is_integer() and int(height) in heights:
+        bypass_vertical_interpolation = True
+
+    if height < np.min(heights) or height > np.max(heights):
+        raise InvalidUsage(("Requested height is outside "
+                            "of allowed range: [%.2f, %.2f]" %
+                            (np.min(heights), np.max(heights))))
+
+    if "inversemoninobukhovlength_2m" not in datasets:
+        raise InvalidUsage(("WTK does not include one of required datasets: "
+                            "inversemoninobukhovlength_2m"))
+
     tidx, timestamps = time_indices(hsds_f, start_date, stop_date)
 
     result = []
+    result.append("Available datasets: %s" % str(datasets))
     result.append("Specified height: %f" % height)
     result.append("Specified lat: %f" % lat)
     result.append("Specified lon: %f" % lon)
@@ -459,12 +498,33 @@ def v1_ws():
     result.append("Time indices: %s" % str(tidx))
 
     tile_df = find_tile(hsds_f, lat, lon)
-
     # DEBUG:
     for idx, row in tile_df.iterrows():
         result.append(str(row))
 
-    for h in heights:
+    if not bypass_vertical_interpolation:
+        # Use Nearest Neighbor for imol -- inversemoninobukhovlength_2m
+        imol_dset = hsds_f["inversemoninobukhovlength_2m"]
+        # head(1) is sufficient for nearest neighbor
+        imol_neighbor_ts_df = extract_ts_for_neighbors(tile_df.head(1),
+                                                       tidx, imol_dset)
+        imol_df = interpolate_spatially(tile_df.head(1), imol_neighbor_ts_df,
+                                        method="nearest")
+        imol_df.rename(columns={"spatially_interpolated": "imol"},
+                       inplace=True)
+        # DEBUG:
+        for idx, row in imol_df.iterrows():
+            result.append(str(row))
+
+    if bypass_vertical_interpolation:
+        selected_heights = [int(height)]
+    else:
+        # # TODO: Fix temporary test
+        height_below, height_above = heights_below_and_above(heights, height)
+        selected_heights = [height_below, height_above]
+
+    # TODO: parallelize the following processing using threads
+    for h in selected_heights:
         dset = hsds_f["windspeed_%dm" % h]
 
         neighbor_ts_df = extract_ts_for_neighbors(tile_df, tidx, dset)
@@ -473,13 +533,9 @@ def v1_ws():
                                                 method=spatial_interpolation,
                                                 neighbors_number=16)
         interpolated_df["timestamp"] = timestamps
-
         # DEBUG:
         for idx, row in interpolated_df.iterrows():
             result.append(str(row))
-
-        # Temporarily only look at single height
-        break
 
     return "".join([s + "<br>" for s in result])
 
