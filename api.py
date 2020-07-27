@@ -524,7 +524,7 @@ def v1_ws():
         selected_heights = [height_below, height_above]
 
     # TODO: parallelize the following processing using threads
-    for h in selected_heights:
+    for h_idx, h in enumerate(selected_heights):
         dset = hsds_f["windspeed_%dm" % h]
 
         neighbor_ts_df = extract_ts_for_neighbors(tile_df, tidx, dset)
@@ -537,17 +537,44 @@ def v1_ws():
         for idx, row in interpolated_df.iterrows():
             result.append(str(row))
 
+        if not bypass_vertical_interpolation:
+            # Special handling for processing two heights in this case
+            if h_idx == 0:
+                interpolated_df_combined = interpolated_df.rename(
+                                           columns={"spatially_interpolated":
+                                                    "height_below"})
+            elif h_idx == 1:
+                interpolated_df_combined["height_above"] = \
+                    interpolated_df["spatially_interpolated"]
+                interpolated_df = interpolated_df_combined
+            else:
+                raise InvalidUsage(("Height selection should pick "
+                                    "only 2 heights in this case, not more."))
+
     if bypass_vertical_interpolation:
         interpolated_df["timestamp"] = interpolated_df["timestamp"].astype(str)
         finalized_df = interpolated_df[["timestamp",
-                                        "spatially_interpolated"]]\
-                                        .reset_index(drop=True)\
-                                        .rename(columns={
-                                                "spatially_interpolated":
+                                        "spatially_interpolated"]
+                                       ].reset_index(drop=True).rename(
+                                       columns={"spatially_interpolated":
                                                 "windspeed"})
         return finalized_df.to_json()
     else:
-        return "".join([s + "<br>" for s in result])
+        # TODO List:
+        # - keep all results collected in interpolated_df for different loop interations above
+        # - apply verical interpolation
+        # - similar steps above to finalize the dateframe:
+        #     timestamps to strings, select output columns, reset index, rename columns, create json
+        # After this is done, comment out irrelevant DEBUG printing above
+        #return "".join([s + "<br>" for s in result])
+        interpolated_df["imol"] = imol_df["imol"]
+
+        interpolated_df["timestamp"] = interpolated_df["timestamp"].astype(str)
+        finalized_df = interpolated_df[["timestamp",
+                                        "height_below", "height_above", "imol"]
+                                       ].reset_index(drop=True)
+        # TODO: Complete vertical interloation for the data assembled in this dataframe
+        return finalized_df.to_json()
 
 
 def main():
