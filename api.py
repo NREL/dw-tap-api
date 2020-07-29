@@ -11,6 +11,9 @@ import dateutil
 from scipy.interpolate import griddata
 import time
 import concurrent.futures
+import points
+import timeseries
+import interpolation
 
 app = flask.Flask(__name__)
 app.config["DEBUG"] = True
@@ -144,9 +147,11 @@ def connected_hsds_file(request):
                        mode='r')
         return f
     except OSError:
-        raise InvalidUsage(("Failed to access specfied HSDS resource. "
+        raise InvalidUsage(("Failed to access specified HSDS resource. "
                             "Check credentials: "
-                            "domain, endpoint, username, password, api_key"),
+                            "domain, endpoint, username, password, api_key. "
+                            "It could be a transient HSDS connection issue. "
+                            "Try again later."),
                            status_code=403)
 
 
@@ -519,11 +524,12 @@ def v1_ws():
     if bypass_vertical_interpolation:
         selected_heights = [int(height)]
     else:
-        # # TODO: Fix temporary test
         height_below, height_above = heights_below_and_above(heights, height)
         selected_heights = [height_below, height_above]
 
-    # TODO: parallelize the following processing using threads
+    desired_point = points.XYZPoint(lat, lon, height, 'desired')
+
+    xyz_points = []
     for h_idx, h in enumerate(selected_heights):
         dset = hsds_f["windspeed_%dm" % h]
 
@@ -538,6 +544,12 @@ def v1_ws():
             result.append(str(row))
 
         if not bypass_vertical_interpolation:
+            p = points.XYZPoint(lat, lon, h, 'model',
+                                timeseries=[timeseries.timeseries(
+                                    interpolated_df["spatially_interpolated"],
+                                    var="ws")])
+            xyz_points.append(p)
+
             # Special handling for processing two heights in this case
             if h_idx == 0:
                 interpolated_df_combined = interpolated_df.rename(
@@ -560,20 +572,40 @@ def v1_ws():
                                                 "windspeed"})
         return finalized_df.to_json()
     else:
+        xy_point = points.XYPoint.from_xyz_points(xyz_points)
+        xy_point.set_timeseries(timeseries.timeseries(imol_df["imol"],
+                                var='stability'))
+        vertical_interpolation = interpolation.interpolation(
+                                 desired_point,
+                                 xy_point,
+                                 vertically_interpolate=True,
+                                 spatially_interpolate=False,
+                                 vertical_interpolation_techniques=["polynomial"])
+        vertical_interpolation.interpolate()
+
         # TODO List:
-        # - keep all results collected in interpolated_df for different loop interations above
         # - apply verical interpolation
         # - similar steps above to finalize the dateframe:
-        #     timestamps to strings, select output columns, reset index, rename columns, create json
+        #     timestamps to strings, select output columns,
+        #        reset index, rename columns, create json
         # After this is done, comment out irrelevant DEBUG printing above
-        #return "".join([s + "<br>" for s in result])
-        interpolated_df["imol"] = imol_df["imol"]
+
+        # return "".join([s + "<br>" for s in result])
+
+        print("RESULT:")
+        print(vertical_interpolation._model_transformed[0]._xyz_points)
+        print(vertical_interpolation._model_transformed[0]._xyz_points._time_series)
+        print(vertical_interpolation._model_transformed[0]._xyz_points._time_series[0])
+        print(vertical_interpolation._model_transformed[0]._xyz_points._time_series[0]._timeseries)
+        #interpolated_df["windspeed"] = [x[0] if type(x) is np.array else x for x in vertical_interpolation._model_transformed[0]._xyz_points._time_series[0]._timeseries.values]
+        interpolated_df["windspeed"] = vertical_interpolation._model_transformed[0]._xyz_points._time_series[0]._timeseries
+
+        print(interpolated_df)
 
         interpolated_df["timestamp"] = interpolated_df["timestamp"].astype(str)
-        finalized_df = interpolated_df[["timestamp",
-                                        "height_below", "height_above", "imol"]
+        finalized_df = interpolated_df[["timestamp", "windspeed"]
                                        ].reset_index(drop=True)
-        # TODO: Complete vertical interloation for the data assembled in this dataframe
+        print(finalized_df.values)
         return finalized_df.to_json()
 
 
