@@ -211,16 +211,35 @@ def validated_params(request):
                             "Please specify stop_date."))
 
     if 'spatial_interpolation' in request.args:
-        spatial_interpolation = request.args['spatial_interpolation']
+        si = request.args['spatial_interpolation']
         si_allowed = ["nearest", "linear", "cubic", "idw"]
-        if spatial_interpolation not in si_allowed:
+        if si not in si_allowed:
             raise InvalidUsage(("Error: invalid spatial_interpolation. "
                                 "Choose one of: " + str(si_allowed)))
     else:
         raise InvalidUsage(("Error: No spatial_interpolation field provided. "
                             "Please specify spatial_interpolation."))
 
-    return height, lat, lon, start_date, stop_date, spatial_interpolation
+    if 'vertical_interpolation' in request.args:
+        vi = request.args['vertical_interpolation']
+        vi_allowed = ["nearest", "linear", "neutral_power", "stability_power"]
+        if vi not in vi_allowed:
+            raise InvalidUsage(("Error: invalid vertical_interpolation. "
+                                "Choose one of: " + str(vi_allowed)))
+
+        # Map the name from the request to name that have been used in
+        # vertical interpolation code
+        vi_name_map = {"nearest": "nn",
+                       "linear": "polynomial",
+                       "neutral_power": "neutral_power_law",
+                       "stability_power": "stability_adjusted_power_law"}
+        if vi in vi_name_map.keys():
+            vi = vi_name_map[vi]
+    else:
+        raise InvalidUsage(("Error: No vertical_interpolation field provided. "
+                            "Please specify vertical_interpolation."))
+
+    return height, lat, lon, start_date, stop_date, si, vi
 
 
 # This function finds the nearest x/y indices for a given lat/lon.
@@ -472,7 +491,8 @@ def home():
 def v1_ws():
     height, lat, lon,\
                      start_date, stop_date,\
-                     spatial_interpolation = validated_params(request)
+                     spatial_interpolation,\
+                     vertical_interpolation = validated_params(request)
     hsds_f = connected_hsds_file(request)
     heights = available_heights(hsds_f)
     datasets = available_datasets(hsds_f)
@@ -575,37 +595,21 @@ def v1_ws():
         xy_point = points.XYPoint.from_xyz_points(xyz_points)
         xy_point.set_timeseries(timeseries.timeseries(imol_df["imol"],
                                 var='stability'))
-        vertical_interpolation = interpolation.interpolation(
-                                 desired_point,
-                                 xy_point,
-                                 vertically_interpolate=True,
-                                 spatially_interpolate=False,
-                                 vertical_interpolation_techniques=["polynomial"])
-        vertical_interpolation.interpolate()
-
-        # TODO List:
-        # - apply verical interpolation
-        # - similar steps above to finalize the dateframe:
-        #     timestamps to strings, select output columns,
-        #        reset index, rename columns, create json
-        # After this is done, comment out irrelevant DEBUG printing above
+        vi = interpolation.interpolation(
+            desired_point,
+            xy_point,
+            vertically_interpolate=True,
+            spatially_interpolate=False,
+            vertical_interpolation_techniques=vertical_interpolation)
+        vi.interpolate()
 
         # return "".join([s + "<br>" for s in result])
 
-        print("RESULT:")
-        print(vertical_interpolation._model_transformed[0]._xyz_points)
-        print(vertical_interpolation._model_transformed[0]._xyz_points._time_series)
-        print(vertical_interpolation._model_transformed[0]._xyz_points._time_series[0])
-        print(vertical_interpolation._model_transformed[0]._xyz_points._time_series[0]._timeseries)
-        #interpolated_df["windspeed"] = [x[0] if type(x) is np.array else x for x in vertical_interpolation._model_transformed[0]._xyz_points._time_series[0]._timeseries.values]
-        interpolated_df["windspeed"] = vertical_interpolation._model_transformed[0]._xyz_points._time_series[0]._timeseries
-
-        print(interpolated_df)
+        interpolated_df["windspeed"] = vi._model_transformed[0]._xyz_points._time_series[0]._timeseries
 
         interpolated_df["timestamp"] = interpolated_df["timestamp"].astype(str)
         finalized_df = interpolated_df[["timestamp", "windspeed"]
                                        ].reset_index(drop=True)
-        print(finalized_df.values)
         return finalized_df.to_json()
 
 
