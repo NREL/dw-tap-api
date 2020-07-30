@@ -502,9 +502,9 @@ def v1_ws():
     debug_info = []
 
     height, lat, lon,\
-                     start_date, stop_date,\
-                     spatial_interpolation,\
-                     vertical_interpolation = validated_params(request)
+        start_date, stop_date,\
+        spatial_interpolation,\
+        vertical_interpolation = validated_params(request)
     hsds_f = connected_hsds_file(request)
     heights = available_heights(hsds_f)
     datasets = available_datasets(hsds_f)
@@ -618,13 +618,13 @@ def v1_ws():
             vertical_interpolation_techniques=vertical_interpolation)
         vi.interpolate()
 
-        interpolated_df["windspeed"] = vi._model_transformed[0]._xyz_points._time_series[0]._timeseries
+        interpolated_df["windspeed"] = vi._model_transformed[0].\
+            _xyz_points._time_series[0]._timeseries
 
         interpolated_df["timestamp"] = interpolated_df["timestamp"].astype(str)
         finalized_df = interpolated_df[["timestamp", "windspeed"]
                                        ].reset_index(drop=True)
         if DEBUG_OUTPUT:
-            #return "".join([s + "<br>" for s in debug_info])
             return "<br>".join(debug_info)
         else:
             return finalized_df.to_json()
