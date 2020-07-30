@@ -18,6 +18,9 @@ import interpolation
 app = flask.Flask(__name__)
 app.config["DEBUG"] = True
 
+# Switch from desired json output to debug info and intemediate dataframes
+DEBUG_OUTPUT = False
+
 with open('config.json', 'r') as f:
     config = json.load(f)
 
@@ -481,6 +484,13 @@ def heights_below_and_above(all_heights, selected_height):
     height_above = arr[arr > selected_height].min()
     return height_below, height_above
 
+
+def df2strings(df):
+    """ Helper function for outputing a dataframe in the form of a list of
+    strings (for each row) for debug.
+    """
+    return [str(row) for idx, row in df.iterrows()]
+
 # "About" route
 @app.route('/', methods=['GET'])
 def home():
@@ -489,6 +499,8 @@ def home():
 # Fully functional route
 @app.route('/v1/timeseries/windspeed', methods=['GET'])
 def v1_ws():
+    debug_info = []
+
     height, lat, lon,\
                      start_date, stop_date,\
                      spatial_interpolation,\
@@ -512,20 +524,20 @@ def v1_ws():
 
     tidx, timestamps = time_indices(hsds_f, start_date, stop_date)
 
-    result = []
-    result.append("Available datasets: %s" % str(datasets))
-    result.append("Specified height: %f" % height)
-    result.append("Specified lat: %f" % lat)
-    result.append("Specified lon: %f" % lon)
-    result.append("Specified start_date: %s" % str(start_date))
-    result.append("Specified stop_date: %s" % str(stop_date))
-    result.append("Available heights: %s" % str(heights))
-    result.append("Time indices: %s" % str(tidx))
+    if DEBUG_OUTPUT:
+        debug_info.append("Specified height: %f" % height)
+        debug_info.append("Specified lat: %f" % lat)
+        debug_info.append("Specified lon: %f" % lon)
+        debug_info.append("Specified start_date: %s" % str(start_date))
+        debug_info.append("Specified stop_date: %s" % str(stop_date))
+        debug_info.append("Available heights: %s" % str(heights))
+        debug_info.append("Time indices: %s" % str(tidx))
+        debug_info.append("Available datasets: %s" % str(datasets))
 
     tile_df = find_tile(hsds_f, lat, lon)
-    # DEBUG:
-    for idx, row in tile_df.iterrows():
-        result.append(str(row))
+
+    if DEBUG_OUTPUT:
+        debug_info += df2strings(tile_df)
 
     if not bypass_vertical_interpolation:
         # Use Nearest Neighbor for imol -- inversemoninobukhovlength_2m
@@ -537,9 +549,9 @@ def v1_ws():
                                         method="nearest")
         imol_df.rename(columns={"spatially_interpolated": "imol"},
                        inplace=True)
-        # DEBUG:
-        for idx, row in imol_df.iterrows():
-            result.append(str(row))
+
+        if DEBUG_OUTPUT:
+            debug_info += df2strings(imol_df)
 
     if bypass_vertical_interpolation:
         selected_heights = [int(height)]
@@ -559,9 +571,9 @@ def v1_ws():
                                                 method=spatial_interpolation,
                                                 neighbors_number=16)
         interpolated_df["timestamp"] = timestamps
-        # DEBUG:
-        for idx, row in interpolated_df.iterrows():
-            result.append(str(row))
+
+        if DEBUG_OUTPUT:
+            debug_info += df2strings(interpolated_df)
 
         if not bypass_vertical_interpolation:
             p = points.XYZPoint(lat, lon, h, 'model',
@@ -590,7 +602,10 @@ def v1_ws():
                                        ].reset_index(drop=True).rename(
                                        columns={"spatially_interpolated":
                                                 "windspeed"})
-        return finalized_df.to_json()
+        if DEBUG_OUTPUT:
+            return "<br>".join(debug_info)
+        else:
+            return finalized_df.to_json()
     else:
         xy_point = points.XYPoint.from_xyz_points(xyz_points)
         xy_point.set_timeseries(timeseries.timeseries(imol_df["imol"],
@@ -603,14 +618,16 @@ def v1_ws():
             vertical_interpolation_techniques=vertical_interpolation)
         vi.interpolate()
 
-        # return "".join([s + "<br>" for s in result])
-
         interpolated_df["windspeed"] = vi._model_transformed[0]._xyz_points._time_series[0]._timeseries
 
         interpolated_df["timestamp"] = interpolated_df["timestamp"].astype(str)
         finalized_df = interpolated_df[["timestamp", "windspeed"]
                                        ].reset_index(drop=True)
-        return finalized_df.to_json()
+        if DEBUG_OUTPUT:
+            #return "".join([s + "<br>" for s in debug_info])
+            return "<br>".join(debug_info)
+        else:
+            return finalized_df.to_json()
 
 
 def main():

@@ -47,11 +47,6 @@ class interpolation():
                     polynomial_interpolated_series = vif.polynomial(self._desired_point, xy_point._xyz_points,degree = degree)
                     if polynomial_interpolated_series is not None:
                         polynomial_interpolated_series.name = 'vert_poly_deg{0}'.format(str(degree))
-                        #polynomial_interpolated_series = pd.Series([x[0] for x in polynomial_interpolated_series.values])
-                        print("poly branch")
-                        #polynomial_interpolated_series = pd.to_numeric(polynomial_interpolated_series)
-                        print(polynomial_interpolated_series)
-                        #polynomial_interpolated_series = pd.Series(polynomial_interpolated_series.values)
                         vertically_interpolated_timeseries.append(timeseries.timeseries(polynomial_interpolated_series))
 
             if 'nn' in self._vertical_interpolation_techniques:
