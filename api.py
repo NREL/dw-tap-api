@@ -159,9 +159,9 @@ def connected_hsds_file(request):
 
 
 @timeit
-def validated_params(request):
+def validated_params_windspeed(request):
     """ Returns extracted, processed, and validated
-    required request parameters.
+    required request parameters. This version is desiged for windspeed queries.
     """
     if 'height' in request.args:
         height_str = request.args['height']
@@ -245,6 +245,65 @@ def validated_params(request):
     return height, lat, lon, start_date, stop_date, si, vi
 
 
+@timeit
+def validated_params_winddirection(request):
+    """ Returns extracted, processed, and validated
+    required request parameters.
+    This version is desiged for winddirection queries.
+    """
+    if 'height' in request.args:
+        height_str = request.args['height']
+        if len(height_str) > 0 and height_str[-1] == "m":
+            try:
+                height = float(height_str.rstrip("m"))
+            except ValueError:
+                raise InvalidUsage(("Height provided is malformed. "
+                                    "Please use the notation: 'XXm' "
+                                    "(where 'm' is for meters and XX is a "
+                                    "positive number; it doesn't need to be "
+                                    "an integer)."))
+            if height < 0:
+                raise InvalidUsage("Height should be a positive number.")
+        else:
+            raise InvalidUsage(("Height provided is malformed. "
+                                "Please use the notation: 'XXm' "
+                                "(where 'm' is for meters and XX is a "
+                                "positive number; it doesn't need to be "
+                                "an integer)."))
+
+    if 'lat' in request.args:
+        try:
+            lat = float(request.args['lat'])
+        except ValueError:
+            raise InvalidUsage(("Lat (latitude) provided is invalid."
+                                "Needs to be a number."))
+    else:
+        raise InvalidUsage("Lat (latitude) is not provided.")
+
+    if 'lon' in request.args:
+        try:
+            lon = float(request.args['lon'])
+        except ValueError:
+            raise InvalidUsage(("Lon (longitude) provided is invalid."
+                                "Needs to be a number."))
+    else:
+        raise InvalidUsage("Lon (longitude) is not provided.")
+
+    if 'start_date' in request.args:
+        start_date = validated_dt(request.args['start_date'])
+    else:
+        raise InvalidUsage(("Error: No start_date field provided. "
+                            "Please specify start_date."))
+
+    if 'stop_date' in request.args:
+        stop_date = validated_dt(request.args['stop_date'])
+    else:
+        raise InvalidUsage(("Error: No stop_date field provided. "
+                            "Please specify stop_date."))
+
+    return height, lat, lon, start_date, stop_date
+
+
 # This function finds the nearest x/y indices for a given lat/lon.
 # Rather than fetching the entire coordinates database, which is 500+ MB, this
 # uses the Proj4 library to find a nearby point and converts to x/y indices
@@ -308,14 +367,15 @@ def find_tile(f, lat, lon, radius=3, trim=16):
     return res.sort_values("d")[:trim].reset_index(drop=True)
 
 
-def available_heights(f):
+def available_heights(f, prefix="windspeed"):
     """ Return list of all heights available in resource f --
-    datasets named "windspeed_XXm", where XX is a number.
+    datasets named "<prefix>_XXm", where XX is a number.
     """
+    prefix = prefix.rstrip("_") + "_"
     try:
-        heights = sorted([int(attr.replace("windspeed_", "").rstrip("m"))
+        heights = sorted([int(attr.replace(prefix, "").rstrip("m"))
                          for attr in
-                         list(f) if "windspeed_" in attr])
+                         list(f) if prefix in attr])
     except ValueError:
         raise InvalidUsage("Problem with processing WTK heights.")
     return heights
@@ -443,7 +503,7 @@ def interpolate_spatially(tile_df, neighbor_ts_df,
                           method='nearest', neighbors_number=16):
     """ Process a single-height dataframe for
     single location with timeseries for neighboring gridpoints.
-    Method should be validated in validated_params()."""
+    Method should be validated in validated_params_X()."""
 
     res_df = pd.DataFrame(index=neighbor_ts_df.index)
 
@@ -496,7 +556,7 @@ def df2strings(df):
 def home():
     return config["html_home"]
 
-# Fully functional route
+# Fully functional route for windspeed
 @app.route('/v1/timeseries/windspeed', methods=['GET'])
 def v1_ws():
     debug_info = []
@@ -504,9 +564,9 @@ def v1_ws():
     height, lat, lon,\
         start_date, stop_date,\
         spatial_interpolation,\
-        vertical_interpolation = validated_params(request)
+        vertical_interpolation = validated_params_windspeed(request)
     hsds_f = connected_hsds_file(request)
-    heights = available_heights(hsds_f)
+    heights = available_heights(hsds_f, prefix="windspeed")
     datasets = available_datasets(hsds_f)
 
     bypass_vertical_interpolation = False
@@ -523,6 +583,8 @@ def v1_ws():
                             "inversemoninobukhovlength_2m"))
 
     tidx, timestamps = time_indices(hsds_f, start_date, stop_date)
+
+    desired_point = points.XYZPoint(lat, lon, height, 'desired')
 
     if DEBUG_OUTPUT:
         debug_info.append("Specified height: %f" % height)
@@ -558,8 +620,6 @@ def v1_ws():
     else:
         height_below, height_above = heights_below_and_above(heights, height)
         selected_heights = [height_below, height_above]
-
-    desired_point = points.XYZPoint(lat, lon, height, 'desired')
 
     xyz_points = []
     for h_idx, h in enumerate(selected_heights):
@@ -628,6 +688,56 @@ def v1_ws():
             return "<br>".join(debug_info)
         else:
             return finalized_df.to_json()
+
+# Fully functional route for winddirection
+@app.route('/v1/timeseries/winddirection', methods=['GET'])
+def v1_wd():
+
+    print("v1_wd")
+    debug_info = []
+
+    height, lat, lon,\
+        start_date, stop_date = validated_params_winddirection(request)
+    hsds_f = connected_hsds_file(request)
+    heights = available_heights(hsds_f, prefix="winddirection")
+    datasets = available_datasets(hsds_f)
+
+    if height < np.min(heights) or height > np.max(heights):
+        raise InvalidUsage(("Requested height is outside "
+                            "of allowed range: [%.2f, %.2f]" %
+                            (np.min(heights), np.max(heights))))
+
+    tidx, timestamps = time_indices(hsds_f, start_date, stop_date)
+
+    if DEBUG_OUTPUT:
+        debug_info.append("Specified height: %f" % height)
+        debug_info.append("Specified lat: %f" % lat)
+        debug_info.append("Specified lon: %f" % lon)
+        debug_info.append("Specified start_date: %s" % str(start_date))
+        debug_info.append("Specified stop_date: %s" % str(stop_date))
+        debug_info.append("Available heights: %s" % str(heights))
+        debug_info.append("Time indices: %s" % str(tidx))
+        debug_info.append("Available datasets: %s" % str(datasets))
+
+    tile_df = find_tile(hsds_f, lat, lon, radius=1)
+
+    nearest_h = heights[np.abs(np.array(heights) - height).argmin()]
+    wd_dset = hsds_f["winddirection_%dm" % int(nearest_h)]
+    neighbor_ts_df = extract_ts_for_neighbors(tile_df.head(1),
+                                              tidx, wd_dset)
+    neighbor_ts_df.columns = ["winddirection"]
+    neighbor_ts_df["timestamp"] = timestamps
+
+    neighbor_ts_df["timestamp"] = neighbor_ts_df["timestamp"].astype(str)
+    finalized_df = neighbor_ts_df[["timestamp", "winddirection"]
+                                  ].reset_index(drop=True)
+
+    if DEBUG_OUTPUT:
+        debug_info += df2strings(tile_df)
+        debug_info += df2strings(neighbor_ts_df)
+        return "<br>".join(debug_info)
+    else:
+        return finalized_df.to_json()
 
 
 def main():

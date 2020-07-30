@@ -8,5 +8,5 @@
     "api_key": "3K3JQbjZmWctY0xmIfSYvYgtIcM3CN0cb1Y2w9bf",
     "__info__": "These credentials are for demo, rate-limited usage."
   },
-  "html_home": "<h1>DW-TAP Project's API Endpoint</h1><p> This endpoint supports the following requests:<br><br>GET /v1/timeseries/windspeed?height=50m&lat=40.7128&lon=-74.0059&start_date=20100302&stop_date=20120101&vertical_interpolation=poly2&spatial_interpolation=idw&bias_correction=default&unit=m/s</p>"
+  "html_home": "<h1>DW-TAP Project's API Endpoint</h1><p> This endpoint supports the following requests:<br><br>GET /v1/timeseries/windspeed?height=50m&lat=40.7128&lon=-74.0059&start_date=20100302&stop_date=20120101&vertical_interpolation=linear&spatial_interpolation=idw</p><p>OR</p><p>GET /v1/timeseries/winddirection?height=67.00m&lat=40.7888&lon=-74.0059&start_date=20110302&stop_date=20110303</p>"
 }
