@@ -741,6 +741,11 @@ def v1_wd():
         return finalized_df.to_json()
 
 
+@app.route('/check', methods=['GET'])
+def check():
+    return json.dumps({"Status": "OK!"})
+
+
 def main():
     app.run()
 
