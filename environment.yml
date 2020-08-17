@@ -6,3 +6,5 @@ dependencies:
 - flask
 - requests
 - cartopy
+- pip:
+  - h5pyd 
