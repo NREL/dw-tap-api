@@ -16,7 +16,7 @@ import timeseries
 import interpolation
 
 app = flask.Flask(__name__)
-app.config["DEBUG"] = True
+app.config["DEBUG"] = False
 
 # Switch from desired json output to debug info and intemediate dataframes
 DEBUG_OUTPUT = False
@@ -325,7 +325,7 @@ def indicesForCoord(f, lat_index, lon_index):
 
 
 @timeit
-def find_tile(f, lat, lon, radius=3, trim=16):
+def find_tile(f, lat, lon, radius=3, trim=4):
     """ Return dataframe with information about gridpoints in resource f that
     are neighboring (lat, lon). At first, there will be (radius*2) ^ 2
     entries/neighbors. The dataframe will be sorted by the distance (in meters)
@@ -500,7 +500,7 @@ def interpolate_spatially_row(row, neighbor_xy_centered, method='nearest'):
 
 @timeit
 def interpolate_spatially(tile_df, neighbor_ts_df,
-                          method='nearest', neighbors_number=16):
+                          method='nearest', neighbors_number=4):
     """ Process a single-height dataframe for
     single location with timeseries for neighboring gridpoints.
     Method should be validated in validated_params_X()."""
@@ -558,6 +558,7 @@ def home():
 
 # Fully functional route for windspeed
 @app.route('/v1/timeseries/windspeed', methods=['GET'])
+@timeit
 def v1_ws():
     debug_info = []
 
@@ -629,7 +630,7 @@ def v1_ws():
 
         interpolated_df = interpolate_spatially(tile_df, neighbor_ts_df,
                                                 method=spatial_interpolation,
-                                                neighbors_number=16)
+                                                neighbors_number=4)
         interpolated_df["timestamp"] = timestamps
 
         if DEBUG_OUTPUT:
