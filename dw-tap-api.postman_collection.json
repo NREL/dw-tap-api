@@ -1,0 +1,106 @@
+{
+	"info": {
+		"_postman_id": "b5803794-b71f-47a4-a0f3-9c08fb79c16c",
+		"name": "dw-tap-api",
+		"description": "Examples for NREL DW TAP API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Windspeed Data Request",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:5000/v1/timeseries/windspeed?height=50m&lat=40.7128&lon=-74.0059&start_date=20100302&stop_date=20120101&vertical_interpolation=linear&spatial_interpolation=idw",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"v1",
+						"timeseries",
+						"windspeed"
+					],
+					"query": [
+						{
+							"key": "height",
+							"value": "50m"
+						},
+						{
+							"key": "lat",
+							"value": "40.7128"
+						},
+						{
+							"key": "lon",
+							"value": "-74.0059"
+						},
+						{
+							"key": "start_date",
+							"value": "20100302"
+						},
+						{
+							"key": "stop_date",
+							"value": "20120101"
+						},
+						{
+							"key": "vertical_interpolation",
+							"value": "linear"
+						},
+						{
+							"key": "spatial_interpolation",
+							"value": "idw"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Wind Direction Data Request",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:5000/v1/timeseries/winddirection?height=67.00m&lat=40.7888&lon=-74.0059&start_date=20110302&stop_date=20110303",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"",
+						"v1",
+						"timeseries",
+						"winddirection"
+					],
+					"query": [
+						{
+							"key": "height",
+							"value": "67.00m"
+						},
+						{
+							"key": "lat",
+							"value": "40.7888"
+						},
+						{
+							"key": "lon",
+							"value": "-74.0059"
+						},
+						{
+							"key": "start_date",
+							"value": "20110302"
+						},
+						{
+							"key": "stop_date",
+							"value": "20110303"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}
