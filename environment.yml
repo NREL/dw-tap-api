@@ -4,6 +4,7 @@ dependencies:
 - pandas
 - numpy
 - flask
+- flask-cors
 - requests
 - cartopy
 - pip:

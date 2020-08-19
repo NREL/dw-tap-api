@@ -1,5 +1,6 @@
 import flask
 from flask import request, jsonify
+from flask_cors import CORS
 import datetime
 import h5pyd
 import json
@@ -17,6 +18,9 @@ import interpolation
 
 app = flask.Flask(__name__)
 app.config["DEBUG"] = False
+# Note: may consider limiting CORS for production deployment
+#       this opens up to AJAX calls from any domain
+cors = CORS(app)
 
 # Switch from desired json output to debug info and intemediate dataframes
 DEBUG_OUTPUT = False
