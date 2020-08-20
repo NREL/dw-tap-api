@@ -1,5 +1,4 @@
 # API Endpoint for DW-TAP Project
-=====
 
 ### Deploy as a Container (requires Docker on the host)
 
@@ -13,7 +12,7 @@ Run:
 docker run -p 8080:80 -d tap-api:latest
 ```
 
-Inside the container, flask app will run on port 80.  On the host, you can use any available port, e.g, 8080, like shown above.  
+Inside the container, flask app will run on port `80`.  On the host, you can use any available port, e.g, `8080`, like shown above.  
 
 For a simple test (showing info about the endpoint), navigate to the following URL in your browser (running on the host):
 ```
@@ -28,7 +27,7 @@ This should produce a json output with `timestamp` and `windspeed` values.
 
 For other examples of working queries, refer to the file: `dw-tap-api.postman_collection.json` (look for `raw` attributes). This file can be used by the Postman app (e.g., installed locally, on a laptop), which will cycle through all documented queries and show their status.
 
-### Build & Run Natively (without container)
+### Build & Run Natively (without a container)
 
 ```shell
 conda env create
