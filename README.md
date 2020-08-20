@@ -35,8 +35,10 @@ conda activate dw-tap-api
 python api.py --development
 ```
 
-Notice the `--development` flag at the end -- it makes the endpoint run on port `8080`; for short, you can run: `python api.py -d`. 
+### Running Modes
 
-*Development* is the default mode (run if no flag is sspecified). In contrast, you can run the endpoint in the *Production* mode using: `python api.py --production` or `python api.py -p` -- this is what is used in the container deployment described above (to see the details, check the end of `Dockerfile`).
+Notice the `--development` flag in the command above -- it makes the endpoint run on port `8080`; for short, you can run: `python api.py -d`. 
+
+*Development* is the default mode (run if no flag is specified). In contrast, you can run the endpoint in the *Production* mode using: `python api.py --production` or `python api.py -p` -- this is what is used in the container deployment described above (to see the details, check the end of `Dockerfile`).
 
 To see how these production and development modes are configured, refer to `config.json` and see what `host` and `port` values are specified.  
