@@ -32,7 +32,11 @@ For other examples of working queries, refer to the file: `dw-tap-api.postman_co
 ```shell
 conda env create
 conda activate dw-tap-api
-python api.py
+python api.py --development
 ```
 
-If the local environment does not allow you to run on port 80, edit the file `api.py`, find the line `app.run(host='0.0.0.0', port=80)` near the end, and replace `80` with, e.g., `8080`. Afterwards, try running `python api.py` again.
+Notice the `--development` flag at the end -- it makes the endpoint run on port `8080`; for short, you can run: `python api.py -d`. 
+
+*Development* is the default mode (run if no flag is sspecified). In contrast, you can run the endpoint in the *Production* mode using: `python api.py --production` or `python api.py -p` -- this is what is used in the container deployment described above (to see the details, check the end of `Dockerfile`).
+
+To see how these production and development modes are configured, refer to `config.json` and see what `host` and `port` values are specified.  
