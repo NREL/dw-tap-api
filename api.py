@@ -12,9 +12,33 @@ import dateutil
 from scipy.interpolate import griddata
 import time
 import concurrent.futures
+import argparse
+
 import points
 import timeseries
 import interpolation
+
+with open('config.json', 'r') as f:
+    config = json.load(f)
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-p', '--production', action='store_true')
+parser.add_argument('-d', '--development', action='store_true')
+args = parser.parse_args()
+
+# Make development the default mode
+development_mode = True
+# Switch it if: "-p" and no "-d"
+if (not args.development) and (args.production):
+    development_mode = False
+
+# Use parameters that are appropriate for the selected mode
+if development_mode:
+    host = config["development"]["host"]    
+    port = config["development"]["port"]    
+else:
+    host = config["production"]["host"]
+    port = config["production"]["port"] 
 
 app = flask.Flask(__name__)
 app.config["DEBUG"] = False
@@ -25,8 +49,6 @@ cors = CORS(app)
 # Switch from desired json output to debug info and intemediate dataframes
 DEBUG_OUTPUT = False
 
-with open('config.json', 'r') as f:
-    config = json.load(f)
 
 # Appropriate for lat/lon pairs
 crs_from = ccrs.PlateCarree()
@@ -751,7 +773,7 @@ def check():
 
 
 def main():
-    app.run(host='0.0.0.0', port=80)
+    app.run(host=host, port=port)
 
 
 if __name__ == "__main__":
