@@ -1,11 +1,12 @@
 name: dw-tap-api
 dependencies:
 - python=3.7
+- pip
 - pandas
 - numpy
-- flask
-- flask-cors
 - requests
 - cartopy
 - pip:
   - h5pyd 
+  - flask-cors
+  - flask
