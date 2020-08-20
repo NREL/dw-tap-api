@@ -1,5 +1,5 @@
 # API Endpoint for DW-TAP Project
-=================================
+=====
 
 ### Deploy as a Container (requires Docker on the host)
 
@@ -25,6 +25,8 @@ For a more comprehensive test (with HSDS connection and spatial + vertical inter
 http://localhost:8080/v1/timeseries/windspeed?height=67.00m&lat=40.7888&lon=-74.0059&start_date=20110302&stop_date=20110303&vertical_interpolation=nearest&spatial_interpolation=idw
 ```
 This should produce a json output with `timestamp` and `windspeed` values.
+
+For other examples of working queries, refer to the file: `dw-tap-api.postman_collection.json` (look for `raw` attributes). This file can be used by the Postman app (e.g., installed locally, on a laptop), which will cycle through all documented queries and show their status.
 
 ### Build & Run Natively (without container)
 
