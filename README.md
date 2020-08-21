@@ -45,8 +45,8 @@ To see how these production and development modes are configured, refer to `conf
 
 ### Documentation
 
-Interactive HTML page with API documentation is produced using apiDoc. It can be recreated using:
+Interactive HTML page with API documentation is produced using apiDoc. It can be recreated using (requires installing apiDoc locally):
 ```
 apidoc -i . -o doc/ -t apidoc-template
 ```
-The output can seen by opening `doc/index.html` in a browser.
+The output can be seen by opening `doc/index.html` in a browser.
