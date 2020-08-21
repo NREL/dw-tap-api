@@ -42,3 +42,11 @@ Notice the `--development` flag in the command above -- it makes the endpoint ru
 *Development* is the default mode (run if no flag is specified). In contrast, you can run the endpoint in the *Production* mode using: `python api.py --production` or `python api.py -p` -- this is what is used in the container deployment described above (to see the details, check the end of `Dockerfile`).
 
 To see how these production and development modes are configured, refer to `config.json` and see what `host` and `port` values are specified.  
+
+### Documentation
+
+Interactive HTML page with API documentation is produced using apiDoc. It can be recreated using:
+```
+apidoc -i . -o doc/ -t apidoc-template
+```
+The output can seen by opening `doc/index.html` in a browser.
