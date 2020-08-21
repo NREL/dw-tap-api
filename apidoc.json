@@ -1,0 +1,7 @@
+{
+  "name": "DW-TAP API",
+  "version": "1.0.0",
+  "description": "API for NREL's DW-TAP Project",
+  "title": "DW-TAP API",
+  "url" : "tap-api.nrel.gov/v1"
+}

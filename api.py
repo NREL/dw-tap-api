@@ -586,7 +586,31 @@ def home():
 @app.route('/v1/timeseries/windspeed', methods=['GET'])
 @timeit
 def v1_ws():
-    debug_info = []
+    """
+    @api {get} /timeseries/windspeed Request windspeed estimates
+    @apiVersion 1.0.0 
+    @apiName GetWindspeed
+    @apiGroup Wind Speed
+
+    @apiDescription Request windspeed estimates for a particular site, for a specified height, and corresponding to the given time interval.
+
+    @apiSampleRequest tap-api.nrel.gov/v1/timeseries/windspeed?height=50m&lat=40.7128&lon=-74.0059&start_date=20100302&stop_date=20120101&vertical_interpolation=linear&spatial_interpolation=idw
+
+    @apiSuccess {String} JSON JSON with `timestamp` and `windspeed` series
+    
+    @apiSuccessExample Example output on success:
+    {"timestamp":{"0":"2011-03-02 00:00:00","1":"2011-03-02 01:00:00","2":"2011-03-02 02:00:00",
+    "3":"2011-03-02 03:00:00","4":"2011-03-02 04:00:00","5":"2011-03-02 05:00:00"},
+    "windspeed":{"0":3.5925824239,"1":5.440796747,"2":4.8400592119,"3":5.4325136517,"4":4.9044365704,"5":5.2218727909}} 
+   
+    @apiParam {Float} height Height (in meters) for which the windspeed estimates are requested; notation: `XXm`, where XX is an integer of float
+    @apiParam {Float} lat Latitude (in degrees) for a particular site
+    @apiParam {Float} lon Longitude (in degrees) for a particular site
+    @apiParam {String} start_date Beginning of the time interval in the format: YYYYMMDD
+    @apiParam {String} stop_date End of the time interval in the format: YYYYMMDD
+    @apiParam {String} vertical_interpolation Method used for vertical interpolation; allowed: `nearest`, `linear`, `neutral_power`, `stability_power`
+    @apiParam {String} spatial_interpolation Method used for spatial interpolation; allowed: `nearest`, `linear`, `cubic`, `idw`
+    """
 
     height, lat, lon,\
         start_date, stop_date,\
@@ -719,6 +743,29 @@ def v1_ws():
 # Fully functional route for winddirection
 @app.route('/v1/timeseries/winddirection', methods=['GET'])
 def v1_wd():
+    """
+    @api {get} /timeseries/winddirection Request winddirection estimates
+    @apiVersion 1.0.0
+    @apiName GetWinddirection
+    @apiGroup Wind Direction
+
+    @apiDescription Request wind direction estimates for a particular site, for a specified height, and corresponding to the given time interval. `Nearest-neighbor` is used for both spatial and vertical interpolations. 
+
+    @apiSampleRequest tap-api.nrel.gov/v1/timeseries/winddirection?height=50m&lat=40.7128&lon=-74.0059&start_date=20100302&stop_date=20120101
+
+    @apiSuccess {String} JSON JSON with `timestamp` and `winddirection` series
+
+    @apiSuccessExample Example output on success:
+    {"timestamp":{"0":"2011-03-02 00:00:00","1":"2011-03-02 01:00:00","2":"2011-03-02 02:00:00",
+    "3":"2011-03-02 03:00:00","4":"2011-03-02 04:00:00","5":"2011-03-02 05:00:00"},
+    "winddirection":{"0":188.9596252441,"1":183.7189788818,"2":193.1125793457,"3":184.4605865479,"4":200.0836181641,"5":215.415512085}} 
+
+    @apiParam {Float} height Height (in meters) for which the wind direction estimates are requested; notation: `XXm`, where XX is an integer of float
+    @apiParam {Float} lat Latitude (in degrees) for a particular site
+    @apiParam {Float} lon Longitude (in degrees) for a particular site
+    @apiParam {String} start_date Beginning of the time interval in the format: YYYYMMDD
+    @apiParam {String} stop_date End of the time interval in the format: YYYYMMDD
+    """
 
     print("v1_wd")
     debug_info = []
