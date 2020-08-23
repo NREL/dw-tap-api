@@ -49,4 +49,5 @@ Interactive HTML page with API documentation is produced using apiDoc. It can be
 ```
 apidoc -i . -o doc/ -t apidoc-template
 ```
-The output can be seen by opening `doc/index.html` in a browser.
+The output can be seen by opening `doc/index.html` in a browser. The flask app is configured to serve this documentation page (and related files) at "/" (i.e., "home") route.
+
