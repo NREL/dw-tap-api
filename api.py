@@ -34,11 +34,11 @@ if (not args.development) and (args.production):
 
 # Use parameters that are appropriate for the selected mode
 if development_mode:
-    host = config["development"]["host"]    
-    port = config["development"]["port"]    
+    host = config["development"]["host"]
+    port = config["development"]["port"]
 else:
     host = config["production"]["host"]
-    port = config["production"]["port"] 
+    port = config["production"]["port"]
 
 app = flask.Flask(__name__)
 app.config["DEBUG"] = False
@@ -577,10 +577,23 @@ def df2strings(df):
     """
     return [str(row) for idx, row in df.iterrows()]
 
-# "About" route
+# Home/documentation route
 @app.route('/', methods=['GET'])
 def home():
-    return config["html_home"]
+    # Serve documentation produced by apiDoc
+    return flask.send_file('doc/index.html')
+
+# This helps serve files that are part of the apiDoc output (in /doc)
+@app.route('/<foldername>/<path:filename>')
+def doc_folder_file(foldername, filename):
+    return flask.send_from_directory("doc/" + foldername, filename)
+
+# This helps serve files that are part of the apiDoc output (in /doc)
+@app.route('/<path:filename>')
+def doc_file(filename):
+    if filename.endswith(".js") or filename.endswith(".json"):
+        return flask.send_from_directory("doc", filename)
+
 
 # Fully functional route for windspeed
 @app.route('/v1/timeseries/windspeed', methods=['GET'])
@@ -588,7 +601,7 @@ def home():
 def v1_ws():
     """
     @api {get} /timeseries/windspeed Request windspeed estimates
-    @apiVersion 1.0.0 
+    @apiVersion 1.0.0
     @apiName GetWindspeed
     @apiGroup Wind Speed
 
@@ -597,12 +610,12 @@ def v1_ws():
     @apiSampleRequest tap-api.nrel.gov/v1/timeseries/windspeed?height=50m&lat=40.7128&lon=-74.0059&start_date=20100302&stop_date=20120101&vertical_interpolation=linear&spatial_interpolation=idw
 
     @apiSuccess {String} JSON JSON with `timestamp` and `windspeed` series
-    
+
     @apiSuccessExample Example output on success:
     {"timestamp":{"0":"2011-03-02 00:00:00","1":"2011-03-02 01:00:00","2":"2011-03-02 02:00:00",
     "3":"2011-03-02 03:00:00","4":"2011-03-02 04:00:00","5":"2011-03-02 05:00:00"},
-    "windspeed":{"0":3.5925824239,"1":5.440796747,"2":4.8400592119,"3":5.4325136517,"4":4.9044365704,"5":5.2218727909}} 
-   
+    "windspeed":{"0":3.5925824239,"1":5.440796747,"2":4.8400592119,"3":5.4325136517,"4":4.9044365704,"5":5.2218727909}}
+
     @apiParam {Float} height Height (in meters) for which the windspeed estimates are requested; notation: `XXm`, where XX is an integer of float
     @apiParam {Float} lat Latitude (in degrees) for a particular site
     @apiParam {Float} lon Longitude (in degrees) for a particular site
@@ -749,7 +762,7 @@ def v1_wd():
     @apiName GetWinddirection
     @apiGroup Wind Direction
 
-    @apiDescription Request wind direction estimates for a particular site, for a specified height, and corresponding to the given time interval. `Nearest-neighbor` is used for both spatial and vertical interpolations. 
+    @apiDescription Request wind direction estimates for a particular site, for a specified height, and corresponding to the given time interval. `Nearest-neighbor` is used for both spatial and vertical interpolations.
 
     @apiSampleRequest tap-api.nrel.gov/v1/timeseries/winddirection?height=50m&lat=40.7128&lon=-74.0059&start_date=20100302&stop_date=20120101
 
@@ -758,7 +771,7 @@ def v1_wd():
     @apiSuccessExample Example output on success:
     {"timestamp":{"0":"2011-03-02 00:00:00","1":"2011-03-02 01:00:00","2":"2011-03-02 02:00:00",
     "3":"2011-03-02 03:00:00","4":"2011-03-02 04:00:00","5":"2011-03-02 05:00:00"},
-    "winddirection":{"0":188.9596252441,"1":183.7189788818,"2":193.1125793457,"3":184.4605865479,"4":200.0836181641,"5":215.415512085}} 
+    "winddirection":{"0":188.9596252441,"1":183.7189788818,"2":193.1125793457,"3":184.4605865479,"4":200.0836181641,"5":215.415512085}}
 
     @apiParam {Float} height Height (in meters) for which the wind direction estimates are requested; notation: `XXm`, where XX is an integer of float
     @apiParam {Float} lat Latitude (in degrees) for a particular site
