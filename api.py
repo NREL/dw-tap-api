@@ -623,6 +623,9 @@ def v1_ws():
     @apiParam {String} stop_date End of the time interval in the format: YYYYMMDD
     @apiParam {String} vertical_interpolation Method used for vertical interpolation; allowed: `nearest`, `linear`, `neutral_power`, `stability_power`
     @apiParam {String} spatial_interpolation Method used for spatial interpolation; allowed: `nearest`, `linear`, `cubic`, `idw`
+    @apiParam {String} [username] Optional attribute of the HSDS credentials
+    @apiParam {String} [password] Optional attribute of the HSDS credentials
+    @apiParam {String} [api_key] Optional attribute of the HSDS credentials. If one of `username`, `password`, and `api_key` is specified, all three of these attributes should be specified. Alternatively, if none of these is specified, the default values will be use for rate-limited, demo access 
     """
 
     height, lat, lon,\
@@ -778,6 +781,9 @@ def v1_wd():
     @apiParam {Float} lon Longitude (in degrees) for a particular site
     @apiParam {String} start_date Beginning of the time interval in the format: YYYYMMDD
     @apiParam {String} stop_date End of the time interval in the format: YYYYMMDD
+    @apiParam {String} [username] Optional attribute of the HSDS credentials
+    @apiParam {String} [password] Optional attribute of the HSDS credentials
+    @apiParam {String} [api_key] Optional attribute of the HSDS credentials. If one of `username`, `password`, and `api_key` is specified, all three of these attributes should be specified. Alternatively, if none of these is specified, the default values will be use for rate-limited, demo access
     """
 
     print("v1_wd")
