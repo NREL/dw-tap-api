@@ -184,11 +184,21 @@ def v1_wr():
     @apiParam {String} [api_key] Optional attribute of the HSDS credentials. If one of `username`, `password`, and `api_key` is specified, all three of these attributes should be specified. Alternatively, if none of these is specified, the default values will be use for rate-limited, demo access
     """
     print("v1_wr")
+    hsds_f = connected_hsds_file(request,config)
 
-    wd = v1_wd()
-    ws = v1_ws()
+    height, lat, lon, \
+    start_date, stop_date, \
+    spatial_interpolation, \
+    vertical_interpolation = validated_params_windspeed(request)
 
-    return {}
+    wd_df, wd_debug_info = prepare_winddirection(height, lat, lon, start_date, stop_date, hsds_f, DEBUG_OUTPUT)
+
+    ws_df, ws_debug_info = prepare_windpseed(height, lat, lon, start_date, stop_date, spatial_interpolation,
+                                                 vertical_interpolation, hsds_f, DEBUG_OUTPUT)
+    if DEBUG_OUTPUT:
+        return "<br>".join(ws_debug_info + wd_debug_info)
+    else:
+        return ws_df.merge(wd_df,on='timestamp').to_json()
 
 
 @app.route('/check', methods=['GET'])
