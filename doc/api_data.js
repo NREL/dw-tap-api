@@ -174,14 +174,14 @@ define({ "api": [
             "type": "String",
             "optional": false,
             "field": "JSON",
-            "description": "<p>with percentage observations in each of 8 radial segments (N, NE, E, SE, S, SW, W, NW) and each of 4 wind speed classes (11-14 mps, 8-11 mps, 5-8 mps, less than 5 mps)</p>"
+            "description": "<p>with percentage observations in each of 8 radial segments (N, NE, E, SE, S, SW, W, NW) and each of 4 wind speed classes (11-14 mps, 8-11 mps, 5-8 mps, less than 5 mps) and all together (&quot;All&quot;)</p>"
           }
         ]
       },
       "examples": [
         {
           "title": "Example output on success:",
-          "content": "{\"11-14 m/s\": [77.5, 72.5, 70.0, 45.0, 22.5, 42.5, 40.0, 62.5], \"8-11 m/s\": [57.5, 50.0, 45.0, 35.0, 20.0, 22.5, 37.5, 55.0], \"5-8 m/s\": [40.0, 30.0, 30.0, 35.0, 7.5, 7.5, 32.5, 40.0], \"< 5 m/s\": [20.0, 7.5, 15.0, 22.5, 2.5, 2.5, 12.5, 22.5]}",
+          "content": "{\"11-14 m/s\": [77.5, 72.5, 70.0, 45.0, 22.5, 42.5, 40.0, 62.5], \"8-11 m/s\": [57.5, 50.0, 45.0, 35.0, 20.0, 22.5, 37.5, 55.0], \"5-8 m/s\": [40.0, 30.0, 30.0, 35.0, 7.5, 7.5, 32.5, 40.0], \"< 5 m/s\": [20.0, 7.5, 15.0, 22.5, 2.5, 2.5, 12.5, 22.5], \"All\": [5.0,10.0,50.0,35.0,0.0] }",
           "type": "json"
         }
       ]

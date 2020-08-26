@@ -45,6 +45,7 @@ def windrose_from_df(df):
     c["pct"] = 100.0*c['timestamp_a']/c['timestamp_b']
     c = c[['windspeed_class','direction_class','pct']].set_index(['windspeed_class','direction_class'])
 
+    # calculate percentage for each wind class within each direction
     ret = {}
     for i in ['<5 m/s','5-10 m/s','10-20 m/s','>20 m/s']:
         r = []
@@ -54,6 +55,17 @@ def windrose_from_df(df):
             except KeyError:
                 r.append(0.0)
         ret[i] = r
+
+    # calculate the percentage for each direction
+    b = b.set_index('direction_class')
+    bs = b["timestamp"].sum()
+    r = []
+    for j in ['N','NE','E','SE','S','W','NW']:
+        try:
+            r.append(100*b.loc[j]["timestamp"]/bs)
+        except KeyError:
+            r.append(0.0)
+    ret["Any"] = r
 
     return ret
 
