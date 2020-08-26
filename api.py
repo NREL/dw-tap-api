@@ -8,6 +8,7 @@ from windspeed import *
 from winddirection import *
 from hsds_helpers import *
 from invalid_usage import InvalidUsage
+from helpers import *
 
 with open('config.json', 'r') as f:
     config = json.load(f)
@@ -195,10 +196,17 @@ def v1_wr():
 
     ws_df, ws_debug_info = prepare_windpseed(height, lat, lon, start_date, stop_date, spatial_interpolation,
                                                  vertical_interpolation, hsds_f, DEBUG_OUTPUT)
+
+    combined_df = ws_df.merge(wd_df,on='timestamp')
+    combined_df["windspeed_class"] = combined_df["windspeed"].apply(windspeed_class)
+    combined_df["direction_class"] = combined_df["winddirection"].apply(direction_class)
+
+    ret = windrose_from_df(combined_df)
+
     if DEBUG_OUTPUT:
         return "<br>".join(ws_debug_info + wd_debug_info)
     else:
-        return ws_df.merge(wd_df,on='timestamp').to_json()
+        return json.dumps(ret)
 
 
 @app.route('/check', methods=['GET'])

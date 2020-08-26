@@ -29,3 +29,60 @@ def validated_dt(date_str):
         return datetime.datetime.strptime(date_str, '%Y%m%d')
     except ValueError:
         raise InvalidUsage("Incorrect date format, should be: YYYYMMDD")
+
+
+def windrose_from_df(df):
+    # count per timestamp windspeed and direction class
+    a = df[['timestamp','windspeed_class','direction_class']].groupby(['windspeed_class','direction_class']).count()
+    a = a.reset_index()
+
+    # count per direction class
+    b = df[['timestamp','direction_class']].groupby(['direction_class']).count()
+    b = b.reset_index()
+
+    # combine and calculate percentages
+    c = a.reset_index().merge(b.reset_index(),on='direction_class',suffixes=('_a','_b'),how='left')
+    c["pct"] = 100.0*c['timestamp_a']/c['timestamp_b']
+    c = c[['windspeed_class','direction_class','pct']].set_index(['windspeed_class','direction_class'])
+
+    ret = {}
+    for i in ['<5 m/s','5-10 m/s','10-20 m/s','>20 m/s']:
+        r = []
+        for j in ['N','NE','E','SE','S','W','NW']:
+            try:
+                r.append(c.loc[i,j]["pct"])
+            except KeyError:
+                r.append(0.0)
+        ret[i] = r
+
+    return ret
+
+
+def windspeed_class(x):
+    if x < 5:
+        return "<5 m/s"
+    elif x < 10:
+        return "5-10 m/s"
+    elif x <= 20:
+        return "10-20 m/s"
+    else:
+        return ">20 m/s"
+
+
+def direction_class(x):
+    if (x >= (360.0-45.0/2)) or (x < (45.0/2)):
+        return "N"
+    elif x < 22.5+45:
+        return "NE"
+    elif x < 90+22.5:
+        return "E"
+    elif x < 135+22.5:
+        return "SE"
+    elif x < 180+22.5:
+        return "S"
+    elif x < 225+22.5:
+        return "SW"
+    elif x < 270+22.5:
+        return "W"
+    else:
+        return "NW"

@@ -1,4 +1,4 @@
-from timeit import *
+from timing import *
 from invalid_usage import InvalidUsage
 from helpers import *
 from hsds_helpers import *

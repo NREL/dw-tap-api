@@ -1,6 +1,6 @@
 import h5pyd
 from invalid_usage import *
-from timeit import *
+from timing import *
 from pyproj import Proj
 import pandas as pd
 import numpy as np
