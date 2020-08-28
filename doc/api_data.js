@@ -23,8 +23,8 @@ define({ "api": [
     "url": "",
     "version": "0.0.0",
     "filename": "./apidoc-template/main.js",
-    "group": "/Users/dduplyak/repos/tap-endpoint/apidoc-template/main.js",
-    "groupTitle": "/Users/dduplyak/repos/tap-endpoint/apidoc-template/main.js",
+    "group": "/Users/cphillip/Projects/dwtap/dw-tap-api/apidoc-template/main.js",
+    "groupTitle": "/Users/cphillip/Projects/dwtap/dw-tap-api/apidoc-template/main.js",
     "name": ""
   },
   {
@@ -51,8 +51,8 @@ define({ "api": [
     "url": "",
     "version": "0.0.0",
     "filename": "./doc/main.js",
-    "group": "/Users/dduplyak/repos/tap-endpoint/doc/main.js",
-    "groupTitle": "/Users/dduplyak/repos/tap-endpoint/doc/main.js",
+    "group": "/Users/cphillip/Projects/dwtap/dw-tap-api/doc/main.js",
+    "groupTitle": "/Users/cphillip/Projects/dwtap/dw-tap-api/doc/main.js",
     "name": ""
   },
   {
@@ -152,6 +152,104 @@ define({ "api": [
     },
     "filename": "./api.py",
     "groupTitle": "Wind_Direction"
+  },
+  {
+    "type": "get",
+    "url": "/windrose",
+    "title": "Request windrose estimates",
+    "version": "1.0.0",
+    "name": "GetWindrose",
+    "group": "Wind_Rose",
+    "description": "<p>Convenience function that convolves wind direction and wind speed to create a wind rose as output.</p>",
+    "sampleRequest": [
+      {
+        "url": "tap-api.nrel.gov/v1/windrose?height=50m&lat=40.7128&lon=-74.0059&start_date=20100302&stop_date=20120101"
+      }
+    ],
+    "success": {
+      "fields": {
+        "Success 200": [
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "JSON",
+            "description": "<p>with percentage observations in each of 8 radial segments (N, NE, E, SE, S, SW, W, NW) and each of 4 wind speed classes (11-14 mps, 8-11 mps, 5-8 mps, less than 5 mps) and all together (&quot;All&quot;)</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Example output on success:",
+          "content": "{\"11-14 m/s\": [77.5, 72.5, 70.0, 45.0, 22.5, 42.5, 40.0, 62.5], \"8-11 m/s\": [57.5, 50.0, 45.0, 35.0, 20.0, 22.5, 37.5, 55.0], \"5-8 m/s\": [40.0, 30.0, 30.0, 35.0, 7.5, 7.5, 32.5, 40.0], \"< 5 m/s\": [20.0, 7.5, 15.0, 22.5, 2.5, 2.5, 12.5, 22.5], \"All\": [5.0,10.0,50.0,35.0,0.0] }",
+          "type": "json"
+        }
+      ]
+    },
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "Float",
+            "optional": false,
+            "field": "height",
+            "description": "<p>Height (in meters) for which the wind direction estimates are requested; notation: <code>XXm</code>, where XX is an integer of float</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "Float",
+            "optional": false,
+            "field": "lat",
+            "description": "<p>Latitude (in degrees) for a particular site</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "Float",
+            "optional": false,
+            "field": "lon",
+            "description": "<p>Longitude (in degrees) for a particular site</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "start_date",
+            "description": "<p>Beginning of the time interval in the format: YYYYMMDD</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "stop_date",
+            "description": "<p>End of the time interval in the format: YYYYMMDD</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": true,
+            "field": "username",
+            "description": "<p>Optional attribute of the HSDS credentials</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": true,
+            "field": "password",
+            "description": "<p>Optional attribute of the HSDS credentials</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": true,
+            "field": "api_key",
+            "description": "<p>Optional attribute of the HSDS credentials. If one of <code>username</code>, <code>password</code>, and <code>api_key</code> is specified, all three of these attributes should be specified. Alternatively, if none of these is specified, the default values will be use for rate-limited, demo access</p>"
+          }
+        ]
+      }
+    },
+    "filename": "./api.py",
+    "groupTitle": "Wind_Rose"
   },
   {
     "type": "get",
