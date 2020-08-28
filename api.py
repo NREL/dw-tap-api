@@ -51,18 +51,18 @@ def handle_invalid_usage(error):
 @app.route('/', methods=['GET'])
 def home():
     # Serve documentation produced by apiDoc
-    return flask.send_file('doc/index.html')
+    return flask.send_file('docs/index.html')
 
-# This helps serve files that are part of the apiDoc output (in /doc)
+# This helps serve files that are part of the apiDoc output (in /docs)
 @app.route('/<foldername>/<path:filename>')
-def doc_folder_file(foldername, filename):
-    return flask.send_from_directory("doc/" + foldername, filename)
+def docs_folder_file(foldername, filename):
+    return flask.send_from_directory("docs/" + foldername, filename)
 
-# This helps serve files that are part of the apiDoc output (in /doc)
+# This helps serve files that are part of the apiDoc output (in /docs)
 @app.route('/<path:filename>')
-def doc_file(filename):
+def docs_file(filename):
     if filename.endswith(".js") or filename.endswith(".json"):
-        return flask.send_from_directory("doc", filename)
+        return flask.send_from_directory("docs", filename)
 
 
 # Fully functional route for windspeed

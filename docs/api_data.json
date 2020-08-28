@@ -1,4 +1,4 @@
-define({ "api": [
+[
   {
     "success": {
       "fields": {
@@ -23,8 +23,8 @@ define({ "api": [
     "url": "",
     "version": "0.0.0",
     "filename": "./apidoc-template/main.js",
-    "group": "/Users/cphillip/Projects/dwtap/dw-tap-api/apidoc-template/main.js",
-    "groupTitle": "/Users/cphillip/Projects/dwtap/dw-tap-api/apidoc-template/main.js",
+    "group": "/Users/dduplyak/repos/tap-endpoint/apidoc-template/main.js",
+    "groupTitle": "/Users/dduplyak/repos/tap-endpoint/apidoc-template/main.js",
     "name": ""
   },
   {
@@ -51,8 +51,8 @@ define({ "api": [
     "url": "",
     "version": "0.0.0",
     "filename": "./doc/main.js",
-    "group": "/Users/cphillip/Projects/dwtap/dw-tap-api/doc/main.js",
-    "groupTitle": "/Users/cphillip/Projects/dwtap/dw-tap-api/doc/main.js",
+    "group": "/Users/dduplyak/repos/tap-endpoint/doc/main.js",
+    "groupTitle": "/Users/dduplyak/repos/tap-endpoint/doc/main.js",
     "name": ""
   },
   {
@@ -363,4 +363,4 @@ define({ "api": [
     "filename": "./api.py",
     "groupTitle": "Wind_Speed"
   }
-] });
+]
