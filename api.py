@@ -86,7 +86,7 @@ def v1_ws():
     "3":"2011-03-02 03:00:00","4":"2011-03-02 04:00:00","5":"2011-03-02 05:00:00"},
     "windspeed":{"0":3.5925824239,"1":5.440796747,"2":4.8400592119,"3":5.4325136517,"4":4.9044365704,"5":5.2218727909}}
 
-    @apiParam {Float} height Height (in meters) for which the windspeed estimates are requested; notation: `XXm`, where XX is an integer of float
+    @apiParam {Float} height Height (in meters) for which the windspeed estimates are requested; notation: `XXm`, where XX is an integer or float
     @apiParam {Float} lat Latitude (in degrees) for a particular site
     @apiParam {Float} lon Longitude (in degrees) for a particular site
     @apiParam {String} start_date Beginning of the time interval in the format: YYYYMMDD
@@ -95,7 +95,7 @@ def v1_ws():
     @apiParam {String} spatial_interpolation Method used for spatial interpolation; allowed: `nearest`, `linear`, `cubic`, `idw`
     @apiParam {String} [username] Optional attribute of the HSDS credentials
     @apiParam {String} [password] Optional attribute of the HSDS credentials
-    @apiParam {String} [api_key] Optional attribute of the HSDS credentials. If one of `username`, `password`, and `api_key` is specified, all three of these attributes should be specified. Alternatively, if none of these is specified, the default values will be use for rate-limited, demo access 
+    @apiParam {String} [api_key] Optional attribute of the HSDS credentials. If one of `username`, `password`, and `api_key` is specified, all three of these attributes should be specified. Alternatively, if none of these is specified, the default values will be use for rate-limited, demo access
     """
 
     print("v1_ws")
@@ -134,7 +134,7 @@ def v1_wd():
     "3":"2011-03-02 03:00:00","4":"2011-03-02 04:00:00","5":"2011-03-02 05:00:00"},
     "winddirection":{"0":188.9596252441,"1":183.7189788818,"2":193.1125793457,"3":184.4605865479,"4":200.0836181641,"5":215.415512085}}
 
-    @apiParam {Float} height Height (in meters) for which the wind direction estimates are requested; notation: `XXm`, where XX is an integer of float
+    @apiParam {Float} height Height (in meters) for which the wind direction estimates are requested; notation: `XXm`, where XX is an integer or float
     @apiParam {Float} lat Latitude (in degrees) for a particular site
     @apiParam {Float} lon Longitude (in degrees) for a particular site
     @apiParam {String} start_date Beginning of the time interval in the format: YYYYMMDD
@@ -175,7 +175,7 @@ def v1_wr():
     @apiSuccessExample Example output on success:
     {"11-14 m/s": [77.5, 72.5, 70.0, 45.0, 22.5, 42.5, 40.0, 62.5], "8-11 m/s": [57.5, 50.0, 45.0, 35.0, 20.0, 22.5, 37.5, 55.0], "5-8 m/s": [40.0, 30.0, 30.0, 35.0, 7.5, 7.5, 32.5, 40.0], "< 5 m/s": [20.0, 7.5, 15.0, 22.5, 2.5, 2.5, 12.5, 22.5], "All": [5.0,10.0,50.0,35.0,0.0] }
 
-    @apiParam {Float} height Height (in meters) for which the wind direction estimates are requested; notation: `XXm`, where XX is an integer of float
+    @apiParam {Float} height Height (in meters) for which the wind direction estimates are requested; notation: `XXm`, where XX is an integer or float
     @apiParam {Float} lat Latitude (in degrees) for a particular site
     @apiParam {Float} lon Longitude (in degrees) for a particular site
     @apiParam {String} start_date Beginning of the time interval in the format: YYYYMMDD
