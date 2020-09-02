@@ -3,6 +3,8 @@ from flask import request, jsonify
 from flask_cors import CORS
 import json
 import argparse
+import threading
+import queue
 
 from windspeed import *
 from winddirection import *
@@ -201,12 +203,32 @@ def v1_wr():
     spatial_interpolation, \
     vertical_interpolation = validated_params_windspeed(request)
 
-    wd_df, wd_debug_info = prepare_winddirection(height, lat, lon, start_date, stop_date, hsds_f, DEBUG_OUTPUT)
+    # Use different threads to get windspeed and winddirection
+    wd_que = queue.Queue()
+    ws_que = queue.Queue()
+    wd_th = threading.Thread(target=lambda q, arglist: q.put(prepare_winddirection(*arglist)),
+                             args=(wd_que, [height, lat, lon,
+                                            start_date, stop_date,
+                                            hsds_f, DEBUG_OUTPUT]),
+                             daemon=True)
+    wd_th.start()
 
-    ws_df, ws_debug_info = prepare_windpseed(height, lat, lon, start_date, stop_date, spatial_interpolation,
-                                                 vertical_interpolation, hsds_f, DEBUG_OUTPUT)
+    ws_th = threading.Thread(target=lambda q, arglist: q.put(prepare_windpseed(*arglist)),
+                             args=(ws_que, [height, lat, lon,
+                                            start_date, stop_date,
+                                            spatial_interpolation,
+                                            vertical_interpolation,
+                                            hsds_f, DEBUG_OUTPUT]),
+                             daemon=True)
+    ws_th.start()
 
-    combined_df = ws_df.merge(wd_df,on='timestamp')
+    # Complete calculations, gather results, and assign to results to right variables
+    wd_th.join()
+    ws_th.join()
+    wd_df, wd_debug_info = wd_que.get()
+    ws_df, ws_debug_info = ws_que.get()
+
+    combined_df = ws_df.merge(wd_df, on='timestamp')
     combined_df["windspeed_class"] = combined_df["windspeed"].apply(windspeed_class)
     combined_df["direction_class"] = combined_df["winddirection"].apply(direction_class)
 
