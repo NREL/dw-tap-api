@@ -63,6 +63,8 @@ def docs_folder_file(foldername, filename):
 def docs_file(filename):
     if filename.endswith(".js") or filename.endswith(".json"):
         return flask.send_from_directory("docs", filename)
+    elif filename == "favicon.ico":
+        return flask.send_from_directory("docs/img", filename)
 
 
 # Fully functional route for windspeed
@@ -106,8 +108,12 @@ def v1_ws():
         vertical_interpolation = validated_params_windspeed(request)
     hsds_f = connected_hsds_file(request,config)
 
-    finalized_df, debug_info = prepare_windpseed(height, lat, lon, start_date, stop_date, spatial_interpolation,
-                                                 vertical_interpolation, hsds_f, DEBUG_OUTPUT)
+    finalized_df, debug_info = prepare_windpseed(
+                                   height, lat, lon,
+                                   start_date, stop_date,
+                                   spatial_interpolation,
+                                   vertical_interpolation,
+                                   hsds_f, DEBUG_OUTPUT)
 
     if DEBUG_OUTPUT:
         return "<br>".join(debug_info)

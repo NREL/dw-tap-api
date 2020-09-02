@@ -62,9 +62,24 @@ def interpolate_spatially(tile_df, neighbor_ts_df,
                                  axis=1)
     return res_df
 
-def prepare_windpseed(height, lat, lon, start_date, stop_date, spatial_interpolation,
-                      vertical_interpolation, hsds_f, debug=False):
+def single_height_spatial_interpolation(args):
+    """ Function run in its own thread when multiple heights are processed.
+    """
+    height, hsds_f, tile_df, tidx, spatial_interpolation, timestamps = args
 
+    dset = hsds_f["windspeed_%dm" % height]
+    neighbor_ts_df = extract_ts_for_neighbors(tile_df, tidx, dset)
+    interpolated_df = interpolate_spatially(tile_df, neighbor_ts_df,
+                                            method=spatial_interpolation,
+                                            neighbors_number=4)
+    interpolated_df["timestamp"] = timestamps
+
+    return interpolated_df
+
+def prepare_windpseed(height, lat, lon,
+                      start_date, stop_date, spatial_interpolation,
+                      vertical_interpolation,
+                      hsds_f, debug=False):
     debug_info = []
 
     heights = available_heights(hsds_f, prefix="windspeed")
@@ -116,57 +131,29 @@ def prepare_windpseed(height, lat, lon, start_date, stop_date, spatial_interpola
         if debug:
             debug_info += df2strings(imol_df)
 
-    if bypass_vertical_interpolation:
-        selected_heights = [int(height)]
-    else:
         height_below, height_above = heights_below_and_above(heights, height)
-        selected_heights = [height_below, height_above]
 
-    xyz_points = []
-    for h_idx, h in enumerate(selected_heights):
-        dset = hsds_f["windspeed_%dm" % h]
+        # Process two heights in parallel, in separate threads
+        tasks = [(height, hsds_f, tile_df, tidx, spatial_interpolation, timestamps)
+                 for height in [height_below, height_above]]
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            futures = [executor.submit(single_height_spatial_interpolation, t) for t in tasks]
+            interpolated = [f.result() for f in futures]
 
-        neighbor_ts_df = extract_ts_for_neighbors(tile_df, tidx, dset)
+        p_below = points.XYZPoint(lat, lon, height_below, 'model',
+                                  timeseries=[timeseries.timeseries(
+                                      interpolated[0]["spatially_interpolated"],
+                                      var="ws")])
+        p_above = points.XYZPoint(lat, lon, height_above, 'model',
+                                  timeseries=[timeseries.timeseries(
+                                      interpolated[1]["spatially_interpolated"],
+                                      var="ws")])
+        xyz_points = [p_below, p_above]
 
-        interpolated_df = interpolate_spatially(tile_df, neighbor_ts_df,
-                                                method=spatial_interpolation,
-                                                neighbors_number=4)
-        interpolated_df["timestamp"] = timestamps
+        interpolated_df = pd.DataFrame({"height_below": interpolated[0]["spatially_interpolated"],
+                                        "height_above": interpolated[1]["spatially_interpolated"],
+                                        "timestamp": interpolated[0]["timestamp"]})
 
-        if debug:
-            debug_info += df2strings(interpolated_df)
-
-        if not bypass_vertical_interpolation:
-            p = points.XYZPoint(lat, lon, h, 'model',
-                                timeseries=[timeseries.timeseries(
-                                    interpolated_df["spatially_interpolated"],
-                                    var="ws")])
-            xyz_points.append(p)
-
-            # Special handling for processing two heights in this case
-            if h_idx == 0:
-                interpolated_df_combined = interpolated_df.rename(
-                                           columns={"spatially_interpolated":
-                                                    "height_below"})
-            elif h_idx == 1:
-                interpolated_df_combined["height_above"] = \
-                    interpolated_df["spatially_interpolated"]
-                interpolated_df = interpolated_df_combined
-            else:
-                raise InvalidUsage(("Height selection should pick "
-                                    "only 2 heights in this case, not more."))
-
-    if bypass_vertical_interpolation:
-        interpolated_df["timestamp"] = interpolated_df["timestamp"].astype(str)
-        finalized_df = interpolated_df[["timestamp",
-                                        "spatially_interpolated"]
-                                       ].reset_index(drop=True).rename(
-                                       columns={"spatially_interpolated":
-                                                "windspeed"})
-
-        return (finalized_df,debug_info)
-
-    else:
         xy_point = points.XYPoint.from_xyz_points(xyz_points)
         xy_point.set_timeseries(timeseries.timeseries(imol_df["imol"],
                                 var='stability'))
@@ -183,7 +170,29 @@ def prepare_windpseed(height, lat, lon, start_date, stop_date, spatial_interpola
 
         interpolated_df["timestamp"] = interpolated_df["timestamp"].astype(str)
 
-        return (interpolated_df[["timestamp", "windspeed"]].reset_index(drop=True),debug_info)
+        finalized_df = interpolated_df[["timestamp", "windspeed"]].reset_index(drop=True)
+
+    else:
+        xyz_points = []
+
+        dset = hsds_f["windspeed_%dm" % height]
+        neighbor_ts_df = extract_ts_for_neighbors(tile_df, tidx, dset)
+        interpolated_df = interpolate_spatially(tile_df, neighbor_ts_df,
+                                                method=spatial_interpolation,
+                                                neighbors_number=4)
+        interpolated_df["timestamp"] = timestamps
+        if debug:
+            debug_info += df2strings(interpolated_df)
+
+        interpolated_df["timestamp"] = interpolated_df["timestamp"].astype(str)
+        finalized_df = interpolated_df[["timestamp",
+                                        "spatially_interpolated"]
+                                       ].reset_index(drop=True).rename(
+                                       columns={"spatially_interpolated":
+                                                "windspeed"})
+
+    return (finalized_df, debug_info)
+
 
 @timeit
 def validated_params_windspeed(request):
