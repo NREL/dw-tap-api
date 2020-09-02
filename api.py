@@ -69,7 +69,6 @@ def docs_file(filename):
 
 # Fully functional route for windspeed
 @app.route('/v1/timeseries/windspeed', methods=['GET'])
-@timeit
 def v1_ws():
     """
     @api {get} /timeseries/windspeed Request windspeed estimates
@@ -156,15 +155,19 @@ def v1_wd():
         start_date, stop_date = validated_params_winddirection(request)
     hsds_f = connected_hsds_file(request,config)
 
-    finalized_df, debug_info = prepare_winddirection(height, lat, lon, start_date, stop_date, hsds_f, DEBUG_OUTPUT)
+    finalized_df, debug_info = prepare_winddirection(
+                                   height, lat, lon,
+                                   start_date, stop_date,
+                                   hsds_f, DEBUG_OUTPUT)
 
     if DEBUG_OUTPUT:
         return "<br>".join(debug_info)
     else:
         return finalized_df.to_json()
 
-# Fully functional route for winddirection
+# Fully functional route for windrose
 @app.route('/v1/windrose', methods=['GET'])
+@timeit
 def v1_wr():
     """
     @api {get} /windrose Request windrose estimates
