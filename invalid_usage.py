@@ -1,3 +1,18 @@
+# -*- coding: utf-8 -*-
+""" Code for raising custom exceptions.
+
+Define a class for custom exception handling. This class helps avoid "leaking"
+code when something breaks -- this is a recommended way in development
+of pubic-facing APIs.
+
+Example:
+    try:
+        ...
+    except ValueError:
+        raise InvalidUsage("Problem!...")
+"""
+
+
 class InvalidUsage(Exception):
     status_code = 400
 

@@ -7,12 +7,16 @@ and overall procedure for preparing windspeed datasets
 (which currently implements the nearest-neighbor vertical interpolation).
 """
 
-from timing import *
+import numpy as np
+
+from timing import timeit
 from invalid_usage import InvalidUsage
 from helpers import *
 from hsds_helpers import *
 
-def prepare_winddirection(height, lat, lon, start_date, stop_date, hsds_f, debug=False):
+
+def prepare_winddirection(height, lat, lon,
+                          start_date, stop_date, hsds_f, debug=False):
     debug_info = []
     heights = available_heights(hsds_f, prefix="winddirection")
     datasets = available_datasets(hsds_f)
@@ -44,14 +48,14 @@ def prepare_winddirection(height, lat, lon, start_date, stop_date, hsds_f, debug
     neighbor_ts_df["timestamp"] = timestamps
 
     neighbor_ts_df["timestamp"] = neighbor_ts_df["timestamp"].astype(str)
-    finalized_df = neighbor_ts_df[["timestamp", "winddirection"]].reset_index(drop=True)
+    finalized_df = neighbor_ts_df[["timestamp",
+                                   "winddirection"]].reset_index(drop=True)
 
     if debug:
         debug_info += df2strings(tile_df)
         debug_info += df2strings(neighbor_ts_df)
 
-
-    return (finalized_df,debug_info)
+    return (finalized_df, debug_info)
 
 
 @timeit

@@ -7,14 +7,19 @@ spatial interpolation, and overall procedure for preparing windspeed datasets
 (which includes calling vertical interpolation routines).
 """
 
+import numpy as np
+import pandas as pd
+import concurrent
+from scipy.interpolate import griddata
+
 import points
 import timeseries
 import interpolation
 from invalid_usage import InvalidUsage
 from hsds_helpers import *
-import numpy as np
-from scipy.interpolate import griddata
 from helpers import *
+from timing import timeit
+
 
 def interpolate_spatially_row(row, neighbor_xy_centered, method='nearest'):
     """ This function provides per-row spatial interpolatoin using
@@ -71,6 +76,7 @@ def interpolate_spatially(tile_df, neighbor_ts_df,
                                  axis=1)
     return res_df
 
+
 def single_height_spatial_interpolation(args):
     """ Function run in its own thread when multiple heights are processed.
     """
@@ -84,6 +90,7 @@ def single_height_spatial_interpolation(args):
     interpolated_df["timestamp"] = timestamps
 
     return interpolated_df
+
 
 def prepare_windpseed(height, lat, lon,
                       start_date, stop_date, spatial_interpolation,
@@ -143,25 +150,33 @@ def prepare_windpseed(height, lat, lon,
         height_below, height_above = heights_below_and_above(heights, height)
 
         # Process two heights in parallel, in separate threads
-        tasks = [(height, hsds_f, tile_df, tidx, spatial_interpolation, timestamps)
+        tasks = [(height, hsds_f, tile_df, tidx,
+                  spatial_interpolation, timestamps)
                  for height in [height_below, height_above]]
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            futures = [executor.submit(single_height_spatial_interpolation, t) for t in tasks]
+            futures = [executor.submit(
+                       single_height_spatial_interpolation, t)
+                       for t in tasks]
             interpolated = [f.result() for f in futures]
 
         p_below = points.XYZPoint(lat, lon, height_below, 'model',
                                   timeseries=[timeseries.timeseries(
-                                      interpolated[0]["spatially_interpolated"],
-                                      var="ws")])
+                                    interpolated[0]["spatially_interpolated"],
+                                    var="ws")])
         p_above = points.XYZPoint(lat, lon, height_above, 'model',
                                   timeseries=[timeseries.timeseries(
-                                      interpolated[1]["spatially_interpolated"],
-                                      var="ws")])
+                                    interpolated[1]["spatially_interpolated"],
+                                    var="ws")])
         xyz_points = [p_below, p_above]
 
-        interpolated_df = pd.DataFrame({"height_below": interpolated[0]["spatially_interpolated"],
-                                        "height_above": interpolated[1]["spatially_interpolated"],
-                                        "timestamp": interpolated[0]["timestamp"]})
+        interpolated_df = pd.DataFrame({"height_below":
+                                        interpolated[0][
+                                            "spatially_interpolated"],
+                                        "height_above":
+                                        interpolated[1][
+                                            "spatially_interpolated"],
+                                        "timestamp": interpolated[0][
+                                            "timestamp"]})
 
         xy_point = points.XYPoint.from_xyz_points(xyz_points)
         xy_point.set_timeseries(timeseries.timeseries(imol_df["imol"],
@@ -179,7 +194,8 @@ def prepare_windpseed(height, lat, lon,
 
         interpolated_df["timestamp"] = interpolated_df["timestamp"].astype(str)
 
-        finalized_df = interpolated_df[["timestamp", "windspeed"]].reset_index(drop=True)
+        finalized_df = interpolated_df[["timestamp",
+                                        "windspeed"]].reset_index(drop=True)
 
     else:
         xyz_points = []

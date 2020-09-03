@@ -7,8 +7,8 @@ extract various timeseries, etc.
 """
 
 import h5pyd
-from invalid_usage import *
-from timing import *
+from invalid_usage import InvalidUsage
+from timing import timeit
 from pyproj import Proj
 import pandas as pd
 import numpy as np
@@ -16,8 +16,9 @@ import cartopy.crs as ccrs
 import dateutil
 import concurrent.futures
 
+
 @timeit
-def connected_hsds_file(request,config):
+def connected_hsds_file(request, config):
     """ Return a file object that corresponds to the HSDS resource
     specified in the request (using domain, endpoint, username, password,
     and api_key parameters).
@@ -108,6 +109,7 @@ def available_datasets(f):
         raise InvalidUsage("Problem with processing WTK datasets.")
     return datasets
 
+
 # This function finds the nearest x/y indices for a given lat/lon.
 # Rather than fetching the entire coordinates database, which is 500+ MB, this
 # uses the Proj4 library to find a nearby point and converts to x/y indices
@@ -127,6 +129,7 @@ def indicesForCoord(f, lat_index, lon_index):
     ij = [int(round(x/2000)) for x in delta]
     return tuple(reversed(ij))
 
+
 @timeit
 def find_tile(f, lat, lon, radius=3, trim=4):
     """ Return dataframe with information about gridpoints in resource f that
@@ -139,7 +142,7 @@ def find_tile(f, lat, lon, radius=3, trim=4):
     # Appropriate for lat/lon pairs
     crs_from = ccrs.PlateCarree()
 
-    # This projection uses USA_Contiguous_Albers_Equal_Area_Conic_USGS_version --
+    # This projection uses USA_Contiguous_Albers_Equal_Area_Conic_USGS_version:
     # typical projection for historical USGS maps of the lower 48
     # Reference: https://spatialreference.org/ref/sr-org/usa_contiguous_/
     # albers_equal_area_conic_usgs_version-2/
@@ -183,8 +186,10 @@ def find_tile(f, lat, lon, radius=3, trim=4):
     res["y_idx"] = pd.to_numeric(res["y_idx"], downcast='integer')
     return res.sort_values("d")[:trim].reset_index(drop=True)
 
+
 def coordXform(orig_crs, target_crs, x, y):
     return target_crs.transform_points(orig_crs, x, y)
+
 
 def time_indices(f, start_date, stop_date):
     """ Return lists of time indices and timestamps corresponding to the the
@@ -198,6 +203,7 @@ def time_indices(f, start_date, stop_date):
     selected_inices = selected.index.tolist()
     selected_timestamps = selected.datetime.tolist()
     return selected_inices, selected_timestamps
+
 
 @timeit
 def extract_ts_for_neighbors(tile_df, tidx, dset, impl="parallel"):
@@ -217,6 +223,7 @@ def extract_ts_for_neighbors(tile_df, tidx, dset, impl="parallel"):
         raise ValueError(("Invalid usage of extract_ts_for_neighbors()."
                           "Choose implementation: sequential or parallel."))
 
+
 @timeit
 def extract_ts_for_neighbors_parallel(tile_df, tidx, dset):
     """ Parallel (fast) implementation of extract_ts_for_neighbors().
@@ -232,6 +239,7 @@ def extract_ts_for_neighbors_parallel(tile_df, tidx, dset):
 
     return res_df
 
+
 @timeit
 def extract_ts_for_neighbors_sequential(tile_df, tidx, dset):
     """ Sequential (slow) implementation of extract_ts_for_neighbors().
@@ -244,7 +252,7 @@ def extract_ts_for_neighbors_sequential(tile_df, tidx, dset):
     for idx, row in tile_df.iterrows():
 
         neighbor_data = dset[tidx_min:tidx_max+1,
-                        row.x_idx, row.y_idx]
+                             row.x_idx, row.y_idx]
         column_name = "%d-%d" % (row.x_idx, row.y_idx)
         res_df[column_name] = neighbor_data
 

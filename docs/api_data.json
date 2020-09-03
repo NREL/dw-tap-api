@@ -50,9 +50,9 @@
     "type": "",
     "url": "",
     "version": "0.0.0",
-    "filename": "./doc/main.js",
-    "group": "/Users/dduplyak/repos/tap-endpoint/doc/main.js",
-    "groupTitle": "/Users/dduplyak/repos/tap-endpoint/doc/main.js",
+    "filename": "./docs/main.js",
+    "group": "/Users/dduplyak/repos/tap-endpoint/docs/main.js",
+    "groupTitle": "/Users/dduplyak/repos/tap-endpoint/docs/main.js",
     "name": ""
   },
   {
@@ -96,7 +96,7 @@
             "type": "Float",
             "optional": false,
             "field": "height",
-            "description": "<p>Height (in meters) for which the wind direction estimates are requested; notation: <code>XXm</code>, where XX is an integer of float</p>"
+            "description": "<p>Height (in meters) for which the wind direction estimates are requested; notation: <code>XXm</code>, where XX is an integer or float</p>"
           },
           {
             "group": "Parameter",
@@ -194,7 +194,7 @@
             "type": "Float",
             "optional": false,
             "field": "height",
-            "description": "<p>Height (in meters) for which the wind direction estimates are requested; notation: <code>XXm</code>, where XX is an integer of float</p>"
+            "description": "<p>Height (in meters) for which the wind direction estimates are requested; notation: <code>XXm</code>, where XX is an integer or float</p>"
           },
           {
             "group": "Parameter",
@@ -261,7 +261,7 @@
     "description": "<p>Request windspeed estimates for a particular site, for a specified height, and corresponding to the given time interval.</p>",
     "sampleRequest": [
       {
-        "url": "tap-api.nrel.gov/v1/timeseries/windspeed?height=50m&lat=40.7128&lon=-74.0059&start_date=20100302&stop_date=20120101&vertical_interpolation=linear&spatial_interpolation=idw"
+        "url": "tap-api.nrel.gov/v1/timeseries/windspeed?height=50m\n&lat=40.7128&lon=-74.0059&start_date=20100302&stop_date=20120101\n&vertical_interpolation=linear&spatial_interpolation=idw"
       }
     ],
     "success": {
@@ -279,7 +279,7 @@
       "examples": [
         {
           "title": "Example output on success:",
-          "content": "{\"timestamp\":{\"0\":\"2011-03-02 00:00:00\",\"1\":\"2011-03-02 01:00:00\",\"2\":\"2011-03-02 02:00:00\",\n\"3\":\"2011-03-02 03:00:00\",\"4\":\"2011-03-02 04:00:00\",\"5\":\"2011-03-02 05:00:00\"},\n\"windspeed\":{\"0\":3.5925824239,\"1\":5.440796747,\"2\":4.8400592119,\"3\":5.4325136517,\"4\":4.9044365704,\"5\":5.2218727909}}",
+          "content": "{\"timestamp\":{\"0\":\"2011-03-02 00:00:00\",\"1\":\"2011-03-02 01:00:00\",\n\"2\":\"2011-03-02 02:00:00\",\n\"3\":\"2011-03-02 03:00:00\",\"4\":\"2011-03-02 04:00:00\",\n\"5\":\"2011-03-02 05:00:00\"},\n\"windspeed\":{\"0\":3.5925824239,\"1\":5.440796747,\"2\":4.8400592119,\n\"3\":5.4325136517,\"4\":4.9044365704,\"5\":5.2218727909}}",
           "type": "json"
         }
       ]
@@ -292,7 +292,7 @@
             "type": "Float",
             "optional": false,
             "field": "height",
-            "description": "<p>Height (in meters) for which the windspeed estimates are requested; notation: <code>XXm</code>, where XX is an integer of float</p>"
+            "description": "<p>Height (in meters) for which the windspeed estimates are requested; notation: <code>XXm</code>, where XX is an integer or float</p>"
           },
           {
             "group": "Parameter",
