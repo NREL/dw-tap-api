@@ -1,3 +1,28 @@
+# -*- coding: utf-8 -*-
+"""Main API module.
+
+This file includes all components needed to run a Flask app with several
+endpoints, serving windspeed, winddirection, and windrose data.
+
+Getting Started:
+    $ conda env create -f environment.yml
+    $ conda activate dw-tap-api
+Examples:
+    - Run a development instance (on port 8080, as specified in config.json):
+    $ python api.py
+    or
+    $ python api.py -d
+    or
+    # python api.py --development
+    - Run a production instance
+        (on port 80; again, refer to config.json for details):
+    $ python api.py -p
+    or
+    # python api.py --production
+
+Additional info about running the app is in README.md.
+"""
+
 import flask
 from flask import request, jsonify
 from flask_cors import CORS

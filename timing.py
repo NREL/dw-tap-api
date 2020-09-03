@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+""" Code for timing functions.
+
+Define a decorator that can be easily used for timing function exection.
+
+Example:
+    @timeit
+    def interpolaton(args):
+        ...
+"""
+
 import time
 
 def timeit(method):

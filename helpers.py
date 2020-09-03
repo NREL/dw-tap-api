@@ -1,6 +1,15 @@
+# -*- coding: utf-8 -*-
+"""Helpers module.
+
+This file includes functions for data manipulation tasks,
+either windspeed/winddirection-specific or
+related to handling Pandas dataframes.
+"""
+
 import datetime
 from invalid_usage import InvalidUsage
 import numpy as np
+
 
 def heights_below_and_above(all_heights, selected_height):
     """ Out of the given list of all heights, return the two
@@ -33,25 +42,32 @@ def validated_dt(date_str):
 
 def windrose_from_df(df):
     # count per timestamp windspeed and direction class
-    a = df[['timestamp','windspeed_class','direction_class']].groupby(['windspeed_class','direction_class']).count()
+    a = df[['timestamp', 'windspeed_class',
+            'direction_class']].groupby(
+                ['windspeed_class', 'direction_class']).count()
     a = a.reset_index()
 
     # count per direction class
-    b = df[['timestamp','direction_class']].groupby(['direction_class']).count()
+    b = df[['timestamp',
+            'direction_class']].groupby(['direction_class']).count()
     b = b.reset_index()
 
     # combine and calculate percentages
-    c = a.reset_index().merge(b.reset_index(),on='direction_class',suffixes=('_a','_b'),how='left')
+    c = a.reset_index().merge(b.reset_index(),
+                              on='direction_class',
+                              suffixes=('_a', '_b'), how='left')
     c["pct"] = 100.0*c['timestamp_a']/c['timestamp_b']
-    c = c[['windspeed_class','direction_class','pct']].set_index(['windspeed_class','direction_class'])
+    c = c[['windspeed_class',
+           'direction_class',
+           'pct']].set_index(['windspeed_class', 'direction_class'])
 
     # calculate percentage for each wind class within each direction
     ret = {}
-    for i in ['<5 m/s','5-10 m/s','10-20 m/s','>20 m/s']:
+    for i in ['<5 m/s', '5-10 m/s', '10-20 m/s', '>20 m/s']:
         r = []
-        for j in ['N','NE','E','SE','S','W','NW']:
+        for j in ['N', 'NE', 'E', 'SE', 'S', 'W', 'NW']:
             try:
-                r.append(c.loc[i,j]["pct"])
+                r.append(c.loc[i, j]["pct"])
             except KeyError:
                 r.append(0.0)
         ret[i] = r
@@ -60,7 +76,7 @@ def windrose_from_df(df):
     b = b.set_index('direction_class')
     bs = b["timestamp"].sum()
     r = []
-    for j in ['N','NE','E','SE','S','W','NW']:
+    for j in ['N', 'NE', 'E', 'SE', 'S', 'W', 'NW']:
         try:
             r.append(100*b.loc[j]["timestamp"]/bs)
         except KeyError:

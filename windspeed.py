@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+"""Windspeed data preparation.
+
+This file includes the code involved in preparing windspeed timeseries:
+parameter validaton (specific to windspeed requests),
+spatial interpolation, and overall procedure for preparing windspeed datasets
+(which includes calling vertical interpolation routines).
+"""
+
 import points
 import timeseries
 import interpolation

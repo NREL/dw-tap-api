@@ -1,3 +1,11 @@
+# -*- coding: utf-8 -*-
+"""HSDS Interface.
+
+This file includes functions that allow interacting with HSDS:
+connect to it using specified credentials, extract available heights,
+extract various timeseries, etc.
+"""
+
 import h5pyd
 from invalid_usage import *
 from timing import *

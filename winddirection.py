@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+"""Winddirection data preparation.
+
+This file includes the code involved in preparing winddirection timeseries:
+parameter validaton (specific to winddirection requests),
+and overall procedure for preparing windspeed datasets
+(which currently implements the nearest-neighbor vertical interpolation).
+"""
+
 from timing import *
 from invalid_usage import InvalidUsage
 from helpers import *
