@@ -1,5 +1,12 @@
 # API Endpoint for DW-TAP Project
 
+## About
+
+This is an endpoint repository -- it contains the code that runs a Flask app serving the processed WTK data. 
+The processing includes height selection, time interval selection, spatial interpolation, vertical interpolation, and wind rose calculations.    
+
+## How To Use
+
 ### Deploy as a Container (requires Docker on the host)
 
 Build:
@@ -43,7 +50,7 @@ Notice the `--development` flag in the command above -- it makes the endpoint ru
 
 To see how these production and development modes are configured, refer to `config.json` and see what `host` and `port` values are specified.  
 
-### Documentation
+## Documentation
 
 Interactive HTML page with API documentation is produced using apiDoc. It can be recreated using (requires installing apiDoc locally):
 ```
@@ -51,14 +58,14 @@ apidoc -i . -o docs/ -t apidoc-template
 ```
 The output can be seen by opening `docs/index.html` in a browser. The flask app is configured to serve this documentation page (and related files) at "/" (i.e., "home") route.
 
-### Credit
-
-Code in this repository was developed by Dmitry Duplyakin (dmitry.duplyakin@nrel.gov), Caleb Phillips (caleb.phillips@nrel.gov), and Sagi Zisman (sagi.zisman@nrel.gov) to demonstrate the techniques used in distributed wind resource assessment at the National Rewnable Energy Laboratory in Golden, Colorado, USA.
-
 ### More about the Project
 
 To read a concise summary of the DW-TAP project, please refer to: https://www.energy.gov/sites/prod/files/2020/02/f72/tap-fact-sheet_0.pdf
 
-### License
+## Credit
+
+Code in this repository was developed by Dmitry Duplyakin (dmitry.duplyakin@nrel.gov), Caleb Phillips (caleb.phillips@nrel.gov), and Sagi Zisman (sagi.zisman@nrel.gov) to demonstrate the techniques used in distributed wind resource assessment at the National Renewable Energy Laboratory in Golden, Colorado, USA.
+
+## License
 
 TBD
