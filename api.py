@@ -21,6 +21,9 @@ Examples:
     # python api.py --production
 
 Additional info about running the app is in README.md.
+
+Written by: Dmitry Duplyakin (dmitry.duplyakin@nrel.gov) and Caleb Phillips (caleb.phillips@nrel.gov) 
+in collaboration with the National Renewable Energy Laboratories.
 """
 
 import flask
