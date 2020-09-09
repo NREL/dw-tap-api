@@ -51,3 +51,14 @@ apidoc -i . -o docs/ -t apidoc-template
 ```
 The output can be seen by opening `docs/index.html` in a browser. The flask app is configured to serve this documentation page (and related files) at "/" (i.e., "home") route.
 
+### Credit
+
+Code in this repository was developed by Dmitry Duplyakin (dmitry.duplyakin@nrel.gov), Caleb Phillips (caleb.phillips@nrel.gov), and Sagi Zisman (sagi.zisman@nrel.gov) to demonstrate the techniques used in distributed wind resource assessment at the National Rewnable Energy Laboratory in Golden, Colorado, USA.
+
+### More about the Project
+
+To read a concise summary of the DW-TAP project, please refer to: https://www.energy.gov/sites/prod/files/2020/02/f72/tap-fact-sheet_0.pdf
+
+### License
+
+TBD
