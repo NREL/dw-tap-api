@@ -1,10 +1,19 @@
-"""
-The purpose of this module is to define a class which will associate a set of model points with a desired point to be interpolated.
-The class will keep the state of interpolation in the attribute called model points.
+# -*- coding: utf-8 -*-
+"""Class that manages vertical interpolations.
 
-For example:
+A class which will associate a set of model points with a desired point to be interpolated.
+The class keeps the state of interpolation in the attribute called model points.
 
-If a point needs both vertical and spatial interpolation, but vertical interpolation is done first, then, the set model points will first contain the set of all TS (x,y,z)and then be reduced to a set (x,y,z_desired). Then, spatial interpolation can be performed on the set to reduce it further to (x_desired, y_desired, z_desired)
+A set of model points will first contain the set of all TS (x,y,z) and then be reduced to a set (x,y,z_desired). 
+
+Examples:
+    - Instantiate an interpolation object:
+        interpolation.interpolation(
+                                   XYZPoint_desired , 
+                                   [XYZPoint_model1, XYZPoint_model2, XYZPoint_model3], 
+                                   vertically_interpolate = True, 
+                                   vertical_interpolation_techniques = ['nn','stability_adjusted_log_law']
+                                   )
 
 """
 
