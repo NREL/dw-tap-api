@@ -1,9 +1,34 @@
+# -*- coding: utf-8 -*-
+""" Code implementing vertical interpolation functions.
+
+A collection of vertical interpolation functions used for
+estimating the wind speed at arbitrary heights. Functions
+include statistical and domain-specific approaches. The
+neutral log law method requires surface roughness data
+which is associated with (land cover) NLCD tiles.
+
+Functions act on known input heights and wind speeds (called
+model points but could be observed data). Both the model and
+desired points utilize the Points Class to organize
+interpolations.
+
+Implementation of domain-specific approaches is based on
+theory developed in the following sources:
+
+* M. C. Holtslag, "Estimating atmospheric stability from observations and correcting wind sheer models accordingly," Journal of Physics: Conference Series, vol. 444, no. 012052, 2014. 
+* W. Brutsaert, Evaporation into the Atmosphere, Kluwer Academic Publishers, 1982.
+* E. A. M. D. B. G. S. A. Hsu, "Determining the Power-Law Wind-Profile Exponent under Near-Neutral Stability Conditions at Sea," Journal of Applied Meteorology, vol. 33, pp. 757-765, 1994
+
+
 import pandas as pd
 import numpy as np
 from scipy.interpolate import BarycentricInterpolator
 
 """
-Vertical Interpolation Functions takes a set of model points and a desired point and calculates/returns a timeseries object that represents the vertically interpolated time series.
+Vertical Interpolation Functions takes a set of 
+model points and a desired point and 
+calculates/returns a timeseries object that 
+represents the vertically interpolated time series.
 """
 
 #Function 1: Nearest Neighbor Approach
