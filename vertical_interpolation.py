@@ -19,6 +19,7 @@ theory developed in the following sources:
 * W. Brutsaert, Evaporation into the Atmosphere, Kluwer Academic Publishers, 1982.
 * E. A. M. D. B. G. S. A. Hsu, "Determining the Power-Law Wind-Profile Exponent under Near-Neutral Stability Conditions at Sea," Journal of Applied Meteorology, vol. 33, pp. 757-765, 1994
 
+"""
 
 import pandas as pd
 import numpy as np
