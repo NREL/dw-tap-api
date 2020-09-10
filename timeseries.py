@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+"""Class representing a Timeseries.
+
+This class is a light encapsulation of a Pandas Series
+object with a datetime index. Metadata on the variable
+and unit is also added.
+
+"""
+
 class timeseries():
 
 	"""This class represents a Timeseries class"""
