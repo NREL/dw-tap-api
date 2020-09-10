@@ -1,3 +1,28 @@
+# -*- coding: utf-8 -*-
+""" Class representing XYZ and XY Points.
+
+The class encapsulates data and metadata
+for a particular point of lat/lon and height.
+For instance, the class can be used to associate
+wind speed or direction time series data with a certain
+lat/lon and height. 
+
+Two classes are defined:
+- XYPoint = Container of XYZ points, along with time series and metadata specific
+  to a geographical location
+
+- XYZPoint = Container of time series and metadata of a specific
+  height.
+
+A collection of points can represent model input to
+interpolation functions or estimation routines.
+
+Examples:
+-Initialize an XYZ Point:
+	point.XYZPoint(20, 20, 50, 'model') # lat = 20, lon = 20, height = 50
+
+"""
+
 from abc import ABC
 import pandas as pd
 
