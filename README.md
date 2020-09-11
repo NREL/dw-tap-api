@@ -68,4 +68,4 @@ Code in this repository was developed by Dmitry Duplyakin (dmitry.duplyakin@nrel
 
 ## License
 
-TBD
+Refer to the file called: `LICENSE`.
