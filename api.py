@@ -110,7 +110,7 @@ def v1_ws():
     @apiDescription Request windspeed estimates for a particular site,
     for a specified height, and corresponding to the given time interval.
 
-    @apiSampleRequest tap-api.nrel.gov/v1/timeseries/windspeed?height=50m
+    @apiSampleRequest dw-tap.nrel.gov/v1/timeseries/windspeed?height=50m
 &lat=40.7128&lon=-74.0059&start_date=20100302&stop_date=20120101
 &vertical_interpolation=linear&spatial_interpolation=idw
 
@@ -178,7 +178,7 @@ def v1_wd():
     for a specified height, and corresponding to the given time interval.
     `Nearest-neighbor` is used for both spatial and vertical interpolations.
 
-    @apiSampleRequest tap-api.nrel.gov/v1/timeseries/winddirection?height=50m
+    @apiSampleRequest dw-tap.nrel.gov/v1/timeseries/winddirection?height=50m
 &lat=40.7128&lon=-74.0059&start_date=20100302&stop_date=20120101
 
     @apiSuccess {String} JSON JSON with `timestamp` and `winddirection` series
@@ -237,7 +237,7 @@ def v1_wr():
     @apiDescription Convenience function that convolves wind direction
     and wind speed to create a wind rose as output.
 
-    @apiSampleRequest tap-api.nrel.gov/v1/windrose?height=50m&
+    @apiSampleRequest dw-tap.nrel.gov/v1/windrose?height=50m&
 lat=40.7128&lon=-74.0059&start_date=20100302&stop_date=20120101
 
     @apiSuccess {String} JSON with percentage observations in each

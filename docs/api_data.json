@@ -65,7 +65,7 @@
     "description": "<p>Request wind direction estimates for a particular site, for a specified height, and corresponding to the given time interval. <code>Nearest-neighbor</code> is used for both spatial and vertical interpolations.</p>",
     "sampleRequest": [
       {
-        "url": "tap-api.nrel.gov/v1/timeseries/winddirection?height=50m&lat=40.7128&lon=-74.0059&start_date=20100302&stop_date=20120101"
+        "url": "dw-tap.nrel.gov/v1/timeseries/winddirection?height=50m\n&lat=40.7128&lon=-74.0059&start_date=20100302&stop_date=20120101"
       }
     ],
     "success": {
@@ -83,7 +83,7 @@
       "examples": [
         {
           "title": "Example output on success:",
-          "content": "{\"timestamp\":{\"0\":\"2011-03-02 00:00:00\",\"1\":\"2011-03-02 01:00:00\",\"2\":\"2011-03-02 02:00:00\",\n\"3\":\"2011-03-02 03:00:00\",\"4\":\"2011-03-02 04:00:00\",\"5\":\"2011-03-02 05:00:00\"},\n\"winddirection\":{\"0\":188.9596252441,\"1\":183.7189788818,\"2\":193.1125793457,\"3\":184.4605865479,\"4\":200.0836181641,\"5\":215.415512085}}",
+          "content": "{\"timestamp\":{\"0\":\"2011-03-02 00:00:00\",\"1\":\"2011-03-02 01:00:00\",\n\"2\":\"2011-03-02 02:00:00\",\n\"3\":\"2011-03-02 03:00:00\",\"4\":\"2011-03-02 04:00:00\",\n\"5\":\"2011-03-02 05:00:00\"},\n\"winddirection\":{\"0\":188.9596252441,\"1\":183.7189788818,\"2\":193.1125793457,\n\"3\":184.4605865479,\"4\":200.0836181641,\"5\":215.415512085}}",
           "type": "json"
         }
       ]
@@ -163,7 +163,7 @@
     "description": "<p>Convenience function that convolves wind direction and wind speed to create a wind rose as output.</p>",
     "sampleRequest": [
       {
-        "url": "tap-api.nrel.gov/v1/windrose?height=50m&lat=40.7128&lon=-74.0059&start_date=20100302&stop_date=20120101"
+        "url": "dw-tap.nrel.gov/v1/windrose?height=50m&\nlat=40.7128&lon=-74.0059&start_date=20100302&stop_date=20120101"
       }
     ],
     "success": {
@@ -181,7 +181,7 @@
       "examples": [
         {
           "title": "Example output on success:",
-          "content": "{\"11-14 m/s\": [77.5, 72.5, 70.0, 45.0, 22.5, 42.5, 40.0, 62.5], \"8-11 m/s\": [57.5, 50.0, 45.0, 35.0, 20.0, 22.5, 37.5, 55.0], \"5-8 m/s\": [40.0, 30.0, 30.0, 35.0, 7.5, 7.5, 32.5, 40.0], \"< 5 m/s\": [20.0, 7.5, 15.0, 22.5, 2.5, 2.5, 12.5, 22.5], \"All\": [5.0,10.0,50.0,35.0,0.0] }",
+          "content": "{\"11-14 m/s\": [77.5, 72.5, 70.0, 45.0, 22.5, 42.5, 40.0, 62.5],\n\"8-11 m/s\": [57.5, 50.0, 45.0, 35.0, 20.0, 22.5, 37.5, 55.0],\n\"5-8 m/s\": [40.0, 30.0, 30.0, 35.0, 7.5, 7.5, 32.5, 40.0],\n\"< 5 m/s\": [20.0, 7.5, 15.0, 22.5, 2.5, 2.5, 12.5, 22.5],\n\"All\": [5.0,10.0,50.0,35.0,0.0] }",
           "type": "json"
         }
       ]
@@ -261,7 +261,7 @@
     "description": "<p>Request windspeed estimates for a particular site, for a specified height, and corresponding to the given time interval.</p>",
     "sampleRequest": [
       {
-        "url": "tap-api.nrel.gov/v1/timeseries/windspeed?height=50m\n&lat=40.7128&lon=-74.0059&start_date=20100302&stop_date=20120101\n&vertical_interpolation=linear&spatial_interpolation=idw"
+        "url": "dw-tap.nrel.gov/v1/timeseries/windspeed?height=50m\n&lat=40.7128&lon=-74.0059&start_date=20100302&stop_date=20120101\n&vertical_interpolation=linear&spatial_interpolation=idw"
       }
     ],
     "success": {
