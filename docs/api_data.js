@@ -28,6 +28,34 @@ define({ "api": [
     "name": ""
   },
   {
+    "success": {
+      "fields": {
+        "Success 200": [
+          {
+            "group": "Success 200",
+            "optional": false,
+            "field": "varname1",
+            "description": "<p>No type.</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "String",
+            "optional": false,
+            "field": "varname2",
+            "description": "<p>With type.</p>"
+          }
+        ]
+      }
+    },
+    "type": "",
+    "url": "",
+    "version": "0.0.0",
+    "filename": "./docs/main.js",
+    "group": "/Users/dduplyak/repos/tap-endpoint/docs/main.js",
+    "groupTitle": "/Users/dduplyak/repos/tap-endpoint/docs/main.js",
+    "name": ""
+  },
+  {
     "type": "get",
     "url": "/timeseries/winddirection",
     "title": "Request winddirection estimates",
@@ -37,7 +65,7 @@ define({ "api": [
     "description": "<p>Request wind direction estimates for a particular site, for a specified height, and corresponding to the given time interval. <code>Nearest-neighbor</code> is used for both spatial and vertical interpolations.</p>",
     "sampleRequest": [
       {
-        "url": "dw-tap.nrel.gov/v1/timeseries/winddirection?height=50m\n&lat=40.7128&lon=-74.0059&start_date=20100302&stop_date=20120101"
+        "url": "https://dw-tap.nrel.gov/v1/timeseries/winddirection?height=50m\n&lat=40.7128&lon=-74.0059&start_date=20100302&stop_date=20120101"
       }
     ],
     "success": {
@@ -135,7 +163,7 @@ define({ "api": [
     "description": "<p>Convenience function that convolves wind direction and wind speed to create a wind rose as output.</p>",
     "sampleRequest": [
       {
-        "url": "dw-tap.nrel.gov/v1/windrose?height=50m&\nlat=40.7128&lon=-74.0059&start_date=20100302&stop_date=20120101"
+        "url": "https://dw-tap.nrel.gov/v1/windrose?height=50m&\nlat=40.7128&lon=-74.0059&start_date=20100302&stop_date=20120101"
       }
     ],
     "success": {
@@ -233,7 +261,7 @@ define({ "api": [
     "description": "<p>Request windspeed estimates for a particular site, for a specified height, and corresponding to the given time interval.</p>",
     "sampleRequest": [
       {
-        "url": "dw-tap.nrel.gov/v1/timeseries/windspeed?height=50m\n&lat=40.7128&lon=-74.0059&start_date=20100302&stop_date=20120101\n&vertical_interpolation=linear&spatial_interpolation=idw"
+        "url": "https://dw-tap.nrel.gov/v1/timeseries/windspeed?height=50m\n&lat=40.7128&lon=-74.0059&start_date=20100302&stop_date=20120101\n&vertical_interpolation=linear&spatial_interpolation=idw"
       }
     ],
     "success": {

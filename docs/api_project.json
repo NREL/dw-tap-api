@@ -3,13 +3,13 @@
   "version": "1.0.0",
   "description": "API for NREL's DW-TAP Project",
   "title": "DW-TAP API",
-  "url": "tap-api.nrel.gov/v1",
+  "url": "https://dw-tap.hpc.nrel.gov/v1",
   "sampleUrl": false,
   "defaultVersion": "0.0.0",
   "apidoc": "0.3.0",
   "generator": {
     "name": "apidoc",
-    "time": "2020-10-05T18:54:26.670Z",
+    "time": "2020-10-05T19:39:49.787Z",
     "url": "https://apidocjs.com",
     "version": "0.25.0"
   }
