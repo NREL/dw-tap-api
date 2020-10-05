@@ -65,7 +65,7 @@ define({ "api": [
     "description": "<p>Request wind direction estimates for a particular site, for a specified height, and corresponding to the given time interval. <code>Nearest-neighbor</code> is used for both spatial and vertical interpolations.</p>",
     "sampleRequest": [
       {
-        "url": "https://dw-tap.nrel.gov/v1/timeseries/winddirection?height=50m\n&lat=40.7128&lon=-74.0059&start_date=20100302&stop_date=20120101"
+        "url": "https://dw-tap.nrel.gov/v1/timeseries/winddirection?height=50m\n&lat=40.7128&lon=-74.0059&start_date=20100302&stop_date=20100402"
       }
     ],
     "success": {
@@ -163,7 +163,7 @@ define({ "api": [
     "description": "<p>Convenience function that convolves wind direction and wind speed to create a wind rose as output.</p>",
     "sampleRequest": [
       {
-        "url": "https://dw-tap.nrel.gov/v1/windrose?height=50m&\nlat=40.7128&lon=-74.0059&start_date=20100302&stop_date=20120101"
+        "url": "https://dw-tap.nrel.gov/v1/windrose?height=50m&\nlat=40.7128&lon=-74.0059&start_date=20100302&stop_date=20100402&\nvertical_interpolation=linear&spatial_interpolation=idw"
       }
     ],
     "success": {
@@ -227,6 +227,20 @@ define({ "api": [
           {
             "group": "Parameter",
             "type": "String",
+            "optional": false,
+            "field": "vertical_interpolation",
+            "description": "<p>Method used for vertical interpolation; allowed: <code>nearest</code>, <code>linear</code>, <code>neutral_power</code>, <code>stability_power</code>. Currently applied only to the windspeed data (not direction).</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "spatial_interpolation",
+            "description": "<p>Method used for spatial interpolation; allowed: <code>nearest</code>, <code>linear</code>, <code>cubic</code>, <code>idw</code>. Currently applied only to the windspeed data (not direction).</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
             "optional": true,
             "field": "username",
             "description": "<p>Optional attribute of the HSDS credentials</p>"
@@ -261,7 +275,7 @@ define({ "api": [
     "description": "<p>Request windspeed estimates for a particular site, for a specified height, and corresponding to the given time interval.</p>",
     "sampleRequest": [
       {
-        "url": "https://dw-tap.nrel.gov/v1/timeseries/windspeed?height=50m\n&lat=40.7128&lon=-74.0059&start_date=20100302&stop_date=20120101\n&vertical_interpolation=linear&spatial_interpolation=idw"
+        "url": "https://dw-tap.nrel.gov/v1/timeseries/windspeed?height=50m\n&lat=40.7128&lon=-74.0059&start_date=20100302&stop_date=20100402\n&vertical_interpolation=linear&spatial_interpolation=idw"
       }
     ],
     "success": {

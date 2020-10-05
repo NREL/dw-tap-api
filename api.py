@@ -111,7 +111,7 @@ def v1_ws():
     for a specified height, and corresponding to the given time interval.
 
     @apiSampleRequest https://dw-tap.nrel.gov/v1/timeseries/windspeed?height=50m
-&lat=40.7128&lon=-74.0059&start_date=20100302&stop_date=20120101
+&lat=40.7128&lon=-74.0059&start_date=20100302&stop_date=20100402
 &vertical_interpolation=linear&spatial_interpolation=idw
 
     @apiSuccess {String} JSON JSON with `timestamp` and `windspeed` series
@@ -179,7 +179,7 @@ def v1_wd():
     `Nearest-neighbor` is used for both spatial and vertical interpolations.
 
     @apiSampleRequest https://dw-tap.nrel.gov/v1/timeseries/winddirection?height=50m
-&lat=40.7128&lon=-74.0059&start_date=20100302&stop_date=20120101
+&lat=40.7128&lon=-74.0059&start_date=20100302&stop_date=20100402
 
     @apiSuccess {String} JSON JSON with `timestamp` and `winddirection` series
 
@@ -238,7 +238,8 @@ def v1_wr():
     and wind speed to create a wind rose as output.
 
     @apiSampleRequest https://dw-tap.nrel.gov/v1/windrose?height=50m&
-lat=40.7128&lon=-74.0059&start_date=20100302&stop_date=20120101
+lat=40.7128&lon=-74.0059&start_date=20100302&stop_date=20100402&
+vertical_interpolation=linear&spatial_interpolation=idw
 
     @apiSuccess {String} JSON with percentage observations in each
     of 8 radial segments (N, NE, E, SE, S, SW, W, NW) and each of 4 wind speed
@@ -261,6 +262,12 @@ lat=40.7128&lon=-74.0059&start_date=20100302&stop_date=20120101
     YYYYMMDD
     @apiParam {String} stop_date End of the time interval in the format:
     YYYYMMDD
+    @apiParam {String} vertical_interpolation Method used for vertical
+    interpolation; allowed: `nearest`, `linear`, `neutral_power`,
+    `stability_power`. Currently applied only to the windspeed data (not direction).
+    @apiParam {String} spatial_interpolation Method used for spatial
+    interpolation; allowed: `nearest`, `linear`, `cubic`, `idw`. Currently 
+    applied only to the windspeed data (not direction).
     @apiParam {String} [username] Optional attribute of the HSDS credentials
     @apiParam {String} [password] Optional attribute of the HSDS credentials
     @apiParam {String} [api_key] Optional attribute of the HSDS credentials.
