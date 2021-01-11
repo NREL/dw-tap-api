@@ -224,6 +224,41 @@ def validated_params_windspeed(request):
     """ Returns extracted, processed, and validated
     required request parameters. This version is desiged for windspeed queries.
     """
+
+    # Performance benchmarks, implemented to test performance of HSDS instance
+    if 'perfbench' in request.args:
+        perfbench = int(request.args['perfbench'])
+        if perfbench == 1:
+            # 1-month-worth of data, only spatial interpolation (NN)
+            start_date = validated_dt('20110101')
+            stop_date = validated_dt('20110201')
+            si = "nearest"
+            vi = "nn"
+            lat = 39.8636622292353
+            lon = -105.12315215422839
+            height = 60.0
+            return height, lat, lon, start_date, stop_date, si, vi
+        elif perfbench == 2:
+            # 1-year-worth of data, only spatial interpolation (NN)
+            start_date = validated_dt('20110101')
+            stop_date = validated_dt('20120101')
+            si = "nearest"
+            vi = "nn"
+            lat = 39.8636622292353
+            lon = -105.12315215422839
+            height = 60.0
+            return height, lat, lon, start_date, stop_date, si, vi
+        elif perfbench == 3:
+            # 1-year-worth of data, spatial + vertical interpolation
+            start_date = validated_dt('20110101')
+            stop_date = validated_dt('20120101')
+            si = "idw"
+            vi = "stability_adjusted_power_law"
+            lat = 39.8636622292353
+            lon = -105.12315215422839
+            height = 55.55
+            return height, lat, lon, start_date, stop_date, si, vi
+
     if 'height' in request.args:
         height_str = request.args['height']
         if len(height_str) > 0 and height_str[-1] == "m":
