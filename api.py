@@ -22,7 +22,7 @@ Examples:
 
 Additional info about running the app is in README.md.
 
-Written by: Dmitry Duplyakin (dmitry.duplyakin@nrel.gov) and Caleb Phillips (caleb.phillips@nrel.gov) 
+Written by: Dmitry Duplyakin (dmitry.duplyakin@nrel.gov) and Caleb Phillips (caleb.phillips@nrel.gov)
 in collaboration with the National Renewable Energy Laboratories.
 """
 
@@ -33,6 +33,9 @@ import json
 import argparse
 import threading
 import queue
+import time
+import os
+import pandas as pd
 
 from windspeed import *
 from winddirection import *
@@ -151,19 +154,55 @@ def v1_ws():
         start_date, stop_date,\
         spatial_interpolation,\
         vertical_interpolation = validated_params_windspeed(request)
-    hsds_f = connected_hsds_file(request, config)
 
-    finalized_df, debug_info = prepare_windpseed(
-                                   height, lat, lon,
-                                   start_date, stop_date,
-                                   spatial_interpolation,
-                                   vertical_interpolation,
-                                   hsds_f, DEBUG_OUTPUT)
+    if 'perfbench' not in request.args:
+        hsds_f = connected_hsds_file(request, config)
 
-    if DEBUG_OUTPUT:
-        return "<br>".join(debug_info)
+        finalized_df, debug_info = prepare_windpseed(
+                                       height, lat, lon,
+                                       start_date, stop_date,
+                                       spatial_interpolation,
+                                       vertical_interpolation,
+                                       hsds_f, DEBUG_OUTPUT)
+
+        if DEBUG_OUTPUT:
+            return "<br>".join(debug_info)
+        else:
+            return finalized_df.to_json()
     else:
-        return finalized_df.to_json()
+        # Implementing convenient benchmarking with repetition;
+        # it includes loading/updating/saving dataframe with all bench results
+        perfbench = int(request.args['perfbench'])
+        if 'reps' in request.args:
+            reps = int(request.args['reps'])
+        else:
+            reps = 1
+
+        all_results_dest = "perfbench_results.csv"
+        if os.path.exists(all_results_dest):
+            timing_df = pd.read_csv(all_results_dest)
+        else:
+            timing_df = pd.DataFrame(columns=[
+                "timestamp", "endpoint", "perfbench", "time"])
+
+        for i in range(reps):
+            ts = time.time()
+            hsds_f = connected_hsds_file(request, config)
+
+            finalized_df, debug_info = prepare_windpseed(
+                                           height, lat, lon,
+                                           start_date, stop_date,
+                                           spatial_interpolation,
+                                           vertical_interpolation,
+                                           hsds_f, DEBUG_OUTPUT)
+            te = time.time()
+            timing_df.loc[len(timing_df)] = [time.ctime(),
+                                             config["hsds"]["endpoint"],
+                                             perfbench,
+                                             te - ts]
+            timing_df.to_csv(all_results_dest, index=False)
+        return timing_df.to_csv().replace("\n", "<br>")
+
 
 # Fully functional route for winddirection
 @app.route('/v1/timeseries/winddirection', methods=['GET'])
@@ -266,7 +305,7 @@ vertical_interpolation=linear&spatial_interpolation=idw
     interpolation; allowed: `nearest`, `linear`, `neutral_power`,
     `stability_power`. Currently applied only to the windspeed data (not direction).
     @apiParam {String} spatial_interpolation Method used for spatial
-    interpolation; allowed: `nearest`, `linear`, `cubic`, `idw`. Currently 
+    interpolation; allowed: `nearest`, `linear`, `cubic`, `idw`. Currently
     applied only to the windspeed data (not direction).
     @apiParam {String} [username] Optional attribute of the HSDS credentials
     @apiParam {String} [password] Optional attribute of the HSDS credentials

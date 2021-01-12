@@ -16,6 +16,7 @@
   {
     "__info__": "These credentials are for demo, rate-limited usage.",
     "endpoint_OFFICIAL": "https://developer.nrel.gov/api/hsds",
+    "endpoint_DEDICATED": "https://tap-hsds.ace.nrel.gov",
     "endpoint": "https://tap-hsds.ace.nrel.gov",
     "domain": "/nrel/wtk-us.h5",
     "username": null,

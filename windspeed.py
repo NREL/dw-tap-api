@@ -253,7 +253,27 @@ def validated_params_windspeed(request):
             start_date = validated_dt('20110101')
             stop_date = validated_dt('20120101')
             si = "idw"
-            vi = "stability_adjusted_power_law"
+            vi = "neutral_power_law"
+            lat = 39.8636622292353
+            lon = -105.12315215422839
+            height = 55.55
+            return height, lat, lon, start_date, stop_date, si, vi
+        elif perfbench == 4:
+            # 2-years-worth of data, spatial + vertical interpolation
+            start_date = validated_dt('20070101')
+            stop_date = validated_dt('20090101')
+            si = "idw"
+            vi = "neutral_power_law"
+            lat = 39.8636622292353
+            lon = -105.12315215422839
+            height = 55.55
+            return height, lat, lon, start_date, stop_date, si, vi
+        elif perfbench == 5:
+            # 3-years-worth of data, spatial + vertical interpolation
+            start_date = validated_dt('20070101')
+            stop_date = validated_dt('20100101')
+            si = "idw"
+            vi = "neutral_power_law"
             lat = 39.8636622292353
             lon = -105.12315215422839
             height = 55.55
