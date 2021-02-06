@@ -70,11 +70,17 @@ def connected_hsds_file(request, config):
                                 "request to use demo credentials."))
 
     try:
+        # This worked for public HSDS instance
+        # f = h5pyd.File(domain=domain,
+        #                endpoint=endpoint,
+        #                username=username,
+        #                password=password,
+        #                api_key=api_key,
+        #                mode='r')
+
+        # This works for dedicated HSDS instance
         f = h5pyd.File(domain=domain,
                        endpoint=endpoint,
-                       username=username,
-                       password=password,
-                       api_key=api_key,
                        mode='r')
         return f
     except OSError:
