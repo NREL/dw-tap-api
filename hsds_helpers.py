@@ -15,6 +15,7 @@ import numpy as np
 import cartopy.crs as ccrs
 import dateutil
 import concurrent.futures
+import time
 
 
 @timeit
@@ -119,8 +120,12 @@ def available_datasets(f):
 # This function finds the nearest x/y indices for a given lat/lon.
 # Rather than fetching the entire coordinates database, which is 500+ MB, this
 # uses the Proj4 library to find a nearby point and converts to x/y indices
-def indicesForCoord(f, lat_index, lon_index):
-    dset_coords = f['coordinates']
+def indicesForCoord(f, coords_df, lat_index, lon_index):
+
+    # TODO: refactor; coords_df might be making f unnecessary here
+    #dset_coords = f['coordinates']
+    dset_coords = coords_df
+
     projstring = """+proj=lcc +lat_1=30 +lat_2=60
                     +lat_0=38.47240422490422 +lon_0=-96.0
                     +x_0=0 +y_0=0 +ellps=sphere
@@ -137,7 +142,7 @@ def indicesForCoord(f, lat_index, lon_index):
 
 
 @timeit
-def find_tile(f, lat, lon, radius=3, trim=4):
+def find_tile(f, coords_df, lat, lon, radius=3, trim=4):
     """ Return dataframe with information about gridpoints in resource f that
     are neighboring (lat, lon). At first, there will be (radius*2) ^ 2
     entries/neighbors. The dataframe will be sorted by the distance (in meters)
@@ -157,8 +162,11 @@ def find_tile(f, lat, lon, radius=3, trim=4):
                                   false_easting=0.0,
                                   false_northing=0.0,
                                   standard_parallels=(29.5, 45.5), globe=None)
+    ts = time.time()
+    point_idx = indicesForCoord(f, coords_df, lat, lon)
+    te = time.time()
+    print("***** Timed indicesForCoord, hsds_helpers.py:", te - ts)
 
-    point_idx = indicesForCoord(f, lat, lon)
     point_xy = coordXform(crs_from, crs_to,
                           np.array([lon]), np.array([lat]))[0]
 
@@ -169,13 +177,30 @@ def find_tile(f, lat, lon, radius=3, trim=4):
             neighbors_to_check.append([x_idx, y_idx])
 
     # Get lat/lon pairs for all neighbors (faster than one-at-a-time)
-    neighbors_latlon = [list(p) for p in f["coordinates"][neighbors_to_check]]
+    # ts = time.time()
+    # neighbors_latlon = [list(p) for p in f["coordinates"][neighbors_to_check]]
+    # te = time.time()
+    # print("***** Timed getting neighbors_latlon, hsds_helpers.py:", te - ts)
+    ts = time.time()
+    # neighbors_latlon = [list(p) for p in f["coordinates"][neighbors_to_check]]
+    neighbors_latlon = [coords_df[nr[0]][nr[1]] for nr in neighbors_to_check]
+    te = time.time()
+    print("***** Timed getting neighbors_latlon, hsds_helpers.py:", te - ts)
+    print(np.array(neighbors_latlon).shape)
+    print([el[1] for el in neighbors_latlon])
+    print([el[0] for el in neighbors_latlon])
+
+
 
     # Convert all neighbors' lat/lon pairs to x/y
+    # neighbors_xy = coordXform(crs_from, crs_to,
+    #                           np.array(neighbors_latlon).reshape(-1, 2)[:, 1],
+    #                           np.array(neighbors_latlon).reshape(-1, 2)[:, 0])
     neighbors_xy = coordXform(crs_from, crs_to,
-                              np.array(neighbors_latlon).reshape(-1, 2)[:, 1],
-                              np.array(neighbors_latlon).reshape(-1, 2)[:, 0])
+                              np.array([el[1] for el in neighbors_latlon]),
+                              np.array([el[0] for el in neighbors_latlon]))
 
+    ts = time.time()
     res = pd.DataFrame(columns=["x_idx", "y_idx", "lat", "lon",
                                 "x_centered", "y_centered", "d"])
     for idx, latlon, xy in zip(neighbors_to_check,
@@ -187,6 +212,8 @@ def find_tile(f, lat, lon, radius=3, trim=4):
         d = np.sqrt(dx ** 2 + dy ** 2)
         res.loc[len(res)] = [idx[0], idx[1],
                              latlon[0], latlon[1], dx, dy, d]
+    te = time.time()
+    print("***** Timed forming res dataframe, hsds_helpers.py:", te - ts)
 
     res["x_idx"] = pd.to_numeric(res["x_idx"], downcast='integer')
     res["y_idx"] = pd.to_numeric(res["y_idx"], downcast='integer')
@@ -196,20 +223,22 @@ def find_tile(f, lat, lon, radius=3, trim=4):
 def coordXform(orig_crs, target_crs, x, y):
     return target_crs.transform_points(orig_crs, x, y)
 
-
-def time_indices(f, start_date, stop_date):
-    """ Return lists of time indices and timestamps corresponding to the the
-    requested time interval: [start_date, stop_date].
+def time_indices_all(f):
+    """ Returns a dataframe with all processed timestamps from f
+    (meant to run once, when the app is first loaded, and reduce overhead)
     """
     dt = f["datetime"]
     dt = pd.DataFrame({"datetime": dt[:]}, index=range(0, dt.shape[0]))
     dt['datetime'] = dt['datetime'].apply(dateutil.parser.parse)
-    selected = dt.loc[(dt.datetime >= start_date) &
-                      (dt.datetime <= stop_date)]
-    selected_inices = selected.index.tolist()
-    selected_timestamps = selected.datetime.tolist()
-    return selected_inices, selected_timestamps
+    return dt
 
+def time_indices_select(time_df, start_date, stop_date):
+    """ Return lists of time indices and timestamps corresponding to the the
+    requested time interval: [start_date, stop_date].
+    """
+    selected = time_df.loc[(time_df.datetime >= start_date) &
+                           (time_df.datetime <= stop_date)]
+    return selected.index.tolist(), selected.datetime.tolist()
 
 @timeit
 def extract_ts_for_neighbors(tile_df, tidx, dset, impl="parallel"):
@@ -252,13 +281,18 @@ def extract_ts_for_neighbors_sequential(tile_df, tidx, dset):
     """
     res_df = pd.DataFrame(index=tidx)
 
-    tidx_min = np.array(tidx).min()
-    tidx_max = np.array(tidx).max()
+    #tidx_min = np.array(tidx).min()
+    #tidx_max = np.array(tidx).max()
+    tidx_min = tidx[0]
+    tidx_max = tidx[-1]
 
     for idx, row in tile_df.iterrows():
 
+        ts = time.time()
         neighbor_data = dset[tidx_min:tidx_max+1,
                              row.x_idx, row.y_idx]
+        te = time.time()
+        print("***!!!** Timed getting neighbor_data, hsds_helpers.py:", te - ts)
         column_name = "%d-%d" % (row.x_idx, row.y_idx)
         res_df[column_name] = neighbor_data
 

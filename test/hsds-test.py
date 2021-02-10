@@ -1,5 +1,5 @@
 import h5pyd
-import json
+#import json
 
 class InvalidUsage(Exception):
     status_code = 400
@@ -16,29 +16,6 @@ class InvalidUsage(Exception):
         rv['message'] = self.message
         return rv
 
-def connected_hsds_file(config):
-    domain = config["hsds"]["domain"]
-    endpoint = config["hsds"]["endpoint"]
-    username = config["hsds"]["username"]
-    password = config["hsds"]["password"]
-    api_key = config["hsds"]["api_key"]
-    try:
-        # f = h5pyd.File(domain=domain,
-        #                endpoint=endpoint,
-        #                username=username,
-        #                password=password,
-        #                api_key=api_key,
-        #                mode='r')
-
-        # Debugging showed that new HSDS instance doesn't need user & pass & key
-        # (in fact, they lead to errors if provided)
-        f = h5pyd.File(domain=domain,
-                       endpoint=endpoint,
-                       mode='r')
-        return f
-    except OSError:
-        raise InvalidUsage("Failed to access HSDS resource", status_code=403)
-
 def available_datasets(f):
     """ Return list of all datasets available in resource f.
     """
@@ -48,10 +25,30 @@ def available_datasets(f):
         raise InvalidUsage("Problem with processing WTK datasets.")
     return datasets
 
-with open('config.json', 'r') as f:
-    config = json.load(f)
+# with open('config.json', 'r') as f:
+#     config = json.load(f)
 
-hsds_f = connected_hsds_file(config)
+endpoint = "https://tap-hsds.ace.nrel.gov"
+domain = "/nrel/wtk-us.h5"
+username = None
+password = None
+api_key = None
+
+try:
+    # hsds_f = h5pyd.File(domain=domain,
+    #                endpoint=endpoint,
+    #                username=username,
+    #                password=password,
+    #                api_key=api_key,
+    #                mode='r')
+
+    # Debugging showed that new HSDS instance doesn't need user & pass & key
+    # (in fact, they lead to errors if provided)
+    hsds_f = h5pyd.File(domain=domain,
+                   endpoint=endpoint,
+                   mode='r')
+except OSError:
+    raise InvalidUsage("Failed to access HSDS resource", status_code=403)
 
 print("\nPrinting list of availble datasets:")
 print(available_datasets(hsds_f))

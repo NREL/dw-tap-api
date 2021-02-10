@@ -19,6 +19,7 @@ from invalid_usage import InvalidUsage
 from hsds_helpers import *
 from helpers import *
 from timing import timeit
+import time
 
 
 def interpolate_spatially_row(row, neighbor_xy_centered, method='nearest'):
@@ -48,6 +49,9 @@ def interpolate_spatially(tile_df, neighbor_ts_df,
     """ Process a single-height dataframe for
     single location with timeseries for neighboring gridpoints.
     Method should be validated in validated_params_X()."""
+    print("Inside interpolate_spatially()")
+    print("method:", method)
+    print(neighbor_ts_df.head(10))
 
     res_df = pd.DataFrame(index=neighbor_ts_df.index)
 
@@ -61,10 +65,12 @@ def interpolate_spatially(tile_df, neighbor_ts_df,
     if method == "nearest":
         # Nearest is the only method for which the results don't change
         # if we change number of neighbors used; no trimming needed
-        res_df["spatially_interpolated"] = \
-            neighbor_ts_df.apply(interpolate_spatially_row,
-                                 args=(neighbor_xy_centered, 'nearest'),
-                                 axis=1)
+
+        #res_df["spatially_interpolated"] = \
+        #    neighbor_ts_df.apply(interpolate_spatially_row,
+        #                         args=(neighbor_xy_centered, 'nearest'),
+        #                         axis=1)
+        res_df["spatially_interpolated"] = neighbor_ts_df[neighbor_ts_df.columns[0]]
     else:
         # "neighbor_ii[:neighbors_number]" below is used to make sure
         # that first/closest n=neighbors_number points are used;
@@ -74,6 +80,8 @@ def interpolate_spatially(tile_df, neighbor_ts_df,
                                  args=(neighbor_xy_centered[:neighbors_number],
                                        method),
                                  axis=1)
+    print("res_df:")
+    print(res_df.head(10))
     return res_df
 
 
@@ -92,14 +100,20 @@ def single_height_spatial_interpolation(args):
     return interpolated_df
 
 
-def prepare_windpseed(height, lat, lon,
+def prepare_windspeed(height, lat, lon,
                       start_date, stop_date, spatial_interpolation,
                       vertical_interpolation,
-                      hsds_f, debug=False):
+                      hsds_f,
+                      time_df,
+                      coords_df,
+                      debug=False):
     debug_info = []
 
+    ts = time.time()
     heights = available_heights(hsds_f, prefix="windspeed")
     datasets = available_datasets(hsds_f)
+    te = time.time()
+    print("***** Timed getting heights and datasets, windspeed.py:", te - ts)
 
     bypass_vertical_interpolation = False
     if height.is_integer() and int(height) in heights:
@@ -114,7 +128,10 @@ def prepare_windpseed(height, lat, lon,
         raise InvalidUsage(("WTK does not include one of required datasets: "
                             "inversemoninobukhovlength_2m"))
 
-    tidx, timestamps = time_indices(hsds_f, start_date, stop_date)
+    ts = time.time()
+    tidx, timestamps = time_indices_select(time_df, start_date, stop_date)
+    te = time.time()
+    print("***** Timed getting time indices, windspeed.py:", te - ts)
 
     desired_point = points.XYZPoint(lat, lon, height, 'desired')
 
@@ -128,27 +145,44 @@ def prepare_windpseed(height, lat, lon,
         debug_info.append("Time indices: %s" % str(tidx))
         debug_info.append("Available datasets: %s" % str(datasets))
 
-    tile_df = find_tile(hsds_f, lat, lon)
+    ts = time.time()
+    tile_df = find_tile(hsds_f, coords_df, lat, lon, radius=1)
+    te = time.time()
+    print("***** Timed getting tile, windspeed.py:", te - ts)
 
     if debug:
         debug_info += df2strings(tile_df)
 
+    print("bypass_vertical_interpolation:", bypass_vertical_interpolation)
     if not bypass_vertical_interpolation:
+        ts = time.time()
         # Use Nearest Neighbor for imol -- inversemoninobukhovlength_2m
         imol_dset = hsds_f["inversemoninobukhovlength_2m"]
+        te = time.time()
+        print("***** Timed getting inverse, imol_dset, windspeed.py:", te - ts)
         # head(1) is sufficient for nearest neighbor
+        ts = time.time()
         imol_neighbor_ts_df = extract_ts_for_neighbors(tile_df.head(1),
-                                                       tidx, imol_dset)
+                                                       tidx, imol_dset,
+                                                       impl="sequential")
+        te = time.time()
+        print("***** Timed getting inverse, imol_neighbor_ts_df, windspeed.py:", te - ts)
+
+        ts = time.time()
         imol_df = interpolate_spatially(tile_df.head(1), imol_neighbor_ts_df,
                                         method="nearest")
         imol_df.rename(columns={"spatially_interpolated": "imol"},
                        inplace=True)
+        te = time.time()
+        print("***** Timed getting inverse, interpolate_spatially, windspeed.py:", te - ts)
 
         if debug:
             debug_info += df2strings(imol_df)
 
         height_below, height_above = heights_below_and_above(heights, height)
 
+
+        ts = time.time()
         # Process two heights in parallel, in separate threads
         tasks = [(height, hsds_f, tile_df, tidx,
                   spatial_interpolation, timestamps)
@@ -158,6 +192,8 @@ def prepare_windpseed(height, lat, lon,
                        single_height_spatial_interpolation, t)
                        for t in tasks]
             interpolated = [f.result() for f in futures]
+        te = time.time()
+        print("***** Timed threaded code, windspeed.py:", te - ts)
 
         p_below = points.XYZPoint(lat, lon, height_below, 'model',
                                   timeseries=[timeseries.timeseries(
@@ -201,10 +237,18 @@ def prepare_windpseed(height, lat, lon,
         xyz_points = []
 
         dset = hsds_f["windspeed_%dm" % height]
+
+        ts = time.time()
         neighbor_ts_df = extract_ts_for_neighbors(tile_df, tidx, dset)
+        te = time.time()
+        print("***** Timed extract_ts_for_neighborsv, windspeed.py:", te - ts)
+
+        ts = time.time()
         interpolated_df = interpolate_spatially(tile_df, neighbor_ts_df,
                                                 method=spatial_interpolation,
                                                 neighbors_number=4)
+        te = time.time()
+        print("***** Timed interpolate_spatially, windspeed.py:", te - ts)
         interpolated_df["timestamp"] = timestamps
         if debug:
             debug_info += df2strings(interpolated_df)

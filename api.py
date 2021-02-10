@@ -36,6 +36,8 @@ import queue
 import time
 import os
 import pandas as pd
+import h5pyd
+import sys
 
 from windspeed import *
 from winddirection import *
@@ -64,6 +66,25 @@ if development_mode:
 else:
     host = config["production"]["host"]
     port = config["production"]["port"]
+
+# To cut down overhead, prepare dataframe with time indices
+if config["hsds"]["endpoint"] == "https://developer.nrel.gov/api/hsds":
+    # Proceed with credentials for the developer instance of HSDS
+    hsds_f = h5pyd.File(domain=config["hsds"]["domain"],
+                        endpoint=config["hsds"]["endpoint"],
+                        username=config["hsds"]["username"],
+                        password=config["hsds"]["password"],
+                        api_key=config["hsds"]["api_key"],
+                        mode='r')
+else:
+    # Assume dedicated HSDS instance that does not need credentials
+    hsds_f = h5pyd.File(domain=config["hsds"]["domain"],
+                        endpoint=config["hsds"]["endpoint"],
+                        mode='r')
+time_df = time_indices_all(hsds_f)
+# Value is what converts HDF5 file to numpy array
+# This operation is a bit slow but saves time down the road, for each request
+coords_df = hsds_f['coordinates'].value
 
 app = flask.Flask(__name__)
 app.config["DEBUG"] = False
@@ -158,12 +179,15 @@ def v1_ws():
     if 'perfbench' not in request.args:
         hsds_f = connected_hsds_file(request, config)
 
-        finalized_df, debug_info = prepare_windpseed(
+        finalized_df, debug_info = prepare_windspeed(
                                        height, lat, lon,
                                        start_date, stop_date,
                                        spatial_interpolation,
                                        vertical_interpolation,
-                                       hsds_f, DEBUG_OUTPUT)
+                                       hsds_f,
+                                       time_df,
+                                       coords_df,
+                                       DEBUG_OUTPUT)
 
         if DEBUG_OUTPUT:
             return "<br>".join(debug_info)
@@ -189,13 +213,17 @@ def v1_ws():
             ts = time.time()
             hsds_f = connected_hsds_file(request, config)
 
-            finalized_df, debug_info = prepare_windpseed(
+            finalized_df, debug_info = prepare_windspeed(
                                            height, lat, lon,
                                            start_date, stop_date,
                                            spatial_interpolation,
                                            vertical_interpolation,
-                                           hsds_f, DEBUG_OUTPUT)
+                                           hsds_f,
+                                           time_df,
+                                           coords_df,
+                                           DEBUG_OUTPUT)
             te = time.time()
+            print("*** Timed one rep in perfbench, api.py:", te - ts)
             timing_df.loc[len(timing_df)] = [time.ctime(),
                                              config["hsds"]["endpoint"],
                                              perfbench,
@@ -256,7 +284,9 @@ def v1_wd():
     finalized_df, debug_info = prepare_winddirection(
                                    height, lat, lon,
                                    start_date, stop_date,
-                                   hsds_f, DEBUG_OUTPUT)
+                                   hsds_f,
+                                   time_df,
+                                   DEBUG_OUTPUT)
 
     if DEBUG_OUTPUT:
         return "<br>".join(debug_info)
@@ -328,15 +358,15 @@ vertical_interpolation=linear&spatial_interpolation=idw
     wd_th = threading.Thread(
         target=lambda q, arglist: q.put(prepare_winddirection(*arglist)),
         args=(wd_que, [height, lat, lon, start_date, stop_date,
-                       hsds_f, DEBUG_OUTPUT]),
+                       hsds_f, time_df, DEBUG_OUTPUT]),
         daemon=True)
     wd_th.start()
 
     ws_th = threading.Thread(
-        target=lambda q, arglist: q.put(prepare_windpseed(*arglist)),
+        target=lambda q, arglist: q.put(prepare_windspeed(*arglist)),
         args=(ws_que, [height, lat, lon, start_date, stop_date,
                        spatial_interpolation, vertical_interpolation,
-                       hsds_f, DEBUG_OUTPUT]),
+                       hsds_f, time_df, coords_df, DEBUG_OUTPUT]),
         daemon=True)
     ws_th.start()
 
