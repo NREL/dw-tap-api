@@ -123,7 +123,7 @@ def docs_file(filename):
 
 
 # Fully functional route for windspeed
-@app.route('/v1/timeseries/windspeed', methods=['GET'])
+@app.route('/v1/timeseries/windspeed', methods=['GET', 'POST'])
 def v1_ws():
     """
     @api {get} /timeseries/windspeed Request windspeed estimates
@@ -169,7 +169,10 @@ def v1_ws():
     is specified, the default values will be use for rate-limited, demo access
     """
 
-    print("v1_ws")
+    if request.method == 'POST':
+        if 'obstacles' in request.files.keys():
+            obstacles_file = request.files['obstacles']
+            obstacles_json = obstacles_file.read()
 
     height, lat, lon,\
         start_date, stop_date,\
