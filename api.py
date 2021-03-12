@@ -236,7 +236,7 @@ def v1_ws():
 
 
 # Fully functional route for winddirection
-@app.route('/v1/timeseries/winddirection', methods=['GET'])
+@app.route('/v1/timeseries/winddirection', methods=['GET', 'POST'])
 def v1_wd():
     """
     @api {get} /timeseries/winddirection Request winddirection estimates
@@ -278,7 +278,10 @@ def v1_wd():
     rate-limited, demo access
     """
 
-    print("v1_wd")
+    if request.method == 'POST':
+        if 'obstacles' in request.files.keys():
+            obstacles_file = request.files['obstacles']
+            obstacles_json = obstacles_file.read()
 
     height, lat, lon,\
         start_date, stop_date = validated_params_winddirection(request)
@@ -297,7 +300,7 @@ def v1_wd():
         return finalized_df.to_json()
 
 # Fully functional route for windrose
-@app.route('/v1/windrose', methods=['GET'])
+@app.route('/v1/windrose', methods=['GET', 'POST'])
 @timeit
 def v1_wr():
     """
@@ -347,7 +350,12 @@ vertical_interpolation=linear&spatial_interpolation=idw
     of these attributes should be specified. Alternatively, if none of these
     is specified, the default values will be use for rate-limited, demo access
     """
-    print("v1_wr")
+
+    if request.method == 'POST':
+        if 'obstacles' in request.files.keys():
+            obstacles_file = request.files['obstacles']
+            obstacles_json = obstacles_file.read()
+
     hsds_f = connected_hsds_file(request, config)
 
     height, lat, lon, \
