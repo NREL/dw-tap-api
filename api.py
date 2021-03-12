@@ -167,6 +167,10 @@ def v1_ws():
     If one of `username`, `password`, and `api_key` is specified, all three
     of these attributes should be specified. Alternatively, if none of these
     is specified, the default values will be use for rate-limited, demo access
+    @apiParam {File} [obstacles] Optional file to be uploaded.
+    This geojson file should have obstacle description for the specific studied site.
+    The file upload needs to happen as part of the `POST` http request, 
+    as demonstrated in the [notebook](https://github.com/NREL/dw-tap-api/blob/develop/test/geojson-upload.ipynb).
     """
 
     if request.method == 'POST':
@@ -275,7 +279,11 @@ def v1_wd():
     If one of `username`, `password`, and `api_key` is specified,
     all three of these attributes should be specified. Alternatively,
     if none of these is specified, the default values will be use for
-    rate-limited, demo access
+    rate-limited, demo access.
+    @apiParam {File} [obstacles] Optional file to be uploaded.
+    This geojson file should have obstacle description for the specific studied site.
+    The file upload needs to happen as part of the `POST` http request,
+    as demonstrated in the [notebook](https://github.com/NREL/dw-tap-api/blob/develop/test/geojson-upload.ipynb).
     """
 
     if request.method == 'POST':
@@ -348,7 +356,11 @@ vertical_interpolation=linear&spatial_interpolation=idw
     @apiParam {String} [api_key] Optional attribute of the HSDS credentials.
     If one of `username`, `password`, and `api_key` is specified, all three
     of these attributes should be specified. Alternatively, if none of these
-    is specified, the default values will be use for rate-limited, demo access
+    is specified, the default values will be use for rate-limited, demo access.
+    @apiParam {File} [obstacles] Optional file to be uploaded.
+    This geojson file should have obstacle description for the specific studied site.
+    The file upload needs to happen as part of the `POST` http request,
+    as demonstrated in the [notebook](https://github.com/NREL/dw-tap-api/blob/develop/test/geojson-upload.ipynb).
     """
 
     if request.method == 'POST':

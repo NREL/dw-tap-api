@@ -50,9 +50,9 @@
     "type": "",
     "url": "",
     "version": "0.0.0",
-    "filename": "./doc/main.js",
-    "group": "/Users/dduplyak/repos/tap-endpoint/doc/main.js",
-    "groupTitle": "/Users/dduplyak/repos/tap-endpoint/doc/main.js",
+    "filename": "./docs/main.js",
+    "group": "/Users/dduplyak/repos/tap-endpoint/docs/main.js",
+    "groupTitle": "/Users/dduplyak/repos/tap-endpoint/docs/main.js",
     "name": ""
   },
   {
@@ -145,7 +145,14 @@
             "type": "String",
             "optional": true,
             "field": "api_key",
-            "description": "<p>Optional attribute of the HSDS credentials. If one of <code>username</code>, <code>password</code>, and <code>api_key</code> is specified, all three of these attributes should be specified. Alternatively, if none of these is specified, the default values will be use for rate-limited, demo access</p>"
+            "description": "<p>Optional attribute of the HSDS credentials. If one of <code>username</code>, <code>password</code>, and <code>api_key</code> is specified, all three of these attributes should be specified. Alternatively, if none of these is specified, the default values will be use for rate-limited, demo access.</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "File",
+            "optional": true,
+            "field": "obstacles",
+            "description": "<p>Optional file to be uploaded. This geojson file should have obstacle description for the specific studied site. The file upload needs to happen as part of the <code>POST</code> http request, as demonstrated in the <a href=\"https://github.com/NREL/dw-tap-api/blob/develop/test/geojson-upload.ipynb\">notebook</a>.</p>"
           }
         ]
       }
@@ -257,7 +264,14 @@
             "type": "String",
             "optional": true,
             "field": "api_key",
-            "description": "<p>Optional attribute of the HSDS credentials. If one of <code>username</code>, <code>password</code>, and <code>api_key</code> is specified, all three of these attributes should be specified. Alternatively, if none of these is specified, the default values will be use for rate-limited, demo access</p>"
+            "description": "<p>Optional attribute of the HSDS credentials. If one of <code>username</code>, <code>password</code>, and <code>api_key</code> is specified, all three of these attributes should be specified. Alternatively, if none of these is specified, the default values will be use for rate-limited, demo access.</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "File",
+            "optional": true,
+            "field": "obstacles",
+            "description": "<p>Optional file to be uploaded. This geojson file should have obstacle description for the specific studied site. The file upload needs to happen as part of the <code>POST</code> http request, as demonstrated in the <a href=\"https://github.com/NREL/dw-tap-api/blob/develop/test/geojson-upload.ipynb\">notebook</a>.</p>"
           }
         ]
       }
@@ -370,6 +384,13 @@
             "optional": true,
             "field": "api_key",
             "description": "<p>Optional attribute of the HSDS credentials. If one of <code>username</code>, <code>password</code>, and <code>api_key</code> is specified, all three of these attributes should be specified. Alternatively, if none of these is specified, the default values will be use for rate-limited, demo access</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "File",
+            "optional": true,
+            "field": "obstacles",
+            "description": "<p>Optional file to be uploaded. This geojson file should have obstacle description for the specific studied site. The file upload needs to happen as part of the <code>POST</code> http request, as demonstrated in the <a href=\"https://github.com/NREL/dw-tap-api/blob/develop/test/geojson-upload.ipynb\">notebook</a>.</p>"
           }
         ]
       }
