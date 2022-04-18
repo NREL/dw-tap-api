@@ -16,6 +16,7 @@ import cartopy.crs as ccrs
 import dateutil
 import concurrent.futures
 import time
+from rex.resource_extraction import MultiYearWindX
 
 
 @timeit
@@ -29,46 +30,46 @@ def connected_hsds_file(request, config):
     and uses demo API key (rate-limited)
     if none of the relevant parameters is specified; it uses read-only mode.
     """
-    if 'domain' in request.args:
-        domain = request.args['domain']
-    else:
-        domain = config["hsds"]["domain"]
-
-    if 'endpoint' in request.args:
-        endpoint = request.args['endpoint']
-    else:
-        endpoint = config["hsds"]["endpoint"]
-
-    if ('username' not in request.args) and ('password' not in request.args)\
-       and ('api_key' not in request.args):
-
-        username = config["hsds"]["username"]
-        password = config["hsds"]["password"]
-        api_key = config["hsds"]["api_key"]
-    else:
-        if 'username' in request.args:
-            username = request.args['username']
-        else:
-            raise InvalidUsage(("HSDS username is not specified. "
-                                "Specify all three--username, password, "
-                                "and api_key--or remove all three from "
-                                "request to use demo credentials."))
-
-        if 'password' in request.args:
-            password = request.args['password']
-        else:
-            raise InvalidUsage(("HSDS password is not specified. "
-                                "Specify all three--username, password, "
-                                "and api_key--or remove all three from "
-                                "request to use demo credentials."))
-
-        if 'api_key' in request.args:
-            api_key = request.args['api_key']
-        else:
-            raise InvalidUsage(("HSDS api_key is not specified. "
-                                "Specify all three--username, password, "
-                                "and api_key--or remove all three from "
-                                "request to use demo credentials."))
+    # if 'domain' in request.args:
+    #     domain = request.args['domain']
+    # else:
+    #     domain = config["hsds"]["domain"]
+    #
+    # if 'endpoint' in request.args:
+    #     endpoint = request.args['endpoint']
+    # else:
+    #     endpoint = config["hsds"]["endpoint"]
+    #
+    # if ('username' not in request.args) and ('password' not in request.args)\
+    #    and ('api_key' not in request.args):
+    #
+    #     username = config["hsds"]["username"]
+    #     password = config["hsds"]["password"]
+    #     api_key = config["hsds"]["api_key"]
+    # else:
+    #     if 'username' in request.args:
+    #         username = request.args['username']
+    #     else:
+    #         raise InvalidUsage(("HSDS username is not specified. "
+    #                             "Specify all three--username, password, "
+    #                             "and api_key--or remove all three from "
+    #                             "request to use demo credentials."))
+    #
+    #     if 'password' in request.args:
+    #         password = request.args['password']
+    #     else:
+    #         raise InvalidUsage(("HSDS password is not specified. "
+    #                             "Specify all three--username, password, "
+    #                             "and api_key--or remove all three from "
+    #                             "request to use demo credentials."))
+    #
+    #     if 'api_key' in request.args:
+    #         api_key = request.args['api_key']
+    #     else:
+    #         raise InvalidUsage(("HSDS api_key is not specified. "
+    #                             "Specify all three--username, password, "
+    #                             "and api_key--or remove all three from "
+    #                             "request to use demo credentials."))
 
     try:
         # This worked for public HSDS instance
@@ -80,16 +81,23 @@ def connected_hsds_file(request, config):
         #                mode='r')
 
         # This works for dedicated HSDS instance
-        f = h5pyd.File(domain=domain,
-                       endpoint=endpoint,
-                       mode='r')
-        return f
+        # f = h5pyd.File(domain=domain,
+        #                endpoint=endpoint,
+        #                mode='r')
+        # return f
+
+        domain = config["hsds"]["domain"]
+        myr = MultiYearWindX(domain, hsds=True)
+        return myr
+
     except OSError:
-        raise InvalidUsage(("Failed to access specified HSDS resource. "
-                            "Check credentials: "
-                            "domain, endpoint, username, password, api_key. "
-                            "It could be a transient HSDS connection issue. "
-                            "Try again later."),
+        # raise InvalidUsage(("Failed to access specified HSDS resource. "
+        #                     "Check credentials: "
+        #                     "domain, endpoint, username, password, api_key. "
+        #                     "It could be a transient HSDS connection issue. "
+        #                     "Try again later."),
+        #                    status_code=403)
+        raise InvalidUsage(("Failed to access specified HSDS resource (using MultiYearWindX class)."),
                            status_code=403)
 
 
@@ -142,12 +150,40 @@ def indicesForCoord(f, coords_df, lat_index, lon_index):
 
 
 @timeit
+def find_tile_optimized(f, lat, lon, gridpoint_count=1):
+    """ Return dataframe with information about gridpoints in resource f that
+    are neighboring (lat, lon).
+
+    This is the NEW version; old one below should be eventually DEPRECATED!
+    """
+    dd,ii = f.tree.query((lat, lon), gridpoint_count)
+    if gridpoint_count == 1:
+        dd = [dd]
+        ii = [ii]
+
+    gridpoints_latlon = f.coordinates[ii]
+
+    res = pd.DataFrame(columns=["lat", "lon", "index", "x_centered", "y_centered", "d"])
+
+    for i in range(len(ii)):
+        res.loc[len(res)] = [gridpoints_latlon[i][0], gridpoints_latlon[i][1], ii[i], \
+                             gridpoints_latlon[i][0] - lat, gridpoints_latlon[i][1] - lon, \
+                             dd[i]]
+
+    res["index"] = pd.to_numeric(res["index"], downcast='integer')
+
+    # Returned dataframe will be sorted by d because tree.query() returns points sorted by distance
+    return res
+
+@timeit
 def find_tile(f, coords_df, lat, lon, radius=3, trim=4):
     """ Return dataframe with information about gridpoints in resource f that
     are neighboring (lat, lon). At first, there will be (radius*2) ^ 2
     entries/neighbors. The dataframe will be sorted by the distance (in meters)
     from (lat, lon); the first row -- nearest neighbor. Finally,
     the function will return N=trim first/nearest rows.
+
+    Should be DEPRECATED!
     """
 
     # Appropriate for lat/lon pairs

@@ -1,7 +1,9 @@
 {
   "hsds":
   {
-    "endpoint": "https://tap-hsds.ace.nrel.gov",
+    "endpoint_OFFICIAL": "https://developer.nrel.gov/api/hsds",
+    "endpoint_DEDICATED": "https://tap-hsds.ace.nrel.gov",
+    "endpoint": "https://developer.nrel.gov/api/hsds",
     "domain": "/nrel/wtk-us.h5",
     "username": null,
     "password": null,

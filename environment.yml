@@ -1,4 +1,7 @@
 name: dw-tap-api
+channels:
+  - nrel
+  - defaults
 dependencies:
 - python=3.7
 - pip
@@ -7,6 +10,7 @@ dependencies:
 - numpy
 - requests
 - cartopy
+- nrel-rex
 - pip:
   - h5pyd 
   - flask-cors

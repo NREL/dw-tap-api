@@ -103,17 +103,18 @@ def single_height_spatial_interpolation(args):
 def prepare_windspeed(height, lat, lon,
                       start_date, stop_date, spatial_interpolation,
                       vertical_interpolation,
-                      hsds_f,
-                      time_df,
-                      coords_df,
+                      wind_r, heights, datasets, time_index,
                       debug=False):
     debug_info = []
 
-    ts = time.time()
-    heights = available_heights(hsds_f, prefix="windspeed")
-    datasets = available_datasets(hsds_f)
-    te = time.time()
-    print("***** Timed getting heights and datasets, windspeed.py:", te - ts)
+    # print("Inside prepare_windspeed()")
+    # ts = time.time()
+    # heights = available_heights(hsds_f, prefix="windspeed")
+    # datasets = available_datasets(hsds_f)
+    # te = time.time()
+    # print("***** Timed getting heights and datasets, windspeed.py:", te - ts)
+    # print(heights)
+    # print(datasets)
 
     bypass_vertical_interpolation = False
     if height.is_integer() and int(height) in heights:
@@ -129,7 +130,10 @@ def prepare_windspeed(height, lat, lon,
                             "inversemoninobukhovlength_2m"))
 
     ts = time.time()
+    time_df = pd.DataFrame({"datetime": time_index[:]}, index=range(0, time_index.shape[0]))
     tidx, timestamps = time_indices_select(time_df, start_date, stop_date)
+    start_idx = tidx[0]
+    end_idx = tidx[-1]
     te = time.time()
     print("***** Timed getting time indices, windspeed.py:", te - ts)
 
@@ -146,27 +150,49 @@ def prepare_windspeed(height, lat, lon,
         debug_info.append("Available datasets: %s" % str(datasets))
 
     ts = time.time()
-    tile_df = find_tile(hsds_f, coords_df, lat, lon, radius=1)
+    #tile_df = find_tile(hsds_f, coords_df, lat, lon, radius=1)
+    tile_df = find_tile_optimized(wind_r, lat, lon, gridpoint_count=4)
     te = time.time()
     print("***** Timed getting tile, windspeed.py:", te - ts)
+    print(tile_df)
+    print(tile_df["index"].tolist()[0])
+
+    # Example of tile_df:
+    #          lat        lon    index  x_centered  y_centered         d
+    # 0  40.714733 -74.016357  2300564    0.001933   -0.010457  0.010635
+    # 1  40.709702 -73.992798  2301506   -0.003098    0.013102  0.013464
+    # 2  40.732597 -74.009735  2300565    0.019797   -0.003835  0.020165
+    # 3  40.691830 -73.999451  2301505   -0.020970    0.006449  0.021940
 
     if debug:
         debug_info += df2strings(tile_df)
 
     print("bypass_vertical_interpolation:", bypass_vertical_interpolation)
     if not bypass_vertical_interpolation:
+        # ts = time.time()
+        # # Use Nearest Neighbor for imol -- inversemoninobukhovlength_2m
+        # imol_dset = wind_r["inversemoninobukhovlength_2m"]
+        # te = time.time()
+        # print("***** Timed getting inverse, imol_dset, windspeed.py:", te - ts)
+        # # head(1) is sufficient for nearest neighbor
+        # ts = time.time()
+        # imol_neighbor_ts_df = extract_ts_for_neighbors(tile_df.head(1),
+        #                                                tidx, imol_dset,
+        #                                                impl="sequential")
+        # te = time.time()
+
         ts = time.time()
-        # Use Nearest Neighbor for imol -- inversemoninobukhovlength_2m
-        imol_dset = hsds_f["inversemoninobukhovlength_2m"]
-        te = time.time()
-        print("***** Timed getting inverse, imol_dset, windspeed.py:", te - ts)
-        # head(1) is sufficient for nearest neighbor
-        ts = time.time()
-        imol_neighbor_ts_df = extract_ts_for_neighbors(tile_df.head(1),
-                                                       tidx, imol_dset,
-                                                       impl="sequential")
+        # Nearest neighbor for inversemoninobukhovlength_2m
+        imol_neighbor_ts_df = \
+            wind_r['inversemoninobukhovlength_2m', \
+                start_idx:end_idx, \
+                tile_df["index"].tolist()[0]]
+        imol_neighbor_ts_df = \
+            pd.DataFrame({"nearest": imol_neighbor_ts_df})
+
         te = time.time()
         print("***** Timed getting inverse, imol_neighbor_ts_df, windspeed.py:", te - ts)
+        print("imol_neighbor_ts_df: \n", imol_neighbor_ts_df)
 
         ts = time.time()
         imol_df = interpolate_spatially(tile_df.head(1), imol_neighbor_ts_df,
@@ -184,7 +210,7 @@ def prepare_windspeed(height, lat, lon,
 
         ts = time.time()
         # Process two heights in parallel, in separate threads
-        tasks = [(height, hsds_f, tile_df, tidx,
+        tasks = [(height, wind_r, tile_df, tidx,
                   spatial_interpolation, timestamps)
                  for height in [height_below, height_above]]
         with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -270,58 +296,59 @@ def validated_params_windspeed(request):
     """
 
     # Performance benchmarks, implemented to test performance of HSDS instance
-    if 'perfbench' in request.args:
-        perfbench = int(request.args['perfbench'])
-        if perfbench == 1:
-            # 1-month-worth of data, only spatial interpolation (NN)
-            start_date = validated_dt('20110101')
-            stop_date = validated_dt('20110201')
-            si = "nearest"
-            vi = "nn"
-            lat = 39.8636622292353
-            lon = -105.12315215422839
-            height = 60.0
-            return height, lat, lon, start_date, stop_date, si, vi
-        elif perfbench == 2:
-            # 1-year-worth of data, only spatial interpolation (NN)
-            start_date = validated_dt('20110101')
-            stop_date = validated_dt('20120101')
-            si = "nearest"
-            vi = "nn"
-            lat = 39.8636622292353
-            lon = -105.12315215422839
-            height = 60.0
-            return height, lat, lon, start_date, stop_date, si, vi
-        elif perfbench == 3:
-            # 1-year-worth of data, spatial + vertical interpolation
-            start_date = validated_dt('20110101')
-            stop_date = validated_dt('20120101')
-            si = "idw"
-            vi = "neutral_power_law"
-            lat = 39.8636622292353
-            lon = -105.12315215422839
-            height = 55.55
-            return height, lat, lon, start_date, stop_date, si, vi
-        elif perfbench == 4:
-            # 2-years-worth of data, spatial + vertical interpolation
-            start_date = validated_dt('20070101')
-            stop_date = validated_dt('20090101')
-            si = "idw"
-            vi = "neutral_power_law"
-            lat = 39.8636622292353
-            lon = -105.12315215422839
-            height = 55.55
-            return height, lat, lon, start_date, stop_date, si, vi
-        elif perfbench == 5:
-            # 3-years-worth of data, spatial + vertical interpolation
-            start_date = validated_dt('20070101')
-            stop_date = validated_dt('20100101')
-            si = "idw"
-            vi = "neutral_power_law"
-            lat = 39.8636622292353
-            lon = -105.12315215422839
-            height = 55.55
-            return height, lat, lon, start_date, stop_date, si, vi
+    #
+    # if 'perfbench' in request.args:
+    #     perfbench = int(request.args['perfbench'])
+    #     if perfbench == 1:
+    #         # 1-month-worth of data, only spatial interpolation (NN)
+    #         start_date = validated_dt('20110101')
+    #         stop_date = validated_dt('20110201')
+    #         si = "nearest"
+    #         vi = "nn"
+    #         lat = 39.8636622292353
+    #         lon = -105.12315215422839
+    #         height = 60.0
+    #         return height, lat, lon, start_date, stop_date, si, vi, "json"
+    #     elif perfbench == 2:
+    #         # 1-year-worth of data, only spatial interpolation (NN)
+    #         start_date = validated_dt('20110101')
+    #         stop_date = validated_dt('20120101')
+    #         si = "nearest"
+    #         vi = "nn"
+    #         lat = 39.8636622292353
+    #         lon = -105.12315215422839
+    #         height = 60.0
+    #         return height, lat, lon, start_date, stop_date, si, vi, "json"
+    #     elif perfbench == 3:
+    #         # 1-year-worth of data, spatial + vertical interpolation
+    #         start_date = validated_dt('20110101')
+    #         stop_date = validated_dt('20120101')
+    #         si = "idw"
+    #         vi = "neutral_power_law"
+    #         lat = 39.8636622292353
+    #         lon = -105.12315215422839
+    #         height = 55.55
+    #         return height, lat, lon, start_date, stop_date, si, vi, "json"
+    #     elif perfbench == 4:
+    #         # 2-years-worth of data, spatial + vertical interpolation
+    #         start_date = validated_dt('20070101')
+    #         stop_date = validated_dt('20090101')
+    #         si = "idw"
+    #         vi = "neutral_power_law"
+    #         lat = 39.8636622292353
+    #         lon = -105.12315215422839
+    #         height = 55.55
+    #         return height, lat, lon, start_date, stop_date, si, vi, "json"
+    #     elif perfbench == 5:
+    #         # 3-years-worth of data, spatial + vertical interpolation
+    #         start_date = validated_dt('20070101')
+    #         stop_date = validated_dt('20100101')
+    #         si = "idw"
+    #         vi = "neutral_power_law"
+    #         lat = 39.8636622292353
+    #         lon = -105.12315215422839
+    #         height = 55.55
+    #         return height, lat, lon, start_date, stop_date, si, vi, "json"
 
     if 'height' in request.args:
         height_str = request.args['height']
@@ -361,17 +388,21 @@ def validated_params_windspeed(request):
     else:
         raise InvalidUsage("Lon (longitude) is not provided.")
 
-    if 'start_date' in request.args:
-        start_date = validated_dt(request.args['start_date'])
+    if ('start_date' not in request.args) and ('stop_date' not in request.args):
+        start_date = validated_dt('20130101')
+        stop_date = validated_dt('20131231')
     else:
-        raise InvalidUsage(("Error: No start_date field provided. "
-                            "Please specify start_date."))
+        if 'start_date' in request.args:
+            start_date = validated_dt(request.args['start_date'])
+        else:
+            raise InvalidUsage(("Error: No start_date field provided. "
+                                "Please specify start_date."))
 
-    if 'stop_date' in request.args:
-        stop_date = validated_dt(request.args['stop_date'])
-    else:
-        raise InvalidUsage(("Error: No stop_date field provided. "
-                            "Please specify stop_date."))
+        if 'stop_date' in request.args:
+            stop_date = validated_dt(request.args['stop_date'])
+        else:
+            raise InvalidUsage(("Error: No stop_date field provided. "
+                                "Please specify stop_date."))
 
     if 'spatial_interpolation' in request.args:
         si = request.args['spatial_interpolation']
@@ -402,4 +433,12 @@ def validated_params_windspeed(request):
         raise InvalidUsage(("Error: No vertical_interpolation field provided. "
                             "Please specify vertical_interpolation."))
 
-    return height, lat, lon, start_date, stop_date, si, vi
+    if 'output' in request.args:
+        output_format = request.args['output']
+        if output_format not in ["json", "csv"]:
+            raise InvalidUsage(("Output format provided is invalid. "
+                                "Choose json on csv."))
+    else:
+        output_format = "json"
+
+    return height, lat, lon, start_date, stop_date, si, vi, output_format
