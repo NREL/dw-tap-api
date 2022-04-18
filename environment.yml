@@ -1,11 +1,15 @@
 name: dw-tap-api
+channels:
+- defaults
+- conda-forge
 dependencies:
-- python=3.7
+- python=3.9
 - pip
 - pandas
 - numpy
 - requests
 - cartopy
+- pyproj
 - pip:
   - h5pyd 
   - flask-cors
