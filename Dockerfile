@@ -1,6 +1,5 @@
-# FROM ubuntu:20.04
-# FROM ubuntu:22.04
 FROM ubuntu:latest
+#FROM ubuntu:22.10
 
 LABEL MAINTAINER="Dmitry Duplyakin <dmitry.duplyakin@nrel.gov>"
 
@@ -8,7 +7,6 @@ LABEL MAINTAINER="Dmitry Duplyakin <dmitry.duplyakin@nrel.gov>"
 RUN apt-get update && \
     apt-get install -y build-essential  && \
     apt-get install -y wget && \
-    apt-get install -y openssl && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -24,6 +22,8 @@ ENV PATH=$CONDA_DIR/bin:$PATH
 
 WORKDIR /app
 COPY . /app
+
+RUN conda install openssl==1.1.1p
 
 RUN conda env create -f environment.yml
 
