@@ -23,7 +23,7 @@ ENV PATH=$CONDA_DIR/bin:$PATH
 WORKDIR /app
 COPY . /app
 
-RUN conda install openssl==1.1.1p
+RUN conda install -y openssl==1.1.1p
 
 RUN conda env create -f environment.yml
 
