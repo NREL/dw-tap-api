@@ -16,7 +16,7 @@ docker build -t tap-api:latest .
 
 Run:
 ```shell
-docker run -p 8080:80 -d tap-api:latest
+docker run -p 8080:80 -it tap-api:latest /bin/bash
 ```
 
 Inside the container, flask app will run on port `80`.  On the host, you can use any available port, e.g, `8080`, like shown above.  
