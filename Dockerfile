@@ -1,6 +1,6 @@
 # FROM ubuntu:20.04
 # FROM ubuntu:22.04
-FROM ubuntu:22.10
+FROM ubuntu:latest
 
 LABEL MAINTAINER="Dmitry Duplyakin <dmitry.duplyakin@nrel.gov>"
 
