@@ -1,4 +1,5 @@
-FROM ubuntu:20.04
+FROM ubuntu:latest
+#FROM ubuntu:22.10
 
 LABEL MAINTAINER="Dmitry Duplyakin <dmitry.duplyakin@nrel.gov>"
 
@@ -21,6 +22,8 @@ ENV PATH=$CONDA_DIR/bin:$PATH
 
 WORKDIR /app
 COPY . /app
+
+RUN conda install -y openssl==1.1.1p
 
 RUN conda env create -f environment.yml
 
