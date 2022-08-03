@@ -1,5 +1,5 @@
-FROM ubuntu:latest
-#FROM ubuntu:22.04
+# FROM ubuntu:latest
+FROM ubuntu:22.04
 
 LABEL MAINTAINER="Dmitry Duplyakin <dmitry.duplyakin@nrel.gov>"
 
@@ -26,6 +26,10 @@ COPY . /app
 #RUN conda install -y openssl==1.1.1p
 
 RUN conda env create -f environment.yml
+
+RUN conda update -n base -c defaults conda -y
+# Testing downgrading numpy
+RUN conda install numpy==1.22.0 -n dw-tap-api -c conda-forge
 
 EXPOSE 80
 
