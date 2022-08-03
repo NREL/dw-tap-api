@@ -29,7 +29,7 @@ RUN conda env create -f environment.yml
 
 RUN conda update -n base -c defaults conda -y
 # Testing downgrading numpy
-RUN conda install numpy==1.22.0 -n dw-tap-api -c conda-forge
+RUN conda install numpy==1.22.0 -n dw-tap-api -c conda-forge -y
 
 EXPOSE 80
 
