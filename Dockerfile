@@ -1,5 +1,5 @@
 # FROM ubuntu:latest
-FROM ubuntu:22.04
+FROM ubuntu:22.10
 
 LABEL MAINTAINER="Dmitry Duplyakin <dmitry.duplyakin@nrel.gov>"
 
@@ -19,6 +19,7 @@ ENV CONDA_DIR /opt/conda
 # Put conda in path so we can use conda activate
 ENV PATH=$CONDA_DIR/bin:$PATH
 
+RUN conda update -n base -c defaults conda -y
 
 WORKDIR /app
 COPY . /app
@@ -27,9 +28,8 @@ COPY . /app
 
 RUN conda env create -f environment.yml
 
-RUN conda update -n base -c defaults conda -y
 # Testing downgrading numpy
-RUN conda install numpy==1.22.0 -n dw-tap-api -c conda-forge -y
+#RUN conda install numpy==1.22.0 -n dw-tap-api -c conda-forge -y
 
 EXPOSE 80
 
