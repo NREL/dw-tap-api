@@ -31,6 +31,9 @@ RUN conda env create -f environment.yml
 # Testing downgrading numpy
 #RUN conda install numpy==1.22.0 -n dw-tap-api -c conda-forge -y
 
+RUN conda install -n base Django -y
+RUN conda install -n dw-tap-api Django -y
+
 EXPOSE 80
 
 # Conda env in the path below needs to match the name in the first line of environment.yml
