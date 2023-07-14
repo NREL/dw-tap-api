@@ -22,7 +22,7 @@ Examples:
 
 Additional info about running the app is in README.md.
 
-Written by: Dmitry Duplyakin (dmitry.duplyakin@nrel.gov) and Caleb Phillips (caleb.phillips@nrel.gov) 
+Written by: Dmitry Duplyakin (dmitry.duplyakin@nrel.gov) and Caleb Phillips (caleb.phillips@nrel.gov)
 in collaboration with the National Renewable Energy Laboratories.
 """
 
@@ -33,12 +33,19 @@ import json
 import argparse
 import threading
 import queue
+import matplotlib
+matplotlib.use('agg')
 
 from windspeed import *
 from winddirection import *
 from hsds_helpers import *
 from invalid_usage import InvalidUsage
 from helpers import *
+from v2 import validated_params_v2
+
+import h5pyd
+from dw_tap.data_fetching import getData
+from dw_tap.vis import plot_monthly_avg
 
 with open('config.json', 'r') as f:
     config = json.load(f)
@@ -71,6 +78,7 @@ cors = CORS(app)
 # Switch from desired json output to debug info and intemediate dataframes
 DEBUG_OUTPUT = False
 
+f = h5pyd.File("/nrel/wtk-us.h5", 'r', bucket="nrel-pds-hsds")
 
 @app.errorhandler(InvalidUsage)
 def handle_invalid_usage(error):
@@ -266,7 +274,7 @@ vertical_interpolation=linear&spatial_interpolation=idw
     interpolation; allowed: `nearest`, `linear`, `neutral_power`,
     `stability_power`. Currently applied only to the windspeed data (not direction).
     @apiParam {String} spatial_interpolation Method used for spatial
-    interpolation; allowed: `nearest`, `linear`, `cubic`, `idw`. Currently 
+    interpolation; allowed: `nearest`, `linear`, `cubic`, `idw`. Currently
     applied only to the windspeed data (not direction).
     @apiParam {String} [username] Optional attribute of the HSDS credentials
     @apiParam {String} [password] Optional attribute of the HSDS credentials
@@ -324,6 +332,80 @@ vertical_interpolation=linear&spatial_interpolation=idw
 @app.route('/check', methods=['GET'])
 def check():
     return json.dumps({"Status": "OK!"})
+
+# New endpoint
+@app.route('/v2/ts', methods=['GET'])
+def v2_ws():
+
+    #example = pd.DataFrame({"time": [1,2], "value": [2,3]})
+    #return example.to_json()
+
+    height, lat, lon = validated_params_v2(request)
+
+    f = h5pyd.File("/nrel/wtk-us.h5", 'r', bucket="nrel-pds-hsds")
+    atmospheric_df = getData(f, lat, lon, height,
+                             "IDW",
+                             power_estimate=False,
+                             inverse_monin_obukhov_length=False,
+                             start_time_idx=0, end_time_idx=20, time_stride=1)
+
+    return atmospheric_df.to_csv()
+
+@app.route('/v2/plot_all', methods=['GET'])
+def v2_plot_all():
+
+
+    height, lat, lon = validated_params_v2(request)
+
+    f = h5pyd.File("/nrel/wtk-us.h5", 'r', bucket="nrel-pds-hsds")
+    atmospheric_df = getData(f, lat, lon, height,
+                             "IDW",
+                             power_estimate=False,
+                             inverse_monin_obukhov_length=False,
+                             #start_time_idx=0, end_time_idx=8760, time_stride=1)
+                            )
+
+    #to_plot = atmospheric_df["ws"]
+    #to_plot.index = atmospheric_df["datetime"]
+    #res = to_plot.plot(figsize=(4, 3), fontsize=8).get_figure()
+    #res.savefig('saved.png', dpi=300)
+
+    plot_monthly_avg(atmospheric_df, title="(%f, %f), %.0fm hub height" % (lat, lon, height),
+                           save_to_file='saved.png')
+    return flask.send_file('saved.png')
+
+@app.route('/v2/plot_year', methods=['GET'])
+def v2_plot_year():
+
+    height, lat, lon = validated_params_v2(request)
+
+    if 'year' in request.args:
+        year_str = request.args['year']
+        try:
+            year = int(year_str)
+        except ValueError:
+            raise InvalidUsage(("Year provided is not a number"))
+
+        # Only support years that are in WTK: 2007-2013
+        if year < 2007 or year > 2013:
+            raise InvalidUsage("Year should be one of: 2007, 2008, 2009, 2010, 2011, 2012, 2013.")
+    else:
+        year = 2013
+
+    start_time_idx = (year - 2007) * 8760
+    end_time_idx = (year - 2007 + 1) * 8760
+    atmospheric_df = getData(f, lat, lon, height,
+                             "IDW",
+                             power_estimate=False,
+                             inverse_monin_obukhov_length=False,
+                             start_time_idx=start_time_idx, end_time_idx=end_time_idx,
+                             time_stride=1)
+    print(atmospheric_df.head())
+    print(atmospheric_df.tail())
+
+    plot_monthly_avg(atmospheric_df, title="(%f, %f), %.0fm hub height" % (lat, lon, height),
+                           save_to_file='saved.png')
+    return flask.send_file('saved.png')
 
 
 def main():
