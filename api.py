@@ -44,8 +44,8 @@ from helpers import *
 from v2 import validated_params_v2
 
 import h5pyd
-from dw_tap.data_fetching import getData
-from dw_tap.vis import plot_monthly_avg
+#from dw_tap.data_fetching import getData
+#from dw_tap.vis import plot_monthly_avg
 
 with open('config.json', 'r') as f:
     config = json.load(f)
