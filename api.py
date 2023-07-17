@@ -78,7 +78,8 @@ cors = CORS(app)
 # Switch from desired json output to debug info and intemediate dataframes
 DEBUG_OUTPUT = False
 
-f = h5pyd.File("/nrel/wtk-us.h5", 'r', bucket="nrel-pds-hsds")
+# Undo for actual fetching
+#f = h5pyd.File("/nrel/wtk-us.h5", 'r', bucket="nrel-pds-hsds")
 
 @app.errorhandler(InvalidUsage)
 def handle_invalid_usage(error):
@@ -333,6 +334,61 @@ vertical_interpolation=linear&spatial_interpolation=idw
 def check():
     return json.dumps({"Status": "OK!"})
 
+def pd2srw(df, lat, lon, height, year):
+# $ head /Applications/SAM_2022.11.21/SAM.app/Contents/wind_resource/WY\ Southern-Flat\ Lands.srw
+# loc_id,city??,WY,USA,year??,lat??,lon??,2088,-7,8760
+# Southern WY - flat lands (NREL AWS Truepower representative file)
+# Temperature,Pressure,Direction,Speed,Temperature,Pressure,Direction,Speed,Temperature,Pressure,Direction,Speed,Temperature,Pressure,Direction,Speed
+# C,atm,degrees,m/s,C,atm,degrees,m/s,C,atm,degrees,m/s,C,atm,degrees,m/s
+# 50,50,50,50,80,80,80,80,110,110,110,110,140,140,140,140
+# -4.479,0.756533925,253,9.897,-4.719,0.753473476,254,10.665,-4.919,0.75041204,254,11.333,-5.069,0.747450284,254,11.989
+# -4.279,0.759496669,261,9.659,-4.519,0.756435233,262,10.378,-4.699,0.753374784,264,10.998,-4.869,0.750313348,264,11.53
+# -4.079,0.759990131,278,8.062,-4.319,0.756928695,282,8.766,-4.469,0.753966938,285,9.287,-4.569,0.750905502,285,9.749
+# -3.639,0.761371823,312,8.447,-3.819,0.758310387,316,9.23,-4.019,0.755348631,318,9.883,-4.269,0.752287195,318,10.496
+# -3.679,0.762260054,321,9.84,-3.919,0.759199605,324,10.566,-4.169,0.756039477,325,11.117,-4.369,0.752979028,325,11.626
+
+    # Need to support a single height
+
+    header = "loc_id,denver,CO,USA,%s,%s,%s,2088,-7,8760\n" % (year,lat, lon) + \
+             "Somewhere - ? (NREL WTK sample)\n" + \
+             "Temperature,Pressure,Direction,Speed\n" + \
+             "C,atm,degrees,m/s\n" + \
+             "%d,%d,%d,%d\n" % (height,height,height,height)
+
+    return header + df[["temp", "pres", "wd", "ws"]].to_csv(index=False, header=False)
+
+# New endpoint
+@app.route('/v2/srw', methods=['GET'])
+def v2_srw():
+    height, lat, lon = validated_params_v2(request)
+    if 'year' in request.args:
+        year_str = request.args['year']
+        try:
+            year = int(year_str)
+        except ValueError:
+            raise InvalidUsage(("Year provided is not a number"))
+
+        # Only support years that are in WTK: 2007-2013
+        if year < 2007 or year > 2013:
+            raise InvalidUsage("Year should be one of: 2007, 2008, 2009, 2010, 2011, 2012, 2013.")
+    else:
+        year = 2013
+
+    # atmospheric_df = getData(...) --- make sure we get: ws, wd, pres, temp (power_estimate=True?)
+    atmospheric_df = pd.read_csv("saved.csv")
+    # 8760 rows
+    n = int(8760 / len(atmospheric_df)) + 10
+    completed = pd.concat([atmospheric_df] * n)[:8760]
+    completed["pres"] = 5
+    completed["temp"] = 3
+
+    srw = pd2srw(completed, lat, lon, height, year)
+
+    return srw
+    # Undo this later (helps see individual lines in browser)
+    #return srw.replace("\n", "<br>")
+
+
 # New endpoint
 @app.route('/v2/ts', methods=['GET'])
 def v2_ws():
@@ -343,11 +399,14 @@ def v2_ws():
     height, lat, lon = validated_params_v2(request)
 
     f = h5pyd.File("/nrel/wtk-us.h5", 'r', bucket="nrel-pds-hsds")
-    atmospheric_df = getData(f, lat, lon, height,
-                             "IDW",
-                             power_estimate=False,
-                             inverse_monin_obukhov_length=False,
-                             start_time_idx=0, end_time_idx=20, time_stride=1)
+    #atmospheric_df = getData(f, lat, lon, height,
+    #                         "IDW",
+    #                         power_estimate=False,
+    #                         inverse_monin_obukhov_length=False,
+    #                         start_time_idx=0, end_time_idx=20, time_stride=1)
+    #atmospheric_df.to_csv("saved.csv", index=False)
+    atmospheric_df = pd.read_csv("saved.csv")
+    print(atmospheric_df)
 
     return atmospheric_df.to_csv()
 
