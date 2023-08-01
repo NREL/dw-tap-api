@@ -494,29 +494,34 @@ def v2_stresstest():
     lat, lon, height = 39.0, -90.0 + delta, 40
     atmospheric_df1 = getData(f, lat, lon, height,
                             "IDW",
-                            power_estimate=False,
+                            power_estimate=True,
                             inverse_monin_obukhov_length=False,
                             start_time_idx=0, end_time_idx=8760, time_stride=1,
-                            saved_dt=dt)
+                            saved_dt=dt,
+                            srw=True)
+    year = 2007
+    srw = pd2srw(atmospheric_df1, lat, lon, height, year)
+    return srw
 
-    lat, lon, height = 40.0 + delta, -91.0, 50
-    atmospheric_df2 = getData(f, lat, lon, height,
-                                "IDW",
-                                power_estimate=False,
-                                inverse_monin_obukhov_length=False,
-                                start_time_idx=0, end_time_idx=8760, time_stride=1,
-                                saved_dt=dt)
-
-    lat, lon, height = 38.0 + delta, -89.0 + delta, 60
-    atmospheric_df3 = getData(f, lat, lon, height,
-                                "IDW",
-                                power_estimate=False,
-                                inverse_monin_obukhov_length=False,
-                                start_time_idx=0, end_time_idx=8760, time_stride=1,
-                                saved_dt=dt)
-
-    combined = pd.concat([atmospheric_df1, atmospheric_df2, atmospheric_df3])
-    return "Fetched 3 datasets; Total length: %d<br>Avg. ws=%f" % (len(combined), combined["ws"].mean())
+    # lat, lon, height = 40.0 + delta, -91.0, 50
+    # atmospheric_df2 = getData(f, lat, lon, height,
+    #                             "IDW",
+    #                             power_estimate=False,
+    #                             inverse_monin_obukhov_length=False,
+    #                             start_time_idx=0, end_time_idx=8760, time_stride=1,
+    #                             saved_dt=dt)
+    #
+    # lat, lon, height = 38.0 + delta, -89.0 + delta, 60
+    # atmospheric_df3 = getData(f, lat, lon, height,
+    #                             "IDW",
+    #                             power_estimate=False,
+    #                             inverse_monin_obukhov_length=False,
+    #                             start_time_idx=0, end_time_idx=8760, time_stride=1,
+    #                             saved_dt=dt)
+    #
+    #combined = pd.concat([atmospheric_df1, atmospheric_df2, atmospheric_df3])
+    #combined = pd.concat([atmospheric_df1])
+    #return "Fetched 3 datasets; Total length: %d<br>Avg. ws=%f" % (len(combined), combined["ws"].mean())
 
 def main():
     app.run(host=host, port=port)
