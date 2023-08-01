@@ -29,6 +29,7 @@ in collaboration with the National Renewable Energy Laboratories.
 import flask
 from flask import request, jsonify
 from flask_cors import CORS
+import random
 import json
 import argparse
 import threading
@@ -44,8 +45,8 @@ from helpers import *
 from v2 import validated_params_v2
 
 import h5pyd
-#from dw_tap.data_fetching import getData
-#from dw_tap.vis import plot_monthly_avg
+from dw_tap.data_fetching import getData
+from dw_tap.vis import plot_monthly_avg
 
 with open('config.json', 'r') as f:
     config = json.load(f)
@@ -79,7 +80,20 @@ cors = CORS(app)
 DEBUG_OUTPUT = False
 
 # Undo for actual fetching
-#f = h5pyd.File("/nrel/wtk-us.h5", 'r', bucket="nrel-pds-hsds")
+f = h5pyd.File("/nrel/wtk-us.h5", 'r', bucket="nrel-pds-hsds")
+
+# To recreate saving of the time index, uncomment:
+# def _getDateTime(f):
+#     """ Retrieves and parses date and time from data returning dt["datetime"] """
+#     dt = f["datetime"]
+#     dt = pd.DataFrame({"datetime": dt[:]},index=range(0,dt.shape[0]))
+#     dt['datetime'] = dt['datetime'].apply(dateutil.parser.parse)
+#     dt["datetime"] = pd.to_datetime(dt['datetime'])
+#     return dt["datetime"]
+#
+# dt=_getDateTime(f)
+# dt.to_csv("wtk-dt.csv")
+dt = pd.read_csv("wtk-dt.csv")
 
 @app.errorhandler(InvalidUsage)
 def handle_invalid_usage(error):
@@ -374,8 +388,15 @@ def v2_srw():
     else:
         year = 2013
 
-    # atmospheric_df = getData(...) --- make sure we get: ws, wd, pres, temp (power_estimate=True?)
-    atmospheric_df = pd.read_csv("saved.csv")
+    f = h5pyd.File("/nrel/wtk-us.h5", 'r', bucket="nrel-pds-hsds")
+    atmospheric_df = getData(f, lat, lon, height,
+                            "IDW",
+                            power_estimate=False,
+                            inverse_monin_obukhov_length=False,
+                            start_time_idx=0, end_time_idx=20, time_stride=1)
+    #atmospheric_df.to_csv("saved.csv", index=False)
+    #atmospheric_df = pd.read_csv("saved.csv")
+
     # 8760 rows
     n = int(8760 / len(atmospheric_df)) + 10
     completed = pd.concat([atmospheric_df] * n)[:8760]
@@ -416,7 +437,6 @@ def v2_plot_all():
 
     height, lat, lon = validated_params_v2(request)
 
-    f = h5pyd.File("/nrel/wtk-us.h5", 'r', bucket="nrel-pds-hsds")
     atmospheric_df = getData(f, lat, lon, height,
                              "IDW",
                              power_estimate=False,
@@ -462,10 +482,41 @@ def v2_plot_year():
     print(atmospheric_df.head())
     print(atmospheric_df.tail())
 
+
     plot_monthly_avg(atmospheric_df, title="(%f, %f), %.0fm hub height" % (lat, lon, height),
                            save_to_file='saved.png')
     return flask.send_file('saved.png')
 
+@app.route('/v2/stresstest', methods=['GET'])
+def v2_stresstest():
+    delta = random.random()
+
+    lat, lon, height = 39.0, -90.0 + delta, 40
+    atmospheric_df1 = getData(f, lat, lon, height,
+                            "IDW",
+                            power_estimate=False,
+                            inverse_monin_obukhov_length=False,
+                            start_time_idx=0, end_time_idx=8760, time_stride=1,
+                            saved_dt=dt)
+
+    lat, lon, height = 40.0 + delta, -91.0, 50
+    atmospheric_df2 = getData(f, lat, lon, height,
+                                "IDW",
+                                power_estimate=False,
+                                inverse_monin_obukhov_length=False,
+                                start_time_idx=0, end_time_idx=8760, time_stride=1,
+                                saved_dt=dt)
+
+    lat, lon, height = 38.0 + delta, -89.0 + delta, 60
+    atmospheric_df3 = getData(f, lat, lon, height,
+                                "IDW",
+                                power_estimate=False,
+                                inverse_monin_obukhov_length=False,
+                                start_time_idx=0, end_time_idx=8760, time_stride=1,
+                                saved_dt=dt)
+
+    combined = pd.concat([atmospheric_df1, atmospheric_df2, atmospheric_df3])
+    return "Fetched 3 datasets; Total length: %d<br>Avg. ws=%f" % (len(combined), combined["ws"].mean())
 
 def main():
     app.run(host=host, port=port)

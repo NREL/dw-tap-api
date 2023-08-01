@@ -1,5 +1,5 @@
-# FROM ubuntu:latest
-FROM ubuntu:22.04
+# Use a minimal image (more minimal than ubuntu:22.04)
+FROM python:3.11.4
 
 LABEL MAINTAINER="Dmitry Duplyakin <dmitry.duplyakin@nrel.gov>"
 
@@ -24,12 +24,18 @@ RUN conda update -n base -c defaults conda -y
 WORKDIR /app
 COPY . /app
 
-#RUN conda install -y openssl==1.1.1p
+# Configuration for hsds endpoint 
+COPY .hscfg /root/.hscfg 
 
-RUN conda env create -f environment.yml
+# RUN conda env create -f environment.yml
+RUN conda env create -f environment-fixedversions.yml
 
-RUN conda install -n base Django -y
-RUN conda install -n dw-tap-api Django -y
+# Updated on 07/19/2023 to use latest Django versions
+#RUN conda install -c conda-forge -n base Django -y
+#RUN conda install -c conda-forge -n dw-tap-api Django -y
+
+# Install dw_tap package
+RUN python setup.py install
 
 EXPOSE 80
 
