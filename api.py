@@ -43,6 +43,7 @@ from hsds_helpers import *
 from invalid_usage import InvalidUsage
 from helpers import *
 from v2 import validated_params_v2
+from v2 import validated_params_v2_w_year
 
 import h5pyd
 from dw_tap.data_fetching import getData
@@ -374,40 +375,23 @@ def pd2srw(df, lat, lon, height, year):
 # New endpoint
 @app.route('/v2/srw', methods=['GET'])
 def v2_srw():
-    height, lat, lon = validated_params_v2(request)
-    if 'year' in request.args:
-        year_str = request.args['year']
-        try:
-            year = int(year_str)
-        except ValueError:
-            raise InvalidUsage(("Year provided is not a number"))
-
-        # Only support years that are in WTK: 2007-2013
-        if year < 2007 or year > 2013:
-            raise InvalidUsage("Year should be one of: 2007, 2008, 2009, 2010, 2011, 2012, 2013.")
-    else:
-        year = 2013
-
+    height, lat, lon, year = validated_params_v2_w_year(request)
     f = h5pyd.File("/nrel/wtk-us.h5", 'r', bucket="nrel-pds-hsds")
+
+    dt = pd.read_csv("wtk-dt.csv")
+    dt["datetime"] = pd.to_datetime(dt["datetime"])
+    dt["year"] = dt["datetime"].apply(lambda x: x.year)
+    idx = dt[dt["year"] == year].index
+
     atmospheric_df = getData(f, lat, lon, height,
                             "IDW",
-                            power_estimate=False,
+                            power_estimate=True,
                             inverse_monin_obukhov_length=False,
-                            start_time_idx=0, end_time_idx=20, time_stride=1)
-    #atmospheric_df.to_csv("saved.csv", index=False)
-    #atmospheric_df = pd.read_csv("saved.csv")
-
-    # 8760 rows
-    n = int(8760 / len(atmospheric_df)) + 10
-    completed = pd.concat([atmospheric_df] * n)[:8760]
-    completed["pres"] = 5
-    completed["temp"] = 3
-
-    srw = pd2srw(completed, lat, lon, height, year)
-
+                            start_time_idx=idx[0], end_time_idx=idx[-1], time_stride=1,
+                            saved_dt=dt,
+                            srw=True)
+    srw = pd2srw(atmospheric_df, lat, lon, height, year)
     return srw
-    # Undo this later (helps see individual lines in browser)
-    #return srw.replace("\n", "<br>")
 
 
 # New endpoint

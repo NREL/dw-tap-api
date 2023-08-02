@@ -43,3 +43,16 @@ def validated_params_v2(request):
         raise InvalidUsage("Lon (longitude) is not provided.")
 
     return height, lat, lon
+
+
+def validated_params_v2_w_year(request):
+    height, lat, lon = validated_params_v2(request)
+
+    if 'year' in request.args:  
+        try: 
+            year = int(request.args['year'])
+        except ValueError:
+            raise InvalidUsage(("Year needs to be an integer."))
+    if year <= 2007 or year >= 2013:
+        raise InvalidUsage(("Year need to be between 2007 and 2013."))
+    return height, lat, lon, year
