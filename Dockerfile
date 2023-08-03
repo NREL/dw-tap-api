@@ -35,7 +35,8 @@ RUN conda env create -f environment-fixedversions.yml
 #RUN conda install -c conda-forge -n dw-tap-api Django -y
 
 # Install dw_tap package
-RUN python setup.py install
+RUN git clone https://github.com/NREL/dw-tap.git
+RUN cd dw-tap && /opt/conda/envs/dw-tap-api/bin/python setup.py install && cd ..
 
 EXPOSE 80
 
