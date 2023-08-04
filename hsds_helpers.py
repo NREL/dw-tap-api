@@ -12,7 +12,7 @@ from timing import timeit
 from pyproj import Proj
 import pandas as pd
 import numpy as np
-import cartopy.crs as ccrs
+#import cartopy.crs as ccrs
 import dateutil
 import concurrent.futures
 
@@ -37,6 +37,11 @@ def connected_hsds_file(request, config):
         endpoint = request.args['endpoint']
     else:
         endpoint = config["hsds"]["endpoint"]
+
+    if 'bucket' in request.args:
+        bucket = request.args['bucket']
+    else:
+        bucket = config["hsds"]["bucket"]
 
     if ('username' not in request.args) and ('password' not in request.args)\
        and ('api_key' not in request.args):
@@ -75,12 +80,13 @@ def connected_hsds_file(request, config):
                        username=username,
                        password=password,
                        api_key=api_key,
+                       bucket=bucket,
                        mode='r')
         return f
     except OSError:
         raise InvalidUsage(("Failed to access specified HSDS resource. "
                             "Check credentials: "
-                            "domain, endpoint, username, password, api_key. "
+                            "domain, endpoint, username, password, api_key, bucket. "
                             "It could be a transient HSDS connection issue. "
                             "Try again later."),
                            status_code=403)

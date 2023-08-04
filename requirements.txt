@@ -1,0 +1,14 @@
+Flask
+flask_cors
+geopandas
+h5pyd
+matplotlib
+numpy
+pandas
+pyproj
+python_dateutil
+scikit_learn
+scipy
+setuptools
+Shapely
+tensorflow

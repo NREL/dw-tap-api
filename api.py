@@ -81,7 +81,8 @@ cors = CORS(app)
 DEBUG_OUTPUT = False
 
 # Undo for actual fetching
-f = h5pyd.File("/nrel/wtk-us.h5", 'r', bucket="nrel-pds-hsds")
+#f = h5pyd.File("/nrel/wtk-us.h5", 'r', bucket="nrel-pds-hsds")
+#f = connected_hsds_file(request, config)
 
 # To recreate saving of the time index, uncomment:
 # def _getDateTime(f):
@@ -376,7 +377,10 @@ def pd2srw(df, lat, lon, height, year):
 @app.route('/v2/srw', methods=['GET'])
 def v2_srw():
     height, lat, lon, year = validated_params_v2_w_year(request)
-    f = h5pyd.File("/nrel/wtk-us.h5", 'r', bucket="nrel-pds-hsds")
+    #f = h5pyd.File("/nrel/wtk-us.h5", 'r', bucket="nrel-pds-hsds")
+    print("Establishing hsds connection")
+    f = connected_hsds_file(request, config)
+    print("Established hsds connection")
 
     dt = pd.read_csv("wtk-dt.csv")
     dt["datetime"] = pd.to_datetime(dt["datetime"])
