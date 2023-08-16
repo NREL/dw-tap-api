@@ -13,4 +13,6 @@ setuptools
 Shapely
 tensorflow
 xarray
+ecmwflibs
+cfgrib
 eccodes==1.2.0
