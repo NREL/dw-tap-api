@@ -36,6 +36,7 @@ import threading
 import queue
 import matplotlib
 matplotlib.use('agg')
+import os
 
 from windspeed import *
 from winddirection import *
@@ -378,9 +379,7 @@ def pd2srw(df, lat, lon, height, year):
 def v2_srw():
     height, lat, lon, year = validated_params_v2_w_year(request)
     #f = h5pyd.File("/nrel/wtk-us.h5", 'r', bucket="nrel-pds-hsds")
-    print("Establishing hsds connection")
     f = connected_hsds_file(request, config)
-    print("Established hsds connection")
 
     dt = pd.read_csv("wtk-dt.csv")
     dt["datetime"] = pd.to_datetime(dt["datetime"])
@@ -397,6 +396,30 @@ def v2_srw():
     srw = pd2srw(atmospheric_df, lat, lon, height, year)
     return srw
 
+# New endpoint for displaying plots
+@app.route('/v2/plot', methods=['GET'])
+def v2_plot():
+    height, lat, lon, year = validated_params_v2_w_year(request)
+    #f = h5pyd.File("/nrel/wtk-us.h5", 'r', bucket="nrel-pds-hsds")
+    f = connected_hsds_file(request, config)
+
+    dt = pd.read_csv("wtk-dt.csv")
+    dt["datetime"] = pd.to_datetime(dt["datetime"])
+    dt["year"] = dt["datetime"].apply(lambda x: x.year)
+    idx = dt[dt["year"] == year].index
+
+    atmospheric_df = getData(f, lat, lon, height,
+                            "IDW",
+                            power_estimate=True,
+                            inverse_monin_obukhov_length=False,
+                            start_time_idx=idx[0], end_time_idx=idx[-1], time_stride=1,
+                            saved_dt=dt)
+    plot_monthly_avg(atmospheric_df, \
+                     title="(%f, %f), %.0fm hub height" % (lat, lon, height),\
+                     save_to_file='saved.png',\
+                     show_avg_across_years=True,
+                     show_overall_avg=True)
+    return flask.send_file('saved.png')
 
 # New endpoint
 @app.route('/v2/ts', methods=['GET'])
@@ -419,61 +442,61 @@ def v2_ws():
 
     return atmospheric_df.to_csv()
 
-@app.route('/v2/plot_all', methods=['GET'])
-def v2_plot_all():
+# @app.route('/v2/plot_all', methods=['GET'])
+# def v2_plot_all():
+#
+#
+#     height, lat, lon = validated_params_v2(request)
+#
+#     atmospheric_df = getData(f, lat, lon, height,
+#                              "IDW",
+#                              power_estimate=False,
+#                              inverse_monin_obukhov_length=False,
+#                              #start_time_idx=0, end_time_idx=8760, time_stride=1)
+#                             )
+#
+#     #to_plot = atmospheric_df["ws"]
+#     #to_plot.index = atmospheric_df["datetime"]
+#     #res = to_plot.plot(figsize=(4, 3), fontsize=8).get_figure()
+#     #res.savefig('saved.png', dpi=300)
+#
+#     plot_monthly_avg(atmospheric_df, title="(%f, %f), %.0fm hub height" % (lat, lon, height),
+#                            save_to_file='saved.png')
+#     return flask.send_file('saved.png')
 
-
-    height, lat, lon = validated_params_v2(request)
-
-    atmospheric_df = getData(f, lat, lon, height,
-                             "IDW",
-                             power_estimate=False,
-                             inverse_monin_obukhov_length=False,
-                             #start_time_idx=0, end_time_idx=8760, time_stride=1)
-                            )
-
-    #to_plot = atmospheric_df["ws"]
-    #to_plot.index = atmospheric_df["datetime"]
-    #res = to_plot.plot(figsize=(4, 3), fontsize=8).get_figure()
-    #res.savefig('saved.png', dpi=300)
-
-    plot_monthly_avg(atmospheric_df, title="(%f, %f), %.0fm hub height" % (lat, lon, height),
-                           save_to_file='saved.png')
-    return flask.send_file('saved.png')
-
-@app.route('/v2/plot_year', methods=['GET'])
-def v2_plot_year():
-
-    height, lat, lon = validated_params_v2(request)
-
-    if 'year' in request.args:
-        year_str = request.args['year']
-        try:
-            year = int(year_str)
-        except ValueError:
-            raise InvalidUsage(("Year provided is not a number"))
-
-        # Only support years that are in WTK: 2007-2013
-        if year < 2007 or year > 2013:
-            raise InvalidUsage("Year should be one of: 2007, 2008, 2009, 2010, 2011, 2012, 2013.")
-    else:
-        year = 2013
-
-    start_time_idx = (year - 2007) * 8760
-    end_time_idx = (year - 2007 + 1) * 8760
-    atmospheric_df = getData(f, lat, lon, height,
-                             "IDW",
-                             power_estimate=False,
-                             inverse_monin_obukhov_length=False,
-                             start_time_idx=start_time_idx, end_time_idx=end_time_idx,
-                             time_stride=1)
-    print(atmospheric_df.head())
-    print(atmospheric_df.tail())
-
-
-    plot_monthly_avg(atmospheric_df, title="(%f, %f), %.0fm hub height" % (lat, lon, height),
-                           save_to_file='saved.png')
-    return flask.send_file('saved.png')
+# @app.route('/v2/plot_year', methods=['GET'])
+# def v2_plot_year():
+#
+#     height, lat, lon = validated_params_v2(request)
+#
+#     if 'year' in request.args:
+#         year_str = request.args['year']
+#         try:
+#             year = int(year_str)
+#         except ValueError:
+#             raise InvalidUsage(("Year provided is not a number"))
+#
+#         # Only support years that are in WTK: 2007-2013
+#         if year < 2007 or year > 2013:
+#             raise InvalidUsage("Year should be one of: 2007, 2008, 2009, 2010, 2011, 2012, 2013.")
+#     else:
+#         year = 2013
+#
+#     start_time_idx = (year - 2007) * 8760
+#     end_time_idx = (year - 2007 + 1) * 8760
+#     atmospheric_df = getData(f, lat, lon, height,
+#                              "IDW",
+#                              power_estimate=False,
+#                              inverse_monin_obukhov_length=False,
+#                              start_time_idx=start_time_idx, end_time_idx=end_time_idx,
+#                              time_stride=1)
+#     print(atmospheric_df.head())
+#     print(atmospheric_df.tail())
+#
+#
+#     plot_monthly_avg(atmospheric_df, title="(%f, %f), %.0fm hub height" % (lat, lon, height),
+#                            save_to_file='saved.png')
+#     return flask.send_file('saved.png')
 
 @app.route('/v2/stresstest', methods=['GET'])
 def v2_stresstest():
@@ -510,6 +533,16 @@ def v2_stresstest():
     #combined = pd.concat([atmospheric_df1, atmospheric_df2, atmospheric_df3])
     #combined = pd.concat([atmospheric_df1])
     #return "Fetched 3 datasets; Total length: %d<br>Avg. ws=%f" % (len(combined), combined["ws"].mean())
+
+# The following is used to confirm that efs volume was mounted
+@app.route('/v2/lsera5', methods=['GET'])
+def v2_lsera5():
+    if os.path.exists("/era5-conus/"):
+        output = os.listdir("/era5-conus/")
+        output = "Contents of /era5-conus:<br>" + "<br>".join(output)
+    else:
+        output = "era5 directory isn't found"
+    return output
 
 def main():
     app.run(host=host, port=port)
