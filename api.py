@@ -37,6 +37,7 @@ import queue
 import matplotlib
 matplotlib.use('agg')
 import os
+import xarray as xr
 
 from windspeed import *
 from winddirection import *
@@ -543,6 +544,79 @@ def v2_lsera5():
     else:
         output = "era5 directory isn't found"
     return output
+
+def latlon2era5_idx(ds, lat, lon):
+    # The following relies on u100 being one of the variables in the dataset
+    lats = ds.u100.latitude.values
+    lons = ds.u100.longitude.values
+    lat_closest_idx = np.abs(lats - lat).argmin()
+    lon_closest_idx = np.abs(lons - lon).argmin()
+    return lat_closest_idx, lon_closest_idx
+
+def get_era5_data_100m(ds, lat, lon):
+
+    if type(ds) == type([]) and len(ds) > 1:
+        # Support the case where ds is a list of ds/grib files
+        idx_for_all_ds = [latlon2era5_idx(ds_indiv, lat, lon) for ds_indiv in ds]
+
+        # Check if all lat_idx, and lon_idx pairs are the same; otherwise, raise an error
+        for idx in range(1,len(idx_for_all_ds)):
+            if idx_for_all_ds[idx] != idx_for_all_ds[idx-1]:
+                raise ValueError("Mismatch detected for lat/lon indices across given files.")
+
+        lat_idx, lon_idx = idx_for_all_ds[0][0], idx_for_all_ds[0][1]
+
+        df_list = []
+        for ds_indiv in ds:
+            u100 = ds_indiv.u100.values[:,lat_idx,lon_idx]
+            v100 = ds_indiv.v100.values[:,lat_idx,lon_idx]
+            tt = ds_indiv.u100.time.values
+            df = pd.DataFrame({"datetime": tt, "u100": u100.flatten(), "v100": v100.flatten()})
+            df["datetime"] = pd.to_datetime(df["datetime"])
+            df["ws100"] = np.sqrt(df["u100"]**2 + df["v100"]**2)
+            df_list.append(df)
+        return pd.concat(df_list).sort_values("datetime").reset_index(drop=True)
+
+    else:
+        # Treat ds as a single file
+        if type(ds) == type([]):
+            ds = ds[0]
+
+        lat_idx, lon_idx = latlon2era5_idx(ds, lat, lon)
+        u100 = ds.u100.values[:,lat_idx,lon_idx]
+        v100 = ds.v100.values[:,lat_idx,lon_idx]
+        tt = ds.u100.time.values
+        df = pd.DataFrame({"datetime": tt, "u100": u100.flatten(), "v100": v100.flatten()})
+        df["datetime"] = pd.to_datetime(df["datetime"])
+        df["ws100"] = np.sqrt(df["u100"]**2 + df["v100"]**2)
+        return df
+
+def get_era5_data(ds, lat, lon, height):
+    df = get_era5_data_100m(ds, lat, lon)
+    if height == 100:
+        df["ws"] = df["ws100"]
+    else:
+        # Power-law vertical interpolation
+        df["ws"] = df["ws100"] * ((height/100.0)**(1/7.0))
+    return df
+
+@app.route('/v2/era5', methods=['GET'])
+def v2_era5():
+    height, lat, lon = validated_params_v2(request)
+
+    era5_dir = "/era5-conus/"
+    ds_list = [xr.open_dataset(os.path.join(era5_dir, "conus-%s-hourly.grib" % year), engine="cfgrib") \
+           for year in ['2020', '2021', '2022', '2023']]
+
+    atmospheric_df = get_era5_data(ds_list, lat, lon, height=height)
+
+    plot_monthly_avg(atmospheric_df, \
+                     title="(%f, %f), %.0fm hub height" % (lat, lon, height),\
+                     save_to_file='saved.png',\
+                     show_avg_across_years=True,
+                     show_overall_avg=True)
+    return flask.send_file('saved.png')
+
 
 def main():
     app.run(host=host, port=port)

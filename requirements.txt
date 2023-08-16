@@ -12,3 +12,5 @@ scipy
 setuptools
 Shapely
 tensorflow
+xarray
+eccodes==1.2.0
