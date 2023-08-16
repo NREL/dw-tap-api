@@ -605,7 +605,10 @@ def v2_era5():
     height, lat, lon = validated_params_v2(request)
 
     era5_dir = "/era5-conus/"
-    ds_list = [xr.open_dataset(os.path.join(era5_dir, "conus-%s-hourly.grib" % year), engine="cfgrib") \
+
+    # Controlling indexpath is important; without it the code tries to write to read-only valume with /era5-conus
+    ds_list = [xr.open_dataset(os.path.join(era5_dir, "conus-%s-hourly.grib" % year), engine="cfgrib", \
+                backend_kwargs={"indexpath": "/tmp/conus-%s-hourly.grib.idx" % year}) \
            for year in ['2020', '2021', '2022', '2023']]
 
     atmospheric_df = get_era5_data(ds_list, lat, lon, height=height)
@@ -616,7 +619,6 @@ def v2_era5():
                      show_avg_across_years=True,
                      show_overall_avg=True)
     return flask.send_file('saved.png')
-
 
 def main():
     app.run(host=host, port=port)
