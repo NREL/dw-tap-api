@@ -38,6 +38,7 @@ import matplotlib
 matplotlib.use('agg')
 import os
 import xarray as xr
+import traceback
 
 from windspeed import *
 from winddirection import *
@@ -602,23 +603,29 @@ def get_era5_data(ds, lat, lon, height):
 
 @app.route('/v2/era5', methods=['GET'])
 def v2_era5():
-    height, lat, lon = validated_params_v2(request)
+    try:
+        height, lat, lon = validated_params_v2(request)
 
-    era5_dir = "/era5-conus/"
+        era5_dir = "/era5-conus/"
 
-    # Controlling indexpath is important; without it the code tries to write to read-only valume with /era5-conus
-    ds_list = [xr.open_dataset(os.path.join(era5_dir, "conus-%s-hourly.grib" % year), engine="cfgrib", \
-                backend_kwargs={"indexpath": "/tmp/conus-%s-hourly.grib.idx" % year}) \
-           for year in ['2020', '2021', '2022', '2023']]
+        # Controlling indexpath is important; without it the code tries to write to read-only valume with /era5-conus
+        ds_list = [xr.open_dataset(os.path.join(era5_dir, "conus-%s-hourly.grib" % year), engine="cfgrib", \
+                    backend_kwargs={"indexpath": "/tmp/conus-%s-hourly.grib.idx" % year}) \
+               for year in ['2020', '2021', '2022', '2023']]
 
-    atmospheric_df = get_era5_data(ds_list, lat, lon, height=height)
+        atmospheric_df = get_era5_data(ds_list, lat, lon, height=height)
 
-    plot_monthly_avg(atmospheric_df, \
-                     title="(%f, %f), %.0fm hub height" % (lat, lon, height),\
-                     save_to_file='saved.png',\
-                     show_avg_across_years=True,
-                     show_overall_avg=True)
-    return flask.send_file('saved.png')
+        plot_monthly_avg(atmospheric_df, \
+                         title="(%f, %f), %.0fm hub height" % (lat, lon, height),\
+                         save_to_file='saved.png',\
+                         show_avg_across_years=True,
+                         show_overall_avg=True)
+        return flask.send_file('saved.png')
+
+    except:
+        tb = traceback.format_exc().replace("\n", "<br>")
+        return tb
+
 
 def main():
     app.run(host=host, port=port)
