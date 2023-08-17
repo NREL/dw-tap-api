@@ -609,9 +609,14 @@ def v2_era5():
         era5_dir = "/era5-conus/"
 
         # Controlling indexpath is important; without it the code tries to write to read-only valume with /era5-conus
+        # ds_list = [xr.open_dataset(os.path.join(era5_dir, "conus-%s-hourly.grib" % year), engine="cfgrib", \
+        #             backend_kwargs={"indexpath": "/tmp/conus-%s-hourly.grib.idx" % year}) \
+        #        for year in ['2020', '2021', '2022', '2023']]
+
+        # One year for now
         ds_list = [xr.open_dataset(os.path.join(era5_dir, "conus-%s-hourly.grib" % year), engine="cfgrib", \
                     backend_kwargs={"indexpath": "/tmp/conus-%s-hourly.grib.idx" % year}) \
-               for year in ['2020', '2021', '2022', '2023']]
+               for year in ['2020']]
 
         atmospheric_df = get_era5_data(ds_list, lat, lon, height=height)
 
