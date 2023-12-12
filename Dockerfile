@@ -1,5 +1,5 @@
-# Use a minimal image (more minimal than ubuntu:22.04)
-FROM python:3.11.4
+# Use a minimal image
+FROM python:3.11.7
 
 LABEL MAINTAINER="Dmitry Duplyakin <dmitry.duplyakin@nrel.gov>"
 
@@ -24,6 +24,7 @@ RUN apt-get update && \
 WORKDIR /app
 COPY . /app
 
+RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 
 # Configuration for hsds endpoint 
