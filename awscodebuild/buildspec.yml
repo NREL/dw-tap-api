@@ -1,0 +1,35 @@
+version: 0.2
+
+env:
+  variables:
+    MAKEFILE_PATH: "Makefile"   # Default Makefile path, you can change this as needed
+    ENVIRONMENT: "dev"  # You'll set this dynamically based on the build environment in AWS CodeBuild
+  parameter-store:
+    BASE_IMAGE_TAG: /nrel/split/$ENVIRONMENT/split_nginx_version_stable
+    SEED_API_KEY: /nrel/nrel179d-api/$ENVIRONMENT/SEED_API_KEY
+  exported-variables:
+    - SEED_API_KEY
+    - BASE_IMAGE_TAG
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+      - RELEASE_SHA=$(echo $CODEBUILD_SOURCE_VERSION | head -c 7)
+      - BRANCH_NAME=$(echo $CODEBUILD_WEBHOOK_HEAD_REF | cut -d'/' -f 3)
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building the Docker image...
+      - if [ -f "$MAKEFILE_PATH" ]; then make -f "$MAKEFILE_PATH" BASE_IMAGE_TAG="${BASE_IMAGE_TAG}" build; else echo "Makefile not found."; exit 1; fi
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Pushing the Docker image...
+      - if [ -f "$MAKEFILE_PATH" ]; then make -f "$MAKEFILE_PATH" push; else echo "Makefile not found."; exit 1; fi
+      - echo Writing image definitions file...
+      - printf '{"ImageURI":"%s"}' > imageDetail.json
+artifacts:
+  files:
+    - imageDetail.json
+ 
