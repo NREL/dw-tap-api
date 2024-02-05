@@ -15,15 +15,14 @@ phases:
     commands:
       - echo Build started on `date`
       - echo Building the Docker image...
-      - if [ -f "$MAKEFILE_PATH" ]; then make -f "$MAKEFILE_PATH" BASE_IMAGE_TAG="${BASE_IMAGE_TAG}" build; else echo "Makefile not found."; exit 1; fi
+      - make build
   post_build:
     commands:
       - echo Build completed on `date`
       - echo Pushing the Docker image...
-      - if [ -f "$MAKEFILE_PATH" ]; then make -f "$MAKEFILE_PATH" push; else echo "Makefile not found."; exit 1; fi
+      - make push
       - echo Writing image definitions file...
       - printf '{"ImageURI":"%s"}' > imageDetail.json
 artifacts:
   files:
     - imageDetail.json
- 
