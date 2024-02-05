@@ -4,12 +4,6 @@ env:
   variables:
     MAKEFILE_PATH: "Makefile"   # Default Makefile path, you can change this as needed
     ENVIRONMENT: "dev"  # You'll set this dynamically based on the build environment in AWS CodeBuild
-  parameter-store:
-    BASE_IMAGE_TAG: /nrel/split/$ENVIRONMENT/split_nginx_version_stable
-    SEED_API_KEY: /nrel/nrel179d-api/$ENVIRONMENT/SEED_API_KEY
-  exported-variables:
-    - SEED_API_KEY
-    - BASE_IMAGE_TAG
 phases:
   pre_build:
     commands:
