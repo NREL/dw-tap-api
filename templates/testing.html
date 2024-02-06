@@ -1,0 +1,365 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+
+  <style>
+
+  * {
+    font-family: Verdana !important;
+  }
+
+  body {
+    background-color: white; <!--#D64F2A;-->
+  }
+
+  #dynamicContentX table {
+    border-collapse: collapse;
+    width: 100%;
+    color: #333;
+    font-size: 16px;
+    text-align: left;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    margin: auto;
+    margin-top: 50px;
+    margin-bottom: 50px;
+  }
+
+  #dynamicContentX table th {
+    background-color: #ff9800;
+    color: #fff;
+    font-weight: bold;
+    padding: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-top: 1px solid #fff;
+    border-bottom: 1px solid #ccc;
+  }
+
+  #dynamicContentX table tr:nth-child(even) td {
+    background-color: #f2f2f2;
+  }
+
+  #dynamicContentX table tr:hover td {
+    background-color: #ffedcc;
+  }
+
+  #dynamicContentX table td {
+    background-color: #fff;
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+    font-weight: bold;
+  }
+
+  #dynamicContent {
+    font-family: Verdana !important;
+  }
+
+  #dynamicContent caption {
+    font-size: 20px;
+    color: black;
+    padding-bottom: 30px;
+  }
+
+  #dynamicContent table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 14px;
+    text-align: center;
+    border-radius: 10px !important;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    margin: auto;
+    margin-top: 50px;
+    margin-bottom: 50px;
+  }
+
+  #dynamicContent table th {
+    background-color: #D2B48C;
+    font-weight: bold;
+    letter-spacing: 1px;
+    padding: 8px 25px 8px 25px;
+    color: black;
+    border-top: 1px solid #fff;
+    border-bottom: 1px solid #ccc;
+  }
+
+  .progress {
+    display: flex;
+    position: absolute;
+    height: 100%;
+    width: 100%;
+  }
+
+  .status {
+    color: #0172b4;
+    margin: auto;
+  }
+
+  #workingText h2 {
+    font-family: Verdana;
+    font-size: 20px;
+  }
+
+  .status h2 {
+    padding: 50px;
+    font-size: 80px;
+    font-weight: bold;
+  }
+
+  #progBar {
+    width: 100%
+  }
+
+  #progBar img {
+    width: 90px;
+    height: 150px;
+    position: absolute;
+    left: 50%;
+    margin: -50px 0 0 -50px;
+  }
+
+  #aboutText {
+    width: 100%
+  }
+
+  #aboutText a {
+    margin-top: 300px;
+    left: 50%;
+    top: 65%;
+    font-family: Verdana;
+    font-size: 18px;
+  }
+
+  #initial {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  #initial table {
+    text-align: center;
+    vertical-align: middle;
+    border-collapse: separate;
+    border: solid #808080 1px;
+    border-radius: 10px;
+    padding-bottom: 40px;
+  }
+
+  #initial_r1 {
+    font-family: Verdana;
+    font-size: 20px;
+    padding-top: 20px;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+  }
+
+  #initial_r2 {
+    width: 100px;
+    height: 150px;
+    left: 50%;
+    padding-bottom: 30px;
+  }
+
+  #initial_r3 {
+    font-family: Verdana;
+    font-size: 16px;
+  }
+
+  #colormap {
+    width: 450px;
+  }
+
+  #colormap_wrapper {
+    margin-top: -30px;
+  }
+
+  #colormap_table {
+    width: 450px !important;
+    color: black;
+    font-size: 22px;
+    border: none !important;
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0.1) !important;
+  }
+  #colormap_min_cell {
+    text-align: left;
+    justify-content: left;
+  }
+  #colormap_max_cell {
+    text-align: right;
+    justify-content: right;
+  }
+  .centered {
+    justify-content: center;
+    text-align: center;
+  }
+
+  #monthly_plot {
+    width: 900px;
+  }
+
+  #info_table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 16px;
+    text-align: left;
+    border-radius: 10px !important;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    margin: auto;
+    margin-top: 50px;
+    margin-bottom: 50px;
+    padding: 30px;
+  }
+
+  #info_table td {
+    padding: 15px;
+  }
+
+  #info_table th {
+    background-color: #ff9800;
+    color: #fff;
+    font-weight: bold;
+    padding: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-top: 1px solid #fff;
+    border-bottom: 1px solid #ccc;
+  }
+
+  #info_table tr:nth-child(even) td {
+    background-color: #f2f2f2;
+  }
+
+  #info_table tr:hover td {
+    background-color: #ffedcc;
+  }
+
+
+
+
+
+.wrap-collabsible {
+  margin-bottom: 1.2rem 0;
+}
+
+input[type='checkbox'] {
+  display: none;
+}
+
+.lbl-toggle {
+  display: block;
+
+  font-weight: bold;
+  font-family: monospace;
+  font-size: 14px;
+  text-align: center;
+
+  padding: 1rem;
+
+  color: #A77B0E;
+  background: #FAE042;
+
+  cursor: pointer;
+
+  border-radius: 7px;
+  transition: all 0.0s ease-out;
+}
+
+.lbl-toggle:hover {
+  color: #7C5A0B;
+}
+
+.lbl-toggle::before {
+  content: ' ';
+  display: inline-block;
+
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-left: 10px solid currentColor;
+  margin-right: 1.1rem;
+  transform: translateY(-2px);
+
+  transition: transform .0s ease-out;
+}
+
+.toggle:checked + .lbl-toggle::before {
+  transform: rotate(90deg) translateX(-3px);
+}
+
+.collapsible-content {
+  max-height: 0px;
+  overflow: hidden;
+  transition: max-height .0s ease-in-out;
+}
+
+.toggle:checked + .lbl-toggle + .collapsible-content {
+  max-height: 900vh;
+  width: 900px;
+  right: 10px;
+  position: fixed;
+}
+
+.toggle:checked + .lbl-toggle {
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.collapsible-content .content-inner {
+  background: rgba(250, 224, 66, .2);
+  border-bottom: 1px solid rgba(250, 224, 66, .45);
+  border-bottom-left-radius: 7px;
+  border-bottom-right-radius: 7px;
+  padding: .5rem 1rem;
+}
+
+.wrap-collabsible {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    width: 150px;
+}
+
+#info_logo {
+    height: 30px;
+}
+
+  </style>
+
+  <title>Status Update</title>
+
+</head>
+
+<body>
+      <!-- The following is based on: https://www.digitalocean.com/community/tutorials/css-collapsible-->
+      <div class="wrap-collabsible">
+        <input id="collapsible3" class="toggle" type="checkbox">
+        <label for="collapsible3" class="lbl-toggle" tabindex="0"><img id="info_logo" src="static/info.png"/></label>
+        <div class="collapsible-content"><div class="content-inner">
+          <p> Careen fluke jolly boat keel topgallant Admiral of the Black barkadeer
+            sloop poop deck salmagundi. Avast red ensign parley clap of thunder no prey,
+            no pay killick stern clipper execution dock splice the main brace. Grog blossom
+            yardarm bilge water marooned cog wherry tackle aye Shiver me timbers come about.
+          </p></div></div></div>
+</body>
+
+<script>
+let myLabels = document.querySelectorAll('.lbl-toggle');
+
+Array.from(myLabels).forEach(label => {
+  label.addEventListener('keydown', e => {
+    // 32 === spacebar
+    // 13 === enter
+    if (e.which === 32 || e.which === 13) {
+      e.preventDefault();
+      label.click();
+    };
+  });
+});
+</script>
+
+
+</html>

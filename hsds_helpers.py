@@ -28,46 +28,54 @@ def connected_hsds_file(request, config):
     and uses demo API key (rate-limited)
     if none of the relevant parameters is specified; it uses read-only mode.
     """
-    if 'domain' in request.args:
-        domain = request.args['domain']
+
+    try:
+        # Raw request is passed
+        args = request.args
+    except:
+        # Request's args are passed already
+        args = request
+
+    if 'domain' in args:
+        domain = args['domain']
     else:
         domain = config["hsds"]["domain"]
 
-    if 'endpoint' in request.args:
-        endpoint = request.args['endpoint']
+    if 'endpoint' in args:
+        endpoint = args['endpoint']
     else:
         endpoint = config["hsds"]["endpoint"]
 
-    if 'bucket' in request.args:
-        bucket = request.args['bucket']
+    if 'bucket' in args:
+        bucket = args['bucket']
     else:
         bucket = config["hsds"]["bucket"]
 
-    if ('username' not in request.args) and ('password' not in request.args)\
-       and ('api_key' not in request.args):
+    if ('username' not in args) and ('password' not in args)\
+       and ('api_key' not in args):
 
         username = config["hsds"]["username"]
         password = config["hsds"]["password"]
         api_key = config["hsds"]["api_key"]
     else:
-        if 'username' in request.args:
-            username = request.args['username']
+        if 'username' in args:
+            username = args['username']
         else:
             raise InvalidUsage(("HSDS username is not specified. "
                                 "Specify all three--username, password, "
                                 "and api_key--or remove all three from "
                                 "request to use demo credentials."))
 
-        if 'password' in request.args:
-            password = request.args['password']
+        if 'password' in args:
+            password = args['password']
         else:
             raise InvalidUsage(("HSDS password is not specified. "
                                 "Specify all three--username, password, "
                                 "and api_key--or remove all three from "
                                 "request to use demo credentials."))
 
-        if 'api_key' in request.args:
-            api_key = request.args['api_key']
+        if 'api_key' in args:
+            api_key = args['api_key']
         else:
             raise InvalidUsage(("HSDS api_key is not specified. "
                                 "Specify all three--username, password, "

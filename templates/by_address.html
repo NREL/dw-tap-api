@@ -1,0 +1,492 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+
+  <style>
+
+  body {
+    background-color: white; <!--#D64F2A;-->
+  }
+
+  #dynamicContentX table {
+    border-collapse: collapse;
+    width: 100%;
+    color: #333;
+    font-family: Arial, sans-serif;
+    font-size: 16px;
+    text-align: left;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    margin: auto;
+    margin-top: 50px;
+    margin-bottom: 50px;
+  }
+
+  #dynamicContentX table th {
+    background-color: #ff9800;
+    color: #fff;
+    font-weight: bold;
+    padding: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-top: 1px solid #fff;
+    border-bottom: 1px solid #ccc;
+  }
+
+  #dynamicContentX table tr:nth-child(even) td {
+    background-color: #f2f2f2;
+  }
+
+  #dynamicContentX table tr:hover td {
+    background-color: #ffedcc;
+  }
+
+  #dynamicContentX table td {
+    background-color: #fff;
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+    font-weight: bold;
+  }
+
+  #dynamicContent {
+    font-family: Verdana !important;
+  }
+
+  #dynamicContent caption {
+    font-size: 20px;
+    color: black;
+    padding-bottom: 30px;
+  }
+
+  #dynamicContent table {
+    border-collapse: collapse;
+    width: 100%;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    text-align: center;
+    border-radius: 10px !important;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    margin: auto;
+    margin-top: 50px;
+    margin-bottom: 50px;
+  }
+
+  #dynamicContent table th {
+    background-color: #D2B48C;
+    font-weight: bold;
+    letter-spacing: 1px;
+    padding: 8px 25px 8px 25px;
+    color: black;
+    border-top: 1px solid #fff;
+    border-bottom: 1px solid #ccc;
+  }
+
+  .progress {
+    display: flex;
+    position: absolute;
+    height: 100%;
+    width: 100%;
+  }
+
+  .status {
+    color: #0172b4;
+    margin: auto;
+  }
+
+  #workingText h2 {
+    font-family: Verdana;
+    font-size: 20px;
+  }
+
+  .status h2 {
+    padding: 50px;
+    font-size: 80px;
+    font-weight: bold;
+  }
+
+  #progBar {
+    width: 100%
+  }
+
+  #progBar img {
+    width: 90px;
+    height: 150px;
+    position: absolute;
+    left: 50%;
+    margin: -50px 0 0 -50px;
+  }
+
+  #aboutText {
+    width: 100%
+  }
+
+  #aboutText a {
+    margin-top: 300px;
+    left: 50%;
+    top: 65%;
+    font-family: Verdana;
+    font-size: 18px;
+  }
+
+  #initial {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  #initial table {
+    text-align: center;
+    vertical-align: middle;
+    border-collapse: separate;
+    border: solid #808080 1px;
+    border-radius: 10px;
+    padding-bottom: 40px;
+  }
+
+  #initial_r1 {
+    font-family: Verdana;
+    font-size: 20px;
+    padding-top: 20px;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+  }
+
+  #initial_r2 {
+    width: 100px;
+    height: 150px;
+    left: 50%;
+    padding-bottom: 30px;
+  }
+
+  #initial_r3 {
+    font-family: Verdana;
+    font-size: 16px;
+  }
+  #initial_r4 {
+    font-family: Verdana;
+    font-size: 16px;
+  }
+  #initial_r3_td {
+    padding-bottom: 20px;
+  }
+
+  #colormap {
+    width: 450px;
+  }
+
+  #colormap_wrapper {
+    margin-top: -30px;
+  }
+
+  #colormap_table {
+    width: 450px !important;
+    color: black;
+    font-size: 22px;
+    border: none !important;
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0.1) !important;
+  }
+  #colormap_min_cell {
+    text-align: left;
+    justify-content: left;
+  }
+  #colormap_max_cell {
+    text-align: right;
+    justify-content: right;
+  }
+  .centered {
+    justify-content: center;
+    text-align: center;
+  }
+
+  #monthly_plot {
+    width: 900px;
+  }
+
+  .wrap-collabsible {
+    margin-bottom: 1.2rem 0;
+  }
+  input[type='checkbox'] {
+    display: none;
+  }
+  .lbl-toggle {
+    display: block;
+
+    font-weight: bold;
+    font-family: monospace;
+    font-size: 14px;
+    text-align: center;
+
+    padding: 1rem;
+
+    color: #5f5c4ad9; /* old color: #A77B0E; */
+    background: #adab9f; /* old color: #FAE042; */
+    cursor: pointer;
+    border-radius: 7px;
+    transition: all 0.0s ease-out;
+  }
+  .lbl-toggle:hover {
+    color: #7C5A0B;
+  }
+  .lbl-toggle::before {
+    content: ' ';
+    display: inline-block;
+
+    border-top: 10px solid transparent;
+    border-bottom: 10px solid transparent;
+    border-left: 10px solid currentColor;
+    margin-right: 1.1rem;
+    transform: translateY(-2px);
+
+    transition: transform .0s ease-out;
+  }
+  .toggle:checked + .lbl-toggle::before {
+    transform: rotate(90deg) translateX(-3px);
+  }
+  .collapsible-content {
+    max-height: 0px;
+    overflow: hidden;
+    transition: max-height .0s ease-in-out;
+  }
+  .toggle:checked + .lbl-toggle + .collapsible-content {
+    max-height: 900vh;
+    width: 900px;
+    right: 10px;
+    position: fixed;
+  }
+  .toggle:checked + .lbl-toggle {
+    border-bottom-right-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+  .collapsible-content .content-inner {
+    background: rgba(218, 223, 225, 1.0); /*old color: rgba(250, 224, 66, .2); */
+    border-bottom: 1px solid rgba(99, 93, 56, 1.0); /*rgba(250, 224, 66, .45);*/
+    border-bottom-left-radius: 7px;
+    border-bottom-right-radius: 7px;
+    padding: .5rem 1rem;
+    font-family: Verdana;
+    color: black;
+  }
+  .wrap-collabsible {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      width: 150px;
+  }
+  #info_logo {
+      height: 30px;
+  }
+
+  #form_wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #F1EFEA;
+    border-radius: 10px;
+  }
+
+  #form_wrapper table {
+    text-align: center;
+    vertical-align: middle;
+    border-collapse: separate;
+    border: solid #808080 1px;
+    border-radius: 10px;
+    /*padding-bottom: 40px;*/
+    font-size: 16px;
+    font-family: Verdana;
+    padding: 25px;
+  }
+
+  #form_wrapper table tr {
+    padding-bottom: 30px;
+  }
+
+  .text_field {
+    font-family: Verdana;
+    font-size: 16px;
+    width: 400px;
+    margin-left: 20px;
+  }
+
+  .submit_button {
+    font-size: 18px;
+    margin-top: 20px;
+    padding: 8px 20px 8px 20px;
+    border-radius: 8px;
+  }
+
+  tr.spaceUnder>td {
+    padding-bottom: 1.2em;
+  }
+
+  #fetching_msg {
+    color: #F86F4F;
+    font-family: Verdana;
+    font-size: 14px;
+  }
+
+  </style>
+
+  <title>Status Update</title>
+
+</head>
+
+<body>
+  <div class="progress">
+    <div class="status">
+      <!--
+      <div id="initial">
+        <div id="input_form">
+        <form>
+          <label for="fname">Address:</label>
+          <input type="text" id="addr" value=""><br>
+          <label for="fname">Hub height, meters:</label>
+          <input type="text" id="hub_height" value=40><br>
+          <label for="fname">Years:</label>
+          <input type="text" id="years" value=2013><br>
+          <input type="button" value="Get wind data" onclick="getWindData()" id="get_data_button"><br>
+        </form>
+        </div>
+        <p id="fetching_msg"></p>
+      -->
+
+      <div id="form_wrapper">
+        <table>
+          <tr class="spaceUnder">
+            <form>
+                <td>
+                <label for="fname">Address (exclude ZIP code):</label>
+                </td>
+                <td>
+                <input type="text" class="text_field" id="addr" value=""><br>
+                </td>
+            </form>
+          </tr>
+          <tr class="spaceUnder">
+            <form>
+                <td>
+                <label for="fname">Hub height, meters:</label>
+                </td>
+                <td>
+                <input type="text" class="text_field" id="hub_height" value="40"><br>
+                </td>
+            </form>
+          </tr>
+          <tr class="spaceUnder">
+            <form>
+                <td>
+                <label for="fname">Years (2007,...,2013):</label>
+                </td>
+                <td>
+                <input type="text" class="text_field" id="years" value="2012,2013"><br>
+                </td>
+            </form>
+          </tr>
+          <tr class="spaceUnder">
+            <td colspan=2>
+              <div>
+             <input type="radio" id="choice_monthly" name="contact" value="monthly" checked />
+             <label for="contactChoice1">Monthly plot&nbsp;&nbsp;&nbsp;</label>
+             <input type="radio" id="choice_12x24" name="contact" value="12x24" />
+             <label for="contactChoice2">12x24 table&nbsp;&nbsp;&nbsp;</label>
+             <input type="radio" id="choice_ts" name="contact" value="ts" />
+             <label for="contactChoice3">Raw timeseries&nbsp;&nbsp;&nbsp;</label>
+           </div>
+            </td>
+          </tr >
+          <tr class="spaceUnder">
+            <td colspan=2>
+            <form>
+            <input type="button" class="submit_button" value="Get wind data" onclick="getWindData()" id="get_data_button">
+            </form>
+          </td>
+          </tr>
+          <tr>
+            <td colspan=2>
+              <p id="fetching_msg"> </p>
+            </td>
+          </tr>
+        </table>
+      </div>
+      </div>
+    </div>
+  </div>
+  <!-- The following will be populated by js-->
+  <div id="dynamicContent"></div>
+
+  <!-- The following will be populated by js-->
+  <div id="info_wrapper"></div>
+</body>
+
+<script>
+
+// This async func is needed becuase getWindData can't use await directly
+async function fetchLatLon(addr) {
+  let latlon;
+  try {
+    const FETCH_STR = "/addr_to_latlon?addr=" + addr;
+    const res = await fetch(FETCH_STR);
+    get = await res.json();
+    latlon = get.latlon;
+    console.log(latlon)
+  } catch (e) {
+    console.error("Error: ", e);
+  }
+  return latlon;
+}
+
+// This function handles the get wind data click
+function getWindData() {
+
+  document.getElementById("fetching_msg").innerHTML = "";
+
+  var addr = document.getElementById('addr').value;
+  addr_nospaces = addr.replace(/\s/g, '');
+  if (addr_nospaces === "") {
+    document.getElementById("fetching_msg").innerHTML = "Address field can't be empty. Fill it out and try again.";
+    return
+  }
+
+  var addr_encoded =  addr.replace(/ /g, '+');
+  var hub_height = document.getElementById('hub_height').value;
+  hub_height = hub_height.replace(/\s/g, '');
+  var years = document.getElementById('years').value;
+  years = years.replace(/\s/g, '');
+
+  let laton;
+  const promise = fetchLatLon(addr_encoded);
+  promise.then((latlon) => {
+    if (latlon != ""){
+
+      if (latlon.startsWith("Error")) {
+        document.getElementById("fetching_msg").innerHTML = latlon;
+        return
+      }
+
+      //document.getElementById("input_form").innerHTML = "";
+      //document.getElementById("fetching_msg").innerHTML = "Fetching data for: " + latlon + "...";
+      var endpoint = "";
+      if (document.getElementById('choice_monthly').checked) {
+          endpoint = "monthly";
+      } else if (document.getElementById('choice_12x24').checked) {
+          endpoint = "12x24";
+      }
+      else {
+        endpoint = "ts";
+      }
+      //document.getElementById("fetching_msg").innerHTML = "http://localhost:5000/" + endpoint + "?height=" + hub_height + "m&" + latlon + "&year=" + years;
+
+      document.getElementById("fetching_msg").innerHTML = "";
+      window.location.href = "http://localhost:5000/" + endpoint + "?height=" + hub_height + "m&" + latlon + "&year=" + years;
+      }
+    }
+  );
+
+
+}
+</script>
+
+</html>
