@@ -21,6 +21,7 @@ matplotlib.use('agg')
 from dw_tap.data_fetching import getData
 from v2 import validated_params_v2_w_year
 from hsds_helpers import connected_hsds_file
+from bc import bc_for_point
 #from dw_tap.vis import plot_monthly_avg
 
 #app = Flask(__name__)
@@ -322,8 +323,98 @@ def serve_ts(req_id, req_args):
       if "Unnamed: 0" in atmospheric_df.columns:
           atmospheric_df.drop(columns=["Unnamed: 0"], inplace=True)
 
+      # Saving to file
+      csv_dest = "static/raw/ts-%s.csv" % req_id
+      atmospheric_df.to_csv(csv_dest, index=False)
+
       output = atmospheric_df.to_csv(index=False).replace("\n", "<br>")
       info = ""
+      #save = "Download: static/raw/ts-%s.csv" % req_id
+      proposed_fname="%.4f_%.4f_%.1f.csv" % (lat, lon, height)
+      save = "href=\"%s\" download=\"%s\"" % (csv_dest, proposed_fname)
+      # Example: href="static/raw/ts-cd5e6247a3b935d7770bb1657df34715.csv" download="39.7430_-105.1470_65.000000.csv"
+      # it will be added inside the  <a> tag
+
+      json_output = {'output': output, "info": info, "save": save}
+      with open(output_dest, 'w') as f:
+          json.dump(json_output, f)
+      return
+  except Exception as e:
+      output = "The following error has occurred:<br>" + str(e)
+      info = ""
+      save = ""
+      json_output = {'output': output, "info": info, "save": save}
+      with open(output_dest, 'w') as f:
+          json.dump(json_output, f)
+      return
+
+def serve_bc(req_id, req_args):
+  output_dest = os.path.join(outputs_dir, req_id)
+  try:
+      height, lat, lon, year_list = validated_params_v2_w_year(req_args)
+      f = connected_hsds_file(req_args, config)
+      dt = pd.read_csv("wtk-dt.csv")
+      dt["datetime"] = pd.to_datetime(dt["datetime"])
+      dt["year"] = dt["datetime"].apply(lambda x: x.year)
+
+      subsets=[]
+      for yr in year_list:
+          idx = dt[dt["year"] == yr].index
+          subsets.append(getData(f, lat, lon, height,
+                                 "IDW",
+                                 power_estimate=False,
+                                 inverse_monin_obukhov_length=False,
+                                 start_time_idx=idx[0], end_time_idx=idx[-1], time_stride=1,
+                                 saved_dt=dt))
+      atmospheric_df = pd.concat(subsets)
+      atmospheric_df.index = range(len(atmospheric_df))
+
+      # plot_monthly_avg(atmospheric_df, \
+      #                  title="Location: (%f, %f), %.0fm hub height" % (lat, lon, height),\
+      #                  save_to_file='static/saved.png',\
+      #                  show_avg_across_years=True,
+      #                  show_overall_avg=True,
+      #                  show=False)
+      # #return flask.send_file('saved.png')
+
+      # output = """
+      # <div classes="centered">
+      # <div>
+      #   <table>
+      #       <tr>
+      #         <td><img id=\"monthly_plot\" src=\"static/saved.png\"/></td>
+      #       </tr>
+      #   </table>
+      # </div>
+      # </div>
+      # """
+
+      # Ordered list of BC data locations; supports running inside ECS container and locally
+      # Code below will find first existing and will proceed to using it
+      bc_locs = ["/bc/bc_v4/", "~/OneDrive - NREL/dw-tap-data/bc_development/bc_v4/"]
+      selected_bc_loc = None
+      for bc_loc in bc_locs:
+          d = os.path.expanduser(bc_loc)
+          if os.path.isdir(d):
+              selected_bc_loc = d
+      if not (selected_bc_loc):
+          output = """
+          <div classes="centered">
+          Unable to locate directory with BC data. Checked locations: %s.
+          </div>
+          """ % str(bc_locs)
+          info = ""
+      else:
+          # Todo: check to make sure that atmospheric_df is not empty
+
+          output, info = bc_for_point(lon=lon, lat=lat, height=height, \
+                                      model_data=atmospheric_df, \
+                                      bc_dir=selected_bc_loc,\
+                                      plot_dest = 'static/bc.png') # plot_dest="outputs/fig-%s.png" % req_id)
+
+          #info = "The shown dataset includes %d timesteps between %s and %s." % \
+          #    (len(atmospheric_df), atmospheric_df.datetime.tolist()[0], atmospheric_df.datetime.tolist()[-1])
+
       json_output = {'output': output, "info": info}
       with open(output_dest, 'w') as f:
           json.dump(json_output, f)
@@ -335,32 +426,6 @@ def serve_ts(req_id, req_args):
       with open(output_dest, 'w') as f:
           json.dump(json_output, f)
       return
-
-# @app.route('/12x24')
-# def endpoint_12x24():
-#   global req_args
-#   req_args = request.args
-#   t1 = Thread(target=serve_12x24)
-#   t1.start()
-#   return render_template('12x24_index.html')
-#
-# @app.route('/monthly')
-# def endpoint_monthly():
-#   global req_args
-#   req_args = request.args
-#   t1 = Thread(target=serve_monthly)
-#   t1.start()
-#   return render_template('monthly_index.html')
-#
-# @app.route('/12x24_output', methods=['GET'])
-# def output_12x24():
-#   json_output = {'output': output}
-#   return json.dumps(json_output)
-#
-# @app.route('/monthly_output', methods=['GET'])
-# def output_monthly():
-#   json_output = {'output': output}
-#   return json.dumps(json_output)
 
 @app.route('/output', methods=['GET'])
 def get_output():
@@ -488,6 +553,20 @@ def root(path):
                                   new_text="const FETCH_STR = \"/output?req_id=%s\";" % req_id)
 
         return render_template(os.path.join("served", html_name))
+
+    elif req_endpoint == "bc":
+            th = Thread(target=serve_bc, args=(req_id, req_args))
+            th.start()
+
+            html_name = "bc_%s.html" % req_id
+
+            # Copy from a template and replace the string that has the endpoint for fetching outputs from
+            instantiate_from_template(os.path.join(templates_dir, "bc_index.html"),\
+                                      os.path.join(templates_dir, "served", html_name),
+                                      old_text="const FETCH_STR = \"/output?req_id=NEED_SPECIFIC_REQ_ID\";",\
+                                      new_text="const FETCH_STR = \"/output?req_id=%s\";" % req_id)
+
+            return render_template(os.path.join("served", html_name))
 
     elif req_endpoint == "info":
         return render_template("info.html")

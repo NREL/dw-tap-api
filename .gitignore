@@ -5,3 +5,4 @@ dw_tap.egg-info/
 saved.png
 templates/served/*
 outputs/*
+static/raw/*

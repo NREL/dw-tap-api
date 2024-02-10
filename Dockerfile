@@ -44,6 +44,12 @@ RUN pip install -r requirements.txt
 RUN git clone https://github.com/NREL/dw-tap.git
 RUN cd dw-tap && python setup.py install && cd ..
 
+# Get bc data
+RUN wget https://github.com/NREL/dw-tap-api/raw/master/bc/bc_v4.zip
+RUN mkdir /bc
+RUN unzip bc_v4.zip -d /bc 
+# BC data will be available in: /bc/bc_v4/
+
 EXPOSE 80
 
 # Conda env in the path below needs to match the name in the first line of environment.yml

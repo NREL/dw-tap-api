@@ -3,52 +3,11 @@
 
 <head>
   <meta charset="UTF-8">
+  <link rel="stylesheet" href="static/styles/info_button.css">
 
   <style>
-
   body {
     background-color: white; <!--#D64F2A;-->
-  }
-
-  #dynamicContentX table {
-    border-collapse: collapse;
-    width: 100%;
-    color: #333;
-    font-family: Arial, sans-serif;
-    font-size: 16px;
-    text-align: left;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-    margin: auto;
-    margin-top: 50px;
-    margin-bottom: 50px;
-  }
-
-  #dynamicContentX table th {
-    background-color: #ff9800;
-    color: #fff;
-    font-weight: bold;
-    padding: 10px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    border-top: 1px solid #fff;
-    border-bottom: 1px solid #ccc;
-  }
-
-  #dynamicContentX table tr:nth-child(even) td {
-    background-color: #f2f2f2;
-  }
-
-  #dynamicContentX table tr:hover td {
-    background-color: #ffedcc;
-  }
-
-  #dynamicContentX table td {
-    background-color: #fff;
-    padding: 10px;
-    border-bottom: 1px solid #ccc;
-    font-weight: bold;
   }
 
   #dynamicContent {
@@ -206,79 +165,7 @@
     width: 1200px;
   }
 
-  .wrap-collabsible {
-    margin-bottom: 1.2rem 0;
-  }
-  input[type='checkbox'] {
-    display: none;
-  }
-  .lbl-toggle {
-    display: block;
 
-    font-weight: bold;
-    font-family: monospace;
-    font-size: 14px;
-    text-align: center;
-
-    padding: 1rem;
-
-    color: #5f5c4ad9; /* old color: #A77B0E; */
-    background: #adab9f; /* old color: #FAE042; */
-    cursor: pointer;
-    border-radius: 7px;
-    transition: all 0.0s ease-out;
-  }
-  .lbl-toggle:hover {
-    color: #7C5A0B;
-  }
-  .lbl-toggle::before {
-    content: ' ';
-    display: inline-block;
-
-    border-top: 10px solid transparent;
-    border-bottom: 10px solid transparent;
-    border-left: 10px solid currentColor;
-    margin-right: 1.1rem;
-    transform: translateY(-2px);
-
-    transition: transform .0s ease-out;
-  }
-  .toggle:checked + .lbl-toggle::before {
-    transform: rotate(90deg) translateX(-3px);
-  }
-  .collapsible-content {
-    max-height: 0px;
-    overflow: hidden;
-    transition: max-height .0s ease-in-out;
-  }
-  .toggle:checked + .lbl-toggle + .collapsible-content {
-    max-height: 900vh;
-    width: 900px;
-    right: 10px;
-    position: fixed;
-  }
-  .toggle:checked + .lbl-toggle {
-    border-bottom-right-radius: 0;
-    border-bottom-left-radius: 0;
-  }
-  .collapsible-content .content-inner {
-    background: rgba(218, 223, 225, 1.0); /*old color: rgba(250, 224, 66, .2); */
-    border-bottom: 1px solid rgba(99, 93, 56, 1.0); /*rgba(250, 224, 66, .45);*/
-    border-bottom-left-radius: 7px;
-    border-bottom-right-radius: 7px;
-    padding: .5rem 1rem;
-    font-family: Verdana;
-    color: black;
-  }
-  .wrap-collabsible {
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      width: 150px;
-  }
-  #info_logo {
-      height: 30px;
-  }
 
   </style>
 

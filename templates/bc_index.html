@@ -3,52 +3,12 @@
 
 <head>
   <meta charset="UTF-8">
-  <link rel="stylesheet" href="static/styles/save_button.css">
+  <link rel="stylesheet" href="static/styles/info_button.css">
 
   <style>
+
   body {
     background-color: white; <!--#D64F2A;-->
-  }
-
-  #dynamicContentX table {
-    border-collapse: collapse;
-    width: 100%;
-    color: #333;
-    font-family: Arial, sans-serif;
-    font-size: 16px;
-    text-align: left;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-    margin: auto;
-    margin-top: 50px;
-    margin-bottom: 50px;
-  }
-
-  #dynamicContentX table th {
-    background-color: #ff9800;
-    color: #fff;
-    font-weight: bold;
-    padding: 10px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    border-top: 1px solid #fff;
-    border-bottom: 1px solid #ccc;
-  }
-
-  #dynamicContentX table tr:nth-child(even) td {
-    background-color: #f2f2f2;
-  }
-
-  #dynamicContentX table tr:hover td {
-    background-color: #ffedcc;
-  }
-
-  #dynamicContentX table td {
-    background-color: #fff;
-    padding: 10px;
-    border-bottom: 1px solid #ccc;
-    font-weight: bold;
   }
 
   #dynamicContent {
@@ -203,7 +163,7 @@
   }
 
   #monthly_plot {
-    width: 900px;
+    width: 1200px;
   }
 
   </style>
@@ -241,13 +201,14 @@
         </table>
       </div>
 
+      <!-- The following will be populated by js-->
+      <div id="dynamicContent"></div>
+
+      <!-- The following will be populated by js-->
+      <div id="info_wrapper"></div>
+
     </div>
   </div>
-  <!-- The following will be populated by js-->
-  <div id="dynamicContent"></div>
-
-  <!-- The following will be populated by js-->
-  <div id="info_wrapper"></div>
 </body>
 
 <script>
@@ -283,23 +244,6 @@ async function update() {
             <p id=\"info_text\">
             ` + get.info + "</p></div></div></div>"
     }
-
-    if (get.save != ""){
-        document.getElementById("info_wrapper").innerHTML =
-        "<div class=\"wrap-collabsible\">" + "<a " + get.save + `>
-          <label for=\"collapsible3\" class=\"lbl-toggle\" tabindex=\"0\">
-          <img id=\"info_logo\" src=\"static/save.png\"/></label></a></div>`
-    }
-
-    //
-    //if (get.save != ""){
-    //    document.getElementById("info_wrapper").innerHTML =
-    //    "<div class=\"wrap-collabsible\">" + "<a " + get.save + `>
-    //      <input id=\"collapsible3\" class=\"toggle\" type=\"checkbox\">
-    //      <label for=\"collapsible3\" class=\"lbl-toggle\" tabindex=\"0\">
-    //      <img id=\"info_logo\" src=\"static/save.png\"/></label></a></div>`
-    //}
-
 
     clearTimeout(timeout);
     return false;
