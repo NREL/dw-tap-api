@@ -14,46 +14,6 @@
     background-color: white; <!--#D64F2A;-->
   }
 
-  #dynamicContentX table {
-    border-collapse: collapse;
-    width: 100%;
-    color: #333;
-    font-size: 16px;
-    text-align: left;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-    margin: auto;
-    margin-top: 50px;
-    margin-bottom: 50px;
-  }
-
-  #dynamicContentX table th {
-    background-color: #ff9800;
-    color: #fff;
-    font-weight: bold;
-    padding: 10px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    border-top: 1px solid #fff;
-    border-bottom: 1px solid #ccc;
-  }
-
-  #dynamicContentX table tr:nth-child(even) td {
-    background-color: #f2f2f2;
-  }
-
-  #dynamicContentX table tr:hover td {
-    background-color: #ffedcc;
-  }
-
-  #dynamicContentX table td {
-    background-color: #fff;
-    padding: 10px;
-    border-bottom: 1px solid #ccc;
-    font-weight: bold;
-  }
-
   #dynamicContent {
     font-family: Verdana !important;
   }
@@ -256,27 +216,27 @@
           </tr>
           <tr>
             <td><strong>Plot with monthly average wind speeds</strong></td>
-            <td><a href="http://localhost:5000/monthly?height=65.00m&lat=39.743&lon=-105.147&year=2012" target="_blank">http://dw-tap.nrel.gov/monthly?height=65.00m&lat=39.743&lon=-105.147</a></td>
+            <td><a href="http://dw-tap.nrel.gov:5000/monthly?height=65.00m&lat=39.743&lon=-105.147&year=2012" target="_blank">http://dw-tap.nrel.gov/monthly?height=65.00m&lat=39.743&lon=-105.147</a></td>
             <td>Aggregate to monthly averages and show one or several years of model data.</td>
           </tr>
           <tr>
             <td><strong>12x24 (hourly x monthly) summary with average wind speeds</strong></td>
-            <td><a href="http://localhost:5000/12x24?height=65.00m&lat=39.743&lon=-105.147&year=2012" target="_blank">http://dw-tap.nrel.gov/12x24?height=65.00m&lat=39.743&lon=-105.147</a></td>
+            <td><a href="http://dw-tap.nrel.gov:5000/12x24?height=65.00m&lat=39.743&lon=-105.147&year=2012" target="_blank">http://dw-tap.nrel.gov/12x24?height=65.00m&lat=39.743&lon=-105.147</a></td>
             <td>This summary allows seeing diurnal and seasonal patterns in wind data.</td>
           </tr>
           <tr>
             <td><strong>Wind data for a given address</strong></td>
-            <td><a href="http://localhost:5000/by_address">http://dw-tap.nrel.gov/by_address</a></td>
+            <td><a href="http://dw-tap.nrel.gov:5000/by_address">http://dw-tap.nrel.gov/by_address</a></td>
             <td width="350px">After providing an address and the desired hub height, you will be able to see wind data for that location and height. You can also choose the output format.</td>
           </tr>
           <tr>
             <td><strong>Raw time series</strong></td>
-            <td><a href="http://localhost:5000/ts?height=65.00m&lat=39.743&lon=-105.147&year=2012" target="_blank" rel="noopener noreferrer">http://dw-tap.nrel.gov/ts?height=65.00m&lat=39.743&lon=-105.147</a></td>
+            <td><a href="http://dw-tap.nrel.gov:5000/ts?height=65.00m&lat=39.743&lon=-105.147&year=2012" target="_blank" rel="noopener noreferrer">http://dw-tap.nrel.gov/ts?height=65.00m&lat=39.743&lon=-105.147</a></td>
             <td width="350px">Less user-friendly interface that allows external computational tools, dashboards, etc. access TAP's wind data.</td>
           </tr>
           <tr>
             <td><strong>Bias-corrected wind speeds<sup>(NEW)</sup></strong></td>
-            <td><a href="http://localhost:5000/bc?height=65.00m&lat=39.743&lon=-105.147&year=2012" target="_blank" rel="noopener noreferrer">http://dw-tap.nrel.gov/bc?height=35.00m&lat=41.2&lon=-93.18&year=2011</a></td>
+            <td><a href="http://dw-tap.nrel.gov:5000/bc?height=65.00m&lat=39.743&lon=-105.147&year=2012" target="_blank" rel="noopener noreferrer">http://dw-tap.nrel.gov/bc?height=35.00m&lat=41.2&lon=-93.18&year=2011</a></td>
             <td width="350px">Apply bias correction using observational data and show monthly average wind speeds, with and without bias correction.</td>
           </tr>
         </table>
