@@ -54,5 +54,6 @@ EXPOSE 80
 
 # Conda env in the path below needs to match the name in the first line of environment.yml
 #CMD ["/opt/conda/envs/dw-tap-api/bin/python", "api.py", "--production"]
-CMD ["python", "api.py", "--production"]
+#CMD ["python", "api.py", "--production"]
+CMD ["python", "proto.py", "--production"]
 

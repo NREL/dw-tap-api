@@ -574,4 +574,4 @@ def root(path):
         return "Unsupported endpoint is selected: %s" % req_endpoint
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host=host, port=port, debug=True)
