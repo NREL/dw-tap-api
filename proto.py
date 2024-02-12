@@ -28,7 +28,12 @@ from bc import bc_for_point
 #cors = CORS(app)
 
 outputs_dir = "outputs"
+if not os.path.exists(outputs_dir):
+  os.mkdir(outputs_dir)
+
 templates_dir = "templates"
+if not os.path.exists("%s/served" % templates_dir):
+  os.mkdir("%s/served" % templates_dir)
 
 def plot_monthly_avg(atmospheric_df, ws_column="ws", datetime_column="datetime",
                      title="Windspeed monthly averages",
