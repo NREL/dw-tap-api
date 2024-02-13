@@ -24,11 +24,6 @@ from hsds_helpers import connected_hsds_file
 from bc import bc_for_point
 from infomap import get_infomap_script
 
-#from dw_tap.vis import plot_monthly_avg
-
-#app = Flask(__name__)
-#cors = CORS(app)
-
 outputs_dir = "outputs"
 if not os.path.exists(outputs_dir):
   os.mkdir(outputs_dir)
@@ -36,6 +31,33 @@ if not os.path.exists(outputs_dir):
 templates_dir = "templates"
 if not os.path.exists("%s/served" % templates_dir):
   os.mkdir("%s/served" % templates_dir)
+
+# def instantiate_from_template(src, dest, old_text, new_text):
+#     """ Copy src file to dest with replacement of old_text with new_text """
+#     # This version performs single substring replacement: old_text -> new_text
+#
+#     fin = open(src)
+#     fout = open(dest, "wt")
+#     for line in fin:
+#         fout.write(line.replace(old_text, new_text))
+#     fin.close()
+#     fout.close()
+
+def instantiate_from_template(src, dest, replacements):
+    """ Copy src file to dest with replacement of old_text with new_text """
+
+    # This version performs multiple substring replacement, using each tuple provided in the replacements list
+    # Each element there is: old_text -> new_text
+    fin = open(src)
+    fout = open(dest, "wt")
+    for line in fin:
+        updated_line = line
+        for r in replacements:
+            old_text, new_text = r[0], r[1]
+            updated_line = updated_line.replace(old_text, new_text)
+        fout.write(updated_line)
+    fin.close()
+    fout.close()
 
 def plot_monthly_avg(atmospheric_df, ws_column="ws", datetime_column="datetime",
                      title="Windspeed monthly averages",
@@ -179,6 +201,33 @@ if development_mode:
 else:
     host = config["production"]["host"]
     port = config["production"]["port"]
+
+# Identify the current environment
+# This method came from checking tap-api-prod ECS container on 02/13/2023
+if os.environ.get('AWS_EXECUTION_ENV') == "AWS_ECS_EC2":
+    running_in_aws = True
+    if port == 80 or port == "80":
+        URL_prefix = "http://dw-tap.hpc.nrel.gov"
+    else:
+        URL_prefix = "http://dw-tap.hpc.nrel.gov:%s" % str(port)
+else:
+    running_in_aws = False
+    if port == 80 or port == "80":
+        URL_prefix = "http://localhost"
+    else:
+        URL_prefix = "http://localhost:%s" % str(port)
+
+# Now that URL_prefix is determined for the current env, prepare templates from universal ones
+# Universal here means that those template can be used for AWS and non-AWS envs
+src_dest_names = [("universal_monthly_index.html", "monthly_index.html")]
+for src_dest in src_dest_names:
+    t_src, t_dest = src_dest[0], src_dest[1]
+    t_src = os.path.join(templates_dir, t_src)
+    t_dest = os.path.join(templates_dir, t_dest)
+    if os.path.exists(t_src):
+        instantiate_from_template(t_src,\
+                                  t_dest, \
+                                  [("URL_PREFIX", URL_prefix)])
 
 app = Flask(__name__)
 app.config["DEBUG"] = False
@@ -462,34 +511,6 @@ def get_infomap():
     except Exception as e:
         return ""
 
-
-# def instantiate_from_template(src, dest, old_text, new_text):
-#     """ Copy src file to dest with replacement of old_text with new_text """
-#     # This version performs single substring replacement: old_text -> new_text
-#
-#     fin = open(src)
-#     fout = open(dest, "wt")
-#     for line in fin:
-#         fout.write(line.replace(old_text, new_text))
-#     fin.close()
-#     fout.close()
-
-def instantiate_from_template(src, dest, replacements):
-    """ Copy src file to dest with replacement of old_text with new_text """
-
-    # This version performs multiple substring replacement, using each tuple provided in the replacements list
-    # Each element there is: old_text -> new_text
-    fin = open(src)
-    fout = open(dest, "wt")
-    for line in fin:
-        updated_line = line
-        for r in replacements:
-            old_text, new_text = r[0], r[1]
-            updated_line = updated_line.replace(old_text, new_text)
-        fout.write(updated_line)
-    fin.close()
-    fout.close()
-
 @app.route('/addr_to_latlon', methods=['GET'])
 def addr_to_latlon():
     """ Translate a request with an address to a lat/lon"""
@@ -502,7 +523,9 @@ def addr_to_latlon():
             return json.dumps({"latlon": "lat=%s&lon=%s" % (response[0]["lat"], response[0]["lon"])})
         except Exception as e:
             # "Error" at the beginning is important; js will be looking for it in the returned string to handle the error cases
-            latlon = "Error: OpenStreetMap's API was unable to find lat/lon for the given address.<br>Provide valid address and try again.<br>Keep in mind that OpenStreetMap may not provide info for addresses with special restrictions.<br>If unable to use the desired address, try using <a href=\"http://localhost:8080/on_map\">this interface</a> and choose the location on the map."
+            latlon = "Error: OpenStreetMap's API was unable to find lat/lon for the given address.<br>\
+            Provide valid address and try again.<br>Keep in mind that OpenStreetMap may not provide info for addresses with special restrictions.<br>\
+            If unable to use the desired address, try using <a href=\"%s/on_map\">this interface</a> and choose the location on the map." % URL_prefix
             return json.dumps({"latlon": latlon})
     else:
         return json.dumps({"latlon": ""})
@@ -524,6 +547,21 @@ def by_address():
 @app.route('/on_map', methods=['GET'])
 def on_map():
     return render_template("on_map.html")
+
+@app.route('/status', methods=['GET'])
+def status():
+    """ Minimal simple status with env info and check for hsds """
+    output = "Running in AWS? " + str(running_in_aws) + "<br>"
+    output += "Host: " + str(host) + "<br>"
+    output += "Port: " + str(port) + "<br>"
+    output += "URL_prefix: " + URL_prefix + "<br>"
+    req_args = request.args
+    try:
+        f = connected_hsds_file(req_args, config)
+        output += "Successfully connected to HSDS.<br>"
+    except Exception as e:
+        output += "Can't connect to HSDS. Error:<br>" + str(e)
+    return output
 
 @app.route('/', methods=['GET'])
 @app.route('/<path:path>')
@@ -566,11 +604,14 @@ def root(path):
         return render_template(os.path.join("served", html_name))
 
     elif req_endpoint == "monthly":
+
+        # Step 1: spin up a separate thread for processing
         th = Thread(target=serve_monthly, args=(req_id, req_args))
         th.start()
 
+        # Step 2: from monthly_index.html create html inside served/ for specic request, with specifif lat & lon
+        # Universal here means that the template can be used for AWS and non-AWS envs
         html_name = "monthly_%s.html" % req_id
-
         height, lat, lon, year_list = validated_params_v2_w_year(req_args)
 
         # Copy from a template and replace the string that has the endpoint for fetching outputs from
@@ -587,6 +628,7 @@ def root(path):
                                   ("const lon = \"NEED_SPECIFIC_LON\";",\
                                   "const lon = %.6f;" % lon)])
 
+        # Step 3: Render the final, filled out template
         return render_template(os.path.join("served", html_name))
 
     elif req_endpoint == "ts":
@@ -629,6 +671,7 @@ def root(path):
         return render_template("info.html")
     else:
         return "Unsupported endpoint is selected: %s" % req_endpoint
+
 
 if __name__ == '__main__':
     app.run(host=host, port=port, debug=True)

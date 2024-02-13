@@ -195,7 +195,7 @@
             <td><img id="initial_r2" src="{{url_for('static', filename='turbine.gif')}}"/></td>
           </tr>
           <tr>
-            <td id="initial_r3_td"><a id="initial_r3" href="http://localhost:8080/info" target="_blank" rel="noopener noreferrer">
+            <td id="initial_r3_td"><a id="initial_r3" href="URL_PREFIX/info" target="_blank" rel="noopener noreferrer">
               List of TAP API's capabilities</a></td>
           </tr>
           <tr>
@@ -258,7 +258,7 @@ async function update() {
     // Add js needed to render the show map
     const lat = "NEED_SPECIFIC_LAT"; // NEED_SPECIFIC_LAT will be replaced for individual requests
     const lon = "NEED_SPECIFIC_LON"; // NEED_SPECIFIC_LON will be replaced for individual requests
-    loadJS("http://localhost:8080/infomap?lat=" + lat + "&lon=" + lon, true);
+    loadJS("URL_PREFIX/infomap?lat=" + lat + "&lon=" + lon, true);
 
     if (get.info != ""){
         // The following is based on: https://www.digitalocean.com/community/tutorials/css-collapsible
@@ -285,6 +285,6 @@ update();
 </html>
 <!--
 Notes:
-http://localhost:8080 (2 places) will be populated when universal_monthly_index.htm becomes monthly_index.htm for the current environment (AWS or not)
+URL_PREFIX (2 places) will be populated when universal_monthly_index.htm becomes monthly_index.htm for the current environment (AWS or not)
 NEED_SPECIFIC_REQ_ID, NEED_SPECIFIC_LAT and NEED_SPECIFIC_LON will be populated in the second pass, when monthly_index.htm becomes served/monthly_<req_id>.html
 -->
