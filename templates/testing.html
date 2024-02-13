@@ -327,39 +327,80 @@ input[type='checkbox'] {
     height: 30px;
 }
 
+#mapWrap {
+    width: 100%;
+    height: 600px;
+}
+
   </style>
 
   <title>Status Update</title>
 
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 </head>
 
 <body>
-      <!-- The following is based on: https://www.digitalocean.com/community/tutorials/css-collapsible-->
-      <div class="wrap-collabsible">
-        <input id="collapsible3" class="toggle" type="checkbox">
-        <label for="collapsible3" class="lbl-toggle" tabindex="0"><img id="info_logo" src="static/info.png"/></label>
-        <div class="collapsible-content"><div class="content-inner">
-          <p> Careen fluke jolly boat keel topgallant Admiral of the Black barkadeer
-            sloop poop deck salmagundi. Avast red ensign parley clap of thunder no prey,
-            no pay killick stern clipper execution dock splice the main brace. Grog blossom
-            yardarm bilge water marooned cog wherry tackle aye Shiver me timbers come about.
-          </p></div></div></div>
-</body>
+<div id="mapWrap"></div>
 
 <script>
-let myLabels = document.querySelectorAll('.lbl-toggle');
+// This function handles the get wind data click
+function getWindData() {
+  // Read in values passed through button's attributes
+  const lat = document.getElementById("get_data_button").getAttribute("arg-lat");
+  const lon = document.getElementById("get_data_button").getAttribute("arg-lon");
+  window.location.href = "http://localhost:8080/" + "monthly" + "?height=35m&lat=" + lat + "&lon=" + lon + "&year=2013";
+}
 
-Array.from(myLabels).forEach(label => {
-  label.addEventListener('keydown', e => {
-    // 32 === spacebar
-    // 13 === enter
-    if (e.which === 32 || e.which === 13) {
-      e.preventDefault();
-      label.click();
-    };
-  });
-});
+// Coords are for NREL East Gate
+const latitude = 39.740400605028825;
+const longitude = -105.16842185631096;
+const zoom = 11;
+
+// Set DIV element to embed map
+var mymap = L.map('mapWrap');
+
+// Add initial marker & popup window
+var mmr = L.marker([0,0]);
+mmr.bindPopup('0,0');
+mmr.addTo(mymap);
+
+// Add copyright attribution
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?{foo}', {
+    foo: 'bar',
+    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}
+).addTo(mymap);
+
+// Set lat lng position and zoom level of map
+//mmr.setLatLng(L.latLng(latitude, longitude));
+mymap.setView([latitude, longitude], zoom);
+
+mymap.on('click', function(e) {
+       var popLocation= e.latlng;
+       var lat = popLocation.lat.toFixed(5);
+       var lon = popLocation.lng.toFixed(5);
+       var popup = L.popup()
+       .setLatLng(popLocation)
+       .setContent("<p>Selected location:<br>Latitude: " + lat + "<br>Longitude: " + lon + "<br><br>Check options under the map and click:<br><input type=\"button\" class=\"submit_button\" value=\"Get wind data\" onclick=\"getWindData()\" id=\"get_data_button\" arg-lat=+" + lat + " arg-lon=" + lon + "></p>")
+       .openOn(mymap);
+   });
+
+// Set popup window content
+//mmr.setPopupContent('Latitude: '+latitude+' <br /> Longitude: '+longitude).openPopup();
+
+// Set marker onclick event
+//mmr.on('click', openPopupWindow);
+
+// Marker click event handler
+//function openPopupWindow(e) {
+//    mmr.setPopupContent('Latitude: '+e.latlng.lat+' <br /> Longitude: '+e.latlng.lng).openPopup();
+//}
 </script>
 
+
+
+
+</body>
 
 </html>

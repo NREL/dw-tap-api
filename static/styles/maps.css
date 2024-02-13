@@ -1,0 +1,22 @@
+#infomap {
+    width: 100%;
+    height: 350px;
+    z-index: 0;
+    margin-bottom: -50px;
+}
+
+/* hide map right bottom corner attributes */
+.leaflet-bottom {
+  display: none !important;
+}
+
+#selectionmap {
+    width: 800px;
+    height: 450px;
+    z-index: 0;
+    margin-bottom: 0px;
+    cursor: crosshair !important;
+    border-width: 1px;
+    border-color: black;
+    border-style: solid;
+}

@@ -22,6 +22,8 @@ from dw_tap.data_fetching import getData
 from v2 import validated_params_v2_w_year
 from hsds_helpers import connected_hsds_file
 from bc import bc_for_point
+from infomap import get_infomap_script
+
 #from dw_tap.vis import plot_monthly_avg
 
 #app = Flask(__name__)
@@ -266,7 +268,9 @@ def serve_monthly(req_id, req_args):
                        show=False)
       #return flask.send_file('saved.png')
 
-      output = """
+
+      output = "Selected location:<br><div id=\"infomap\"></div><br><br>" + \
+      """
       <div classes="centered">
       <div>
         <table>
@@ -277,19 +281,14 @@ def serve_monthly(req_id, req_args):
       </div>
       </div>
       """
-
-  #     output_dest = os.path.join(outputs_dir, req_id)
-  #     with open(output_dest, "w") as text_file:
-  #         text_file.write(output)
-  #     return
-  # except Exception as e:
-  #     output = "The following error has occurred:<br>" + str(e)
-  #     with open(output_dest, "w") as text_file:
-  #         text_file.write(output)
-  #     return
+      # Adding info map after output
+      #output += "<br><br>Selected location:<br><div id=\"infomap\"></div>"
 
       info = "The shown dataset includes %d timesteps between %s and %s." % \
         (len(atmospheric_df), atmospheric_df.datetime.tolist()[0], atmospheric_df.datetime.tolist()[-1])
+      # Adding info map inside the info collapsable box doesn't quite work; there is a strage display problem where map shows up partially
+      #info += "<br><br>Selected location:<br><div id=\"infomap\"></div>"
+
       json_output = {'output': output, "info": info}
       with open(output_dest, 'w') as f:
           json.dump(json_output, f)
@@ -335,7 +334,7 @@ def serve_ts(req_id, req_args):
       output = atmospheric_df.to_csv(index=False).replace("\n", "<br>")
       info = ""
       #save = "Download: static/raw/ts-%s.csv" % req_id
-      proposed_fname="%.4f_%.4f_%.1f.csv" % (lat, lon, height)
+      proposed_fname="%.6f_%.6f_%.1f.csv" % (lat, lon, height)
       save = "href=\"%s\" download=\"%s\"" % (csv_dest, proposed_fname)
       # Example: href="static/raw/ts-cd5e6247a3b935d7770bb1657df34715.csv" download="39.7430_-105.1470_65.000000.csv"
       # it will be added inside the  <a> tag
@@ -442,23 +441,52 @@ def get_output():
         if os.path.exists(output_path):
             output = open(output_path, 'r').read()
         else:
-            #output = ""
             output = {'output': "", "info": ""}
     else:
-        # output = ""
         output = {'output': "", "info": ""}
-
-    #json_output = {'output': output}
-    #return json.dumps(json_output)
-
     return output
 
-def instantiate_from_template(src, dest, old_text, new_text):
+@app.route('/infomap', methods=['GET'])
+def get_infomap():
+    req_args = request.args
+
+    if not ('lat' in req_args):
+        return ""
+    if not ('lon' in req_args):
+        return ""
+
+    try:
+        lat = float(req_args["lat"])
+        lon = float(req_args["lon"])
+        return get_infomap_script(lat, lon)
+    except Exception as e:
+        return ""
+
+
+# def instantiate_from_template(src, dest, old_text, new_text):
+#     """ Copy src file to dest with replacement of old_text with new_text """
+#     # This version performs single substring replacement: old_text -> new_text
+#
+#     fin = open(src)
+#     fout = open(dest, "wt")
+#     for line in fin:
+#         fout.write(line.replace(old_text, new_text))
+#     fin.close()
+#     fout.close()
+
+def instantiate_from_template(src, dest, replacements):
     """ Copy src file to dest with replacement of old_text with new_text """
+
+    # This version performs multiple substring replacement, using each tuple provided in the replacements list
+    # Each element there is: old_text -> new_text
     fin = open(src)
     fout = open(dest, "wt")
     for line in fin:
-        fout.write(line.replace(old_text, new_text))
+        updated_line = line
+        for r in replacements:
+            old_text, new_text = r[0], r[1]
+            updated_line = updated_line.replace(old_text, new_text)
+        fout.write(updated_line)
     fin.close()
     fout.close()
 
@@ -474,7 +502,7 @@ def addr_to_latlon():
             return json.dumps({"latlon": "lat=%s&lon=%s" % (response[0]["lat"], response[0]["lon"])})
         except Exception as e:
             # "Error" at the beginning is important; js will be looking for it in the returned string to handle the error cases
-            latlon = "Error: OpenStreetMap's API was unable to find lat/lon for the given address.<br>Provide valid address and try again.<br>Keep in mind that OpenStreetMap may not provide info for addresses with special restrictions."
+            latlon = "Error: OpenStreetMap's API was unable to find lat/lon for the given address.<br>Provide valid address and try again.<br>Keep in mind that OpenStreetMap may not provide info for addresses with special restrictions.<br>If unable to use the desired address, try using <a href=\"http://localhost:8080/on_map\">this interface</a> and choose the location on the map."
             return json.dumps({"latlon": latlon})
     else:
         return json.dumps({"latlon": ""})
@@ -484,16 +512,18 @@ def addr_to_latlon():
     # response = requests.get(url).json()
     # return response[0]["lat"] + "   " + response[0]["lon"]
 
+@app.route('/testing', methods=['GET'])
+def testing():
+    return render_template("testing.html")
+
+
 @app.route('/by_address', methods=['GET'])
 def by_address():
-    #return render_template("testing.html")
-
-    # address = '1840 Alkire Ct, Golden, CO 80401'
-    # url = 'https://nominatim.openstreetmap.org/search?q=' + urllib.parse.quote(address) +'&format=json'
-    # response = requests.get(url).json()
-    # return response[0]["lat"] + "   " + response[0]["lon"]
-
     return render_template("by_address.html")
+
+@app.route('/on_map', methods=['GET'])
+def on_map():
+    return render_template("on_map.html")
 
 @app.route('/', methods=['GET'])
 @app.route('/<path:path>')
@@ -524,10 +554,14 @@ def root(path):
         html_name = "12x24_%s.html" % req_id
 
         # Copy from a template and replace the string that has the endpoint for fetching outputs from
+        # instantiate_from_template(os.path.join(templates_dir, "12x24_index.html"),\
+        #                           os.path.join(templates_dir, "served", html_name),
+        #                           old_text="const FETCH_STR = \"/output?req_id=NEED_SPECIFIC_REQ_ID\";",\
+        #                           new_text="const FETCH_STR = \"/output?req_id=%s\";" % req_id)
         instantiate_from_template(os.path.join(templates_dir, "12x24_index.html"),\
-                                  os.path.join(templates_dir, "served", html_name),
-                                  old_text="const FETCH_STR = \"/output?req_id=NEED_SPECIFIC_REQ_ID\";",\
-                                  new_text="const FETCH_STR = \"/output?req_id=%s\";" % req_id)
+                                  os.path.join(templates_dir, "served", html_name),\
+                                  [("const FETCH_STR = \"/output?req_id=NEED_SPECIFIC_REQ_ID\";", \
+                                  "const FETCH_STR = \"/output?req_id=%s\";" % req_id)])
 
         return render_template(os.path.join("served", html_name))
 
@@ -537,11 +571,21 @@ def root(path):
 
         html_name = "monthly_%s.html" % req_id
 
+        height, lat, lon, year_list = validated_params_v2_w_year(req_args)
+
         # Copy from a template and replace the string that has the endpoint for fetching outputs from
+        # instantiate_from_template(os.path.join(templates_dir, "monthly_index.html"),\
+        #                           os.path.join(templates_dir, "served", html_name),
+        #                           old_text="const FETCH_STR = \"/output?req_id=NEED_SPECIFIC_REQ_ID\";",\
+        #                           new_text="const FETCH_STR = \"/output?req_id=%s\";" % req_id)
         instantiate_from_template(os.path.join(templates_dir, "monthly_index.html"),\
-                                  os.path.join(templates_dir, "served", html_name),
-                                  old_text="const FETCH_STR = \"/output?req_id=NEED_SPECIFIC_REQ_ID\";",\
-                                  new_text="const FETCH_STR = \"/output?req_id=%s\";" % req_id)
+                                  os.path.join(templates_dir, "served", html_name),\
+                                  [("const FETCH_STR = \"/output?req_id=NEED_SPECIFIC_REQ_ID\";",\
+                                  "const FETCH_STR = \"/output?req_id=%s\";" % req_id),\
+                                  ("const lat = \"NEED_SPECIFIC_LAT\";",\
+                                  "const lat = %.6f;" % lat),\
+                                  ("const lon = \"NEED_SPECIFIC_LON\";",\
+                                  "const lon = %.6f;" % lon)])
 
         return render_template(os.path.join("served", html_name))
 
@@ -552,10 +596,14 @@ def root(path):
         html_name = "ts_%s.html" % req_id
 
         # Copy from a template and replace the string that has the endpoint for fetching outputs from
+        # instantiate_from_template(os.path.join(templates_dir, "ts_index.html"),\
+        #                           os.path.join(templates_dir, "served", html_name),
+        #                           old_text="const FETCH_STR = \"/output?req_id=NEED_SPECIFIC_REQ_ID\";",\
+        #                           new_text="const FETCH_STR = \"/output?req_id=%s\";" % req_id)
         instantiate_from_template(os.path.join(templates_dir, "ts_index.html"),\
-                                  os.path.join(templates_dir, "served", html_name),
-                                  old_text="const FETCH_STR = \"/output?req_id=NEED_SPECIFIC_REQ_ID\";",\
-                                  new_text="const FETCH_STR = \"/output?req_id=%s\";" % req_id)
+                                  os.path.join(templates_dir, "served", html_name),\
+                                  [("const FETCH_STR = \"/output?req_id=NEED_SPECIFIC_REQ_ID\";",\
+                                  "const FETCH_STR = \"/output?req_id=%s\";" % req_id)])
 
         return render_template(os.path.join("served", html_name))
 
@@ -566,10 +614,14 @@ def root(path):
             html_name = "bc_%s.html" % req_id
 
             # Copy from a template and replace the string that has the endpoint for fetching outputs from
+            # instantiate_from_template(os.path.join(templates_dir, "bc_index.html"),\
+            #                           os.path.join(templates_dir, "served", html_name),
+            #                           old_text="const FETCH_STR = \"/output?req_id=NEED_SPECIFIC_REQ_ID\";",\
+            #                           new_text="const FETCH_STR = \"/output?req_id=%s\";" % req_id)
             instantiate_from_template(os.path.join(templates_dir, "bc_index.html"),\
-                                      os.path.join(templates_dir, "served", html_name),
-                                      old_text="const FETCH_STR = \"/output?req_id=NEED_SPECIFIC_REQ_ID\";",\
-                                      new_text="const FETCH_STR = \"/output?req_id=%s\";" % req_id)
+                                      os.path.join(templates_dir, "served", html_name),\
+                                      [("const FETCH_STR = \"/output?req_id=NEED_SPECIFIC_REQ_ID\";",\
+                                      "const FETCH_STR = \"/output?req_id=%s\";" % req_id)])
 
             return render_template(os.path.join("served", html_name))
 
