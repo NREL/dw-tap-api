@@ -6,3 +6,4 @@ saved.png
 templates/served/*
 outputs/*
 static/raw/*
+proto.out

@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-
+  <link rel="stylesheet" href="static/styles/maps.css">
   <style>
 
   body {
@@ -316,6 +316,7 @@
     margin-top: 20px;
     padding: 8px 20px 8px 20px;
     border-radius: 8px;
+    z-index: 1000;
   }
 
   tr.spaceUnder>td {
@@ -331,6 +332,9 @@
   </style>
 
   <title>Status Update</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 </head>
 
@@ -357,11 +361,15 @@
         <table>
           <tr class="spaceUnder">
             <form>
-                <td>
-                <label for="fname">Address (exclude ZIP code):</label>
+                <td colspan=2>
+                <label for="fname">Click on the map to select the location:</label>
                 </td>
-                <td>
-                <input type="text" class="text_field" id="addr" value="1 Main St, Lyons, CO"><br>
+            </form>
+          </tr>
+          <tr class="spaceUnder">
+            <form>
+                <td colspan=2>
+                <div id="selectionmap"></div>
                 </td>
             </form>
           </tr>
@@ -397,13 +405,6 @@
            </div>
             </td>
           </tr >
-          <tr class="spaceUnder">
-            <td colspan=2>
-            <form>
-            <input type="button" class="submit_button" value="Get wind data" onclick="getWindData()" id="get_data_button">
-            </form>
-          </td>
-          </tr>
           <tr>
             <td colspan=2>
               <p id="fetching_msg"> </p>
@@ -419,76 +420,75 @@
 
   <!-- The following will be populated by js-->
   <div id="info_wrapper"></div>
-</body>
 
 <script>
-
-// This async func is needed becuase getWindData can't use await directly
-async function fetchLatLon(addr) {
-  let latlon;
-  try {
-    const FETCH_STR = "/addr_to_latlon?addr=" + addr;
-    const res = await fetch(FETCH_STR);
-    get = await res.json();
-    latlon = get.latlon;
-    console.log(latlon)
-  } catch (e) {
-    console.error("Error: ", e);
-  }
-  return latlon;
-}
-
 // This function handles the get wind data click
 function getWindData() {
+  //document.getElementById("fetching_msg").innerHTML = "Clicked";
+  const lat = document.getElementById("get_data_button").getAttribute("arg-lat");
+  const lon = document.getElementById("get_data_button").getAttribute("arg-lon");
 
-  document.getElementById("fetching_msg").innerHTML = "";
-
-  var addr = document.getElementById('addr').value;
-  addr_nospaces = addr.replace(/\s/g, '');
-  if (addr_nospaces === "") {
-    document.getElementById("fetching_msg").innerHTML = "Address field can't be empty. Fill it out and try again.";
-    return
-  }
-
-  var addr_encoded =  addr.replace(/ /g, '+');
   var hub_height = document.getElementById('hub_height').value;
   hub_height = hub_height.replace(/\s/g, '');
   var years = document.getElementById('years').value;
   years = years.replace(/\s/g, '');
 
-  let laton;
-  const promise = fetchLatLon(addr_encoded);
-  promise.then((latlon) => {
-    if (latlon != ""){
-
-      if (latlon.startsWith("Error")) {
-        document.getElementById("fetching_msg").innerHTML = latlon;
-        return
-      }
-
-      //document.getElementById("input_form").innerHTML = "";
-      //document.getElementById("fetching_msg").innerHTML = "Fetching data for: " + latlon + "...";
-      var endpoint = "";
-      if (document.getElementById('choice_monthly').checked) {
-          endpoint = "monthly";
-      } else if (document.getElementById('choice_12x24').checked) {
-          endpoint = "12x24";
-      }
-      else {
-        endpoint = "ts";
-      }
-
-      document.getElementById("fetching_msg").innerHTML = "";
-      window.location.href = "URL_PREFIX" + endpoint + "?height=" + hub_height + "m&" + latlon + "&year=" + years;
-      }
-    }
-  );
-
-
+  var endpoint = "";
+  if (document.getElementById('choice_monthly').checked) {
+      endpoint = "monthly";
+  } else if (document.getElementById('choice_12x24').checked) {
+      endpoint = "12x24";
+  }
+  else {
+    endpoint = "ts";
+  }
+  window.location.href = "URL_PREFIX" + endpoint + "?height=" + hub_height + "m&lat=" + lat + "&lon=" + lon + "&year=" + years;
 }
 </script>
+
+<script>
+
+// Coords are for NREL East Gate -- starting point for the clickable map
+const latitude = 39.740400605028825;
+const longitude = -105.16842185631096;
+const zoom = 11;
+
+// Set DIV element to embed map
+var mymap = L.map('selectionmap');
+
+// Add initial marker & popup window
+var mmr = L.marker([0,0]);
+mmr.bindPopup('0,0');
+mmr.addTo(mymap);
+
+// Add copyright attribution
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?{foo}', {
+    foo: 'bar',
+    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}
+).addTo(mymap);
+
+// Set lat lng position and zoom level of map
+//mmr.setLatLng(L.latLng(latitude, longitude));
+mymap.setView([latitude, longitude], zoom);
+
+mymap.on('click', function(e) {
+       var popLocation= e.latlng;
+       var lat = popLocation.lat.toFixed(6);
+       var lon = popLocation.lng.toFixed(6);
+       var popup = L.popup()
+       .setLatLng(popLocation)
+       .setContent("<p>Selected location:<br>Latitude: " + lat + "<br>Longitude: " + lon + "<br><br>Check options under the map and proceed by clicking:<br><input type=\"button\" value=\"Get wind data\" onclick=\"getWindData()\" id=\"get_data_button\" class=\"submit_button\" arg-lat=+" + lat + " arg-lon=" + lon + "></p>")
+       .openOn(mymap);
+       //Replacing class=\"submit_button\" with .classList.add() below
+
+       // Add style; otherwise the shown button is missing the style
+       document.getElementById("get_data_button").classList.add("submit_button");
+   });
+
+</script>
+</body>
 </html>
 <!--
 Notes:
-URL_PREFIX (1 place) will be populated when universal_by_address.html becomes by_address.html for the current environment (AWS or not)
+URL_PREFIX (1 place) will be populated when universal_on_map.html becomes on_map.html for the current environment (AWS or not)
 -->

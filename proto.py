@@ -230,7 +230,9 @@ src_dest_names = [("universal_monthly_index.html", "monthly_index.html"),\
                   ("universal_12x24_index.html", "12x24_index.html"),\
                   ("universal_ts_index.html", "ts_index.html"),\
                   ("universal_bc_index.html", "bc_index.html"),\
-                  ("universal_info.html", "info.html")]
+                  ("universal_info.html", "info.html"),\
+                  ("universal_on_map.html", "on_map.html"),\
+                  ("universal_by_address.html", "by_address.html")]
 for src_dest in src_dest_names:
     t_src, t_dest = src_dest[0], src_dest[1]
     t_src = os.path.join(templates_dir, t_src)
