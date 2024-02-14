@@ -442,7 +442,13 @@ function getWindData() {
   else {
     endpoint = "ts";
   }
-  window.location.href = "http://localhost:8080" +"/" + endpoint + "?height=" + hub_height + "m&lat=" + lat + "&lon=" + lon + "&year=" + years;
+  // Old way: works locally, fails in AWS
+  //window.location.href = "http://localhost:8080" +"/" + endpoint + "?height=" + hub_height + "m&lat=" + lat + "&lon=" + lon + "&year=" + years;
+  // New way: opens a new tab
+  window.open(
+    "http://localhost:8080" +"/" + endpoint + "?height=" + hub_height + "m&lat=" + lat + "&lon=" + lon + "&year=" + years,
+    '_blank' // <- This is what makes it open in a new window.
+    );
 }
 </script>
 

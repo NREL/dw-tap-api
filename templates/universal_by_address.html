@@ -479,7 +479,13 @@ function getWindData() {
       }
 
       document.getElementById("fetching_msg").innerHTML = "";
-      window.location.href = "URL_PREFIX" + "/" + endpoint + "?height=" + hub_height + "m&" + latlon + "&year=" + years;
+      // Old way: works locally, fails in AWS
+      //window.location.href = "URL_PREFIX" + "/" + endpoint + "?height=" + hub_height + "m&" + latlon + "&year=" + years;
+      // New way: opens a new tab
+      window.open(
+        "URL_PREFIX" + "/" + endpoint + "?height=" + hub_height + "m&" + latlon + "&year=" + years,
+        '_blank' // <- This is what makes it open in a new window.
+        );
       }
     }
   );
