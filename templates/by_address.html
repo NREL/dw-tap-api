@@ -479,7 +479,7 @@ function getWindData() {
       }
 
       document.getElementById("fetching_msg").innerHTML = "";
-      window.location.href = "http://localhost:8080" + endpoint + "?height=" + hub_height + "m&" + latlon + "&year=" + years;
+      window.location.href = "http://localhost:8080" + "/" + endpoint + "?height=" + hub_height + "m&" + latlon + "&year=" + years;
       }
     }
   );

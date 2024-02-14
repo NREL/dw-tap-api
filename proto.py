@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, Response
 from flask_cors import CORS
 from threading import Thread
 from time import sleep
@@ -211,6 +211,7 @@ else:
 
 # Identify the current environment
 # This method came from checking tap-api-prod ECS container on 02/13/2023
+# URL_prefix should NOT include "/" at the end, otherwise there will be errors
 if os.environ.get('AWS_EXECUTION_ENV') == "AWS_ECS_EC2":
     running_in_aws = True
     if port == 80 or port == "80":
@@ -219,10 +220,14 @@ if os.environ.get('AWS_EXECUTION_ENV') == "AWS_ECS_EC2":
         URL_prefix = "https://dw-tap.nrel.gov:%s" % str(port)
 else:
     running_in_aws = False
-    if port == 80 or port == "80":
-        URL_prefix = "http://localhost"
-    else:
-        URL_prefix = "http://localhost:%s" % str(port)
+
+    # This case is for running locally (container should be accessed via port 8080 even though inside it the server runs on part 80)
+    URL_prefix = "http://localhost:8080"
+
+    # if port == 80 or port == "80":
+    #     URL_prefix = "http://localhost"
+    # else:
+    #     URL_prefix = "http://localhost:%s" % str(port)
 
 # Now that URL_prefix is determined for the current env, prepare templates from universal ones
 # Universal here means that those template can be used for AWS and non-AWS envs
@@ -520,7 +525,10 @@ def get_infomap():
     try:
         lat = float(req_args["lat"])
         lon = float(req_args["lon"])
-        return get_infomap_script(lat, lon)
+        #return get_infomap_script(lat, lon)
+
+        # The following should solve the issue "Refused to execite script because "X-Content-Type-Options: nosniff" was given and its Content-Type is not a script MIME type"
+        return Response(get_infomap_script(lat, lon), mimetype='text/javascript')
     except Exception as e:
         return ""
 
@@ -578,6 +586,10 @@ def status():
     return output
 
 @app.route('/', methods=['GET'])
+def serve_slash():
+    return render_template("info.html")
+
+#@app.route('/', methods=['GET'])
 @app.route('/<path:path>')
 def root(path):
     """ Main routine that servies multiple endpoints """
