@@ -214,9 +214,9 @@ else:
 if os.environ.get('AWS_EXECUTION_ENV') == "AWS_ECS_EC2":
     running_in_aws = True
     if port == 80 or port == "80":
-        URL_prefix = "http://dw-tap.nrel.gov"
+        URL_prefix = "https://dw-tap.nrel.gov"
     else:
-        URL_prefix = "http://dw-tap.nrel.gov:%s" % str(port)
+        URL_prefix = "https://dw-tap.nrel.gov:%s" % str(port)
 else:
     running_in_aws = False
     if port == 80 or port == "80":
