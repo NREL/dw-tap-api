@@ -24,6 +24,8 @@ from hsds_helpers import connected_hsds_file
 from bc import bc_for_point
 from infomap import get_infomap_script
 
+server_started_at = datetime.datetime.now()
+
 outputs_dir = "outputs"
 if not os.path.exists(outputs_dir):
   os.mkdir(outputs_dir)
@@ -219,7 +221,8 @@ else:
 
 # Now that URL_prefix is determined for the current env, prepare templates from universal ones
 # Universal here means that those template can be used for AWS and non-AWS envs
-src_dest_names = [("universal_monthly_index.html", "monthly_index.html")]
+src_dest_names = [("universal_monthly_index.html", "monthly_index.html"),\
+                  ("universal_info.html", "info.html")]
 for src_dest in src_dest_names:
     t_src, t_dest = src_dest[0], src_dest[1]
     t_src = os.path.join(templates_dir, t_src)
@@ -551,7 +554,8 @@ def on_map():
 @app.route('/status', methods=['GET'])
 def status():
     """ Minimal simple status with env info and check for hsds """
-    output = "Running in AWS? " + str(running_in_aws) + "<br>"
+    output = "Server started at: " + str(server_started_at) + "<br>"
+    output += "Running in AWS? " + str(running_in_aws) + "<br>"
     output += "Host: " + str(host) + "<br>"
     output += "Port: " + str(port) + "<br>"
     output += "URL_prefix: " + URL_prefix + "<br>"
