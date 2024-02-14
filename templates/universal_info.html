@@ -1,0 +1,268 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+
+  <style>
+
+  * {
+    font-family: Verdana !important;
+  }
+
+  body {
+    background-color: white; <!--#D64F2A;-->
+  }
+
+  #dynamicContent {
+    font-family: Verdana !important;
+  }
+
+  #dynamicContent caption {
+    font-size: 20px;
+    color: black;
+    padding-bottom: 30px;
+  }
+
+  #dynamicContent table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 14px;
+    text-align: center;
+    border-radius: 10px !important;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    margin: auto;
+    margin-top: 50px;
+    margin-bottom: 50px;
+  }
+
+  #dynamicContent table th {
+    background-color: #D2B48C;
+    font-weight: bold;
+    letter-spacing: 1px;
+    padding: 8px 25px 8px 25px;
+    color: black;
+    border-top: 1px solid #fff;
+    border-bottom: 1px solid #ccc;
+  }
+
+  .progress {
+    display: flex;
+    position: absolute;
+    height: 100%;
+    width: 100%;
+  }
+
+  .status {
+    color: #0172b4;
+    margin: auto;
+  }
+
+  #workingText h2 {
+    font-family: Verdana;
+    font-size: 20px;
+  }
+
+  .status h2 {
+    padding: 50px;
+    font-size: 80px;
+    font-weight: bold;
+  }
+
+  #progBar {
+    width: 100%
+  }
+
+  #progBar img {
+    width: 90px;
+    height: 150px;
+    position: absolute;
+    left: 50%;
+    margin: -50px 0 0 -50px;
+  }
+
+  #aboutText {
+    width: 100%
+  }
+
+  #aboutText a {
+    margin-top: 300px;
+    left: 50%;
+    top: 65%;
+    font-family: Verdana;
+    font-size: 18px;
+  }
+
+  #initial {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  #initial table {
+    text-align: center;
+    vertical-align: middle;
+    border-collapse: separate;
+    border: solid #808080 1px;
+    border-radius: 10px;
+    padding-bottom: 40px;
+  }
+
+  #initial_r1 {
+    font-family: Verdana;
+    font-size: 20px;
+    padding-top: 20px;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+  }
+
+  #initial_r2 {
+    width: 100px;
+    height: 150px;
+    left: 50%;
+    padding-bottom: 30px;
+  }
+
+  #initial_r3 {
+    font-family: Verdana;
+    font-size: 16px;
+  }
+
+  #colormap {
+    width: 450px;
+  }
+
+  #colormap_wrapper {
+    margin-top: -30px;
+  }
+
+  #colormap_table {
+    width: 450px !important;
+    color: black;
+    font-size: 22px;
+    border: none !important;
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0.1) !important;
+  }
+  #colormap_min_cell {
+    text-align: left;
+    justify-content: left;
+  }
+  #colormap_max_cell {
+    text-align: right;
+    justify-content: right;
+  }
+  .centered {
+    justify-content: center;
+    text-align: center;
+  }
+
+  #monthly_plot {
+    width: 900px;
+  }
+
+  #info_table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 16px;
+    text-align: left;
+    border-radius: 10px !important;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    margin: auto;
+    margin-top: 50px;
+    margin-bottom: 50px;
+    padding: 30px;
+  }
+
+  #info_table td {
+    padding: 15px;
+  }
+
+  #info_table th {
+    background-color: #ff9800;
+    color: #fff;
+    font-weight: bold;
+    padding: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-top: 1px solid #fff;
+    border-bottom: 1px solid #ccc;
+  }
+
+  #info_table tr:nth-child(even) td {
+    background-color: #f2f2f2;
+  }
+
+  #info_table tr:hover td {
+    background-color: #ffedcc;
+  }
+
+  </style>
+
+  <title>Status Update</title>
+
+</head>
+
+<body>
+  <div class="progress">
+    <div class="status">
+      <h3>TAP API provides public access to the following capabilities:</h3>
+        <table id="info_table">
+          <tr>
+            <th>Capability</th>
+            <th>Link</th>
+            <th>Summary</th>
+          </tr>
+          <tr>
+            <td><strong>Wind data for a point on the map</strong></td>
+            <td><a href="URL_PREFIX/on_map">URL_PREFIX/on_map</a></td>
+            <td width="350px">Click on the map to select the desired location. You can also choose the output format.</td>
+          </tr>
+          <tr>
+            <td><strong>Wind data for a given address</strong></td>
+            <td><a href="URL_PREFIX/by_address">URL_PREFIX/by_address</a></td>
+            <td width="350px">After providing a valid address, you will be able to see wind data for that location. You can also choose the output format.</td>
+          </tr>
+          </table>
+
+          <h4>The capabilities listed below allow to change <mark> highlighted parameters</mark> in specific requests (<a href="https://github.com/NREL/dw-tap-api/blob/master/docs/capabilities_params.md">read more about <mark>parameters</mark></a>):</h4>
+          <table id="info_table">
+            <tr>
+              <th>Capability</th>
+              <th>Example API call</th>
+              <th>Summary</th>
+            </tr>
+          <tr>
+            <td><strong>Plot monthly averages</strong></td>
+            <td><a href="URL_PREFIX/monthly?height=65.00m&lat=39.743&lon=-105.147&year=2012,2013" target="_blank">URL_PREFIX/monthly?<mark>height=65.00m</mark>&<mark>lat=39.743</mark>&<mark>lon=-105.147</mark>&<mark>year=2013</mark></a></td>
+            <td>Aggregate to monthly averages and show one or several years of model data.</td>
+          </tr>
+          <tr>
+            <td><strong>12x24 (hourly x monthly) summary</strong></td>
+            <td><a href="URL_PREFIX/12x24?height=65.00m&lat=39.743&lon=-105.147&year=2012" target="_blank">URL_PREFIX/12x24?height=65.00m&lat=39.743&lon=-105.147</a></td>
+            <td>This summary allows seeing diurnal and seasonal patterns in wind data.</td>
+          </tr>
+          <tr>
+            <td><strong>Raw time series</strong></td>
+            <td><a href="URL_PREFIX/ts?height=65.00m&lat=39.743&lon=-105.147&year=2012" target="_blank" rel="noopener noreferrer">URL_PREFIX/ts?height=65.00m&lat=39.743&lon=-105.147</a></td>
+            <td width="350px">Less user-friendly interface that allows external computational tools, dashboards, etc. access TAP's wind data.</td>
+          </tr>
+          <tr>
+            <td><strong>Bias-corrected wind speeds<sup>(NEW)</sup></strong></td>
+            <td><a href="URL_PREFIX/bc?height=65.00m&lat=39.743&lon=-105.147&year=2012" target="_blank" rel="noopener noreferrer">URL_PREFIX/bc?height=35.00m&lat=41.2&lon=-93.18&year=2011</a></td>
+            <td width="350px">Apply bias correction using observational data and show monthly average wind speeds, with and without bias correction.</td>
+          </tr>
+        </table>
+        <br>
+        <p><a id="initial_r3" href="https://www.nrel.gov/wind/tools-assessing-performance.html" target="_blank" rel="noopener noreferrer">More about NREL's TAP project</a><p>
+      </div>
+    </div>
+</body>
+
+
+</html>
+<!--
+Notes:
+URL_PREFIX (2 places) will be populated when universal_info.html becomes info.html for the current environment (AWS or not)
+-->
