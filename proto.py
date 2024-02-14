@@ -222,6 +222,9 @@ else:
 # Now that URL_prefix is determined for the current env, prepare templates from universal ones
 # Universal here means that those template can be used for AWS and non-AWS envs
 src_dest_names = [("universal_monthly_index.html", "monthly_index.html"),\
+                  ("universal_12x24_index.html", "12x24_index.html"),\
+                  ("universal_ts_index.html", "ts_index.html"),\
+                  ("universal_bc_index.html", "bc_index.html"),\
                   ("universal_info.html", "info.html")]
 for src_dest in src_dest_names:
     t_src, t_dest = src_dest[0], src_dest[1]
