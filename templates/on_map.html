@@ -442,13 +442,13 @@ function getWindData() {
   else {
     endpoint = "ts";
   }
-  window.location.href = "http://localhost:8080/" + endpoint + "?height=" + hub_height + "m&lat=" + lat + "&lon=" + lon + "&year=" + years;
+  window.location.href = "http://localhost:8080" + endpoint + "?height=" + hub_height + "m&lat=" + lat + "&lon=" + lon + "&year=" + years;
 }
 </script>
 
 <script>
 
-// Coords are for NREL East Gate
+// Coords are for NREL East Gate -- starting point for the clickable map
 const latitude = 39.740400605028825;
 const longitude = -105.16842185631096;
 const zoom = 11;
@@ -488,3 +488,7 @@ mymap.on('click', function(e) {
 </script>
 </body>
 </html>
+<!--
+Notes:
+http://localhost:8080 (1 place) will be populated when universal_on_map.html becomes on_map.html for the current environment (AWS or not)
+-->

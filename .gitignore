@@ -7,3 +7,9 @@ templates/served/*
 outputs/*
 static/raw/*
 proto.out
+templates/12x24_index.html
+templates/bc_index.html
+templates/by_address.html
+templates/info.html
+templates/on_map.html
+templates/ts_index.html

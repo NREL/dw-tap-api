@@ -36,8 +36,8 @@ if not os.path.exists("%s/served" % templates_dir):
   os.mkdir("%s/served" % templates_dir)
 
 csv_dir = "static/raw"
- if not os.path.exists(csv_dir):
-   os.mkdir(csv_dir)
+if not os.path.exists(csv_dir):
+  os.mkdir(csv_dir)
 
 # def instantiate_from_template(src, dest, old_text, new_text):
 #     """ Copy src file to dest with replacement of old_text with new_text """
