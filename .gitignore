@@ -13,3 +13,4 @@ templates/by_address.html
 templates/info.html
 templates/on_map.html
 templates/ts_index.html
+templates/monthly_index.html
