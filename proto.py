@@ -26,6 +26,7 @@ from infomap import get_infomap_script
 
 server_started_at = datetime.datetime.now()
 
+# Necessary directories: create if not there
 outputs_dir = "outputs"
 if not os.path.exists(outputs_dir):
   os.mkdir(outputs_dir)
@@ -33,6 +34,10 @@ if not os.path.exists(outputs_dir):
 templates_dir = "templates"
 if not os.path.exists("%s/served" % templates_dir):
   os.mkdir("%s/served" % templates_dir)
+
+csv_dir = "static/raw"
+ if not os.path.exists(csv_dir):
+   os.mkdir(csv_dir)
 
 # def instantiate_from_template(src, dest, old_text, new_text):
 #     """ Copy src file to dest with replacement of old_text with new_text """
@@ -383,7 +388,7 @@ def serve_ts(req_id, req_args):
           atmospheric_df.drop(columns=["Unnamed: 0"], inplace=True)
 
       # Saving to file
-      csv_dest = "static/raw/ts-%s.csv" % req_id
+      csv_dest = "%s/ts-%s.csv" % (csv_dir, req_id)
       atmospheric_df.to_csv(csv_dest, index=False)
 
       output = atmospheric_df.to_csv(index=False).replace("\n", "<br>")
