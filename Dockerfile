@@ -55,8 +55,8 @@ EXPOSE 80
 # Conda env in the path below needs to match the name in the first line of environment.yml
 #CMD ["/opt/conda/envs/dw-tap-api/bin/python", "api.py", "--production"]
 #CMD ["python", "api.py", "--production"]
-#CMD ["python", "proto.py", "--production"]
+CMD ["python", "proto.py", "--production"]
 
-# Version that allows following a file with out and err messages
-CMD ["python", "proto.py", "--production", ">>proto.out", "2>&1"]
+# Not working: Version that allows following a file with out and err messages
+CMD ["/bin/bash", "-c", "python proto.py --production >> proto.out 2>&1"]
 
