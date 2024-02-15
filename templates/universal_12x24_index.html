@@ -4,6 +4,9 @@
 <head>
   <meta charset="UTF-8">
   <link rel="stylesheet" href="static/styles/info_button.css">
+  <link rel="stylesheet" href="static/styles/maps.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <style>
 
@@ -204,6 +207,25 @@
 <script>
 var timeout;
 
+function loadJS(FILE_URL, async = true) {
+  let scriptEle = document.createElement("script");
+
+  scriptEle.setAttribute("src", FILE_URL);
+  scriptEle.setAttribute("type", "text/javascript");
+  scriptEle.setAttribute("async", async);
+
+  document.body.appendChild(scriptEle);
+
+  // success event
+  scriptEle.addEventListener("load", () => {
+    console.log("File loaded")
+  });
+   // error event
+  scriptEle.addEventListener("error", (ev) => {
+    console.log("Error on loading file", ev);
+  });
+}
+
 async function update() {
   let get;
 
@@ -220,6 +242,11 @@ async function update() {
 
     document.getElementById("initial").innerHTML = "";
     document.getElementById("dynamicContent").innerHTML = get.output;
+
+    // Add js needed to render the show map
+    const lat = "NEED_SPECIFIC_LAT"; // NEED_SPECIFIC_LAT will be replaced for individual requests
+    const lon = "NEED_SPECIFIC_LON"; // NEED_SPECIFIC_LON will be replaced for individual requests
+    loadJS("URL_PREFIX/infomap?lat=" + lat + "&lon=" + lon, false);
 
     if (get.info != ""){
         // The following is based on: https://www.digitalocean.com/community/tutorials/css-collapsible

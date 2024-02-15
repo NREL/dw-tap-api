@@ -309,7 +309,23 @@ def serve_12x24(req_id, req_args):
   #         text_file.write(output)
   #     return
 
-      output = timeseries_to_12_by_24(atmospheric_df)
+      output_table = timeseries_to_12_by_24(atmospheric_df)
+
+      output = "Selected location:<br><div id=\"infomap\"></div><br><br>" + \
+      """
+      <div classes="centered">
+      <div>
+        <table>
+            <tr>
+              <td>
+              %s
+              </td>
+            </tr>
+        </table>
+      </div>
+      </div>
+      """ % output_table
+
       info = "Source of data: <a href=\"https://www.nrel.gov/grid/wind-toolkit.html\" target=\"_blank\" rel=\"noopener noreferrer\">NREL's WTK dataset</a>, covering 2007-2013."
       info += "<br><br>The shown subset of the model data includes %d timesteps between %s and %s." % \
         (len(atmospheric_df), atmospheric_df.datetime.tolist()[0], atmospheric_df.datetime.tolist()[-1])
@@ -669,6 +685,7 @@ def root(path):
         th.start()
 
         html_name = "12x24_%s.html" % req_id
+        height, lat, lon, year_list = validated_params_v2_w_year(req_args)
 
         # Copy from a template and replace the string that has the endpoint for fetching outputs from
         # instantiate_from_template(os.path.join(templates_dir, "12x24_index.html"),\
@@ -678,7 +695,11 @@ def root(path):
         instantiate_from_template(os.path.join(templates_dir, "12x24_index.html"),\
                                   os.path.join(templates_dir, "served", html_name),\
                                   [("const FETCH_STR = \"/output?req_id=NEED_SPECIFIC_REQ_ID\";", \
-                                  "const FETCH_STR = \"/output?req_id=%s\";" % req_id)])
+                                  "const FETCH_STR = \"/output?req_id=%s\";" % req_id),\
+                                  ("const lat = \"NEED_SPECIFIC_LAT\";",\
+                                  "const lat = %.6f;" % lat),\
+                                  ("const lon = \"NEED_SPECIFIC_LON\";",\
+                                  "const lon = %.6f;" % lon)])
 
         return render_template(os.path.join("served", html_name))
 
