@@ -1,10 +1,10 @@
-.wrap-collabsible {
+.save-wrap-collabsible {
   margin-bottom: 1.2rem 0;
 }
 input[type='checkbox'] {
   display: none;
 }
-.lbl-toggle {
+.save-lbl-toggle {
   display: block;
 
   font-weight: bold;
@@ -20,15 +20,15 @@ input[type='checkbox'] {
   border-radius: 7px;
   transition: all 0.0s ease-out;
 }
-.lbl-toggle:hover {
+.save-lbl-toggle:hover {
   color: #7C5A0B;
 }
-.wrap-collabsible {
+.save-wrap-collabsible {
     position: fixed;
     top: 10px;
-    right: 10px;
+    right: 200px; /*different for wrap-collapsible for info button*/
     width: 100px;
 }
-#info_logo {
+#save_logo {
     height: 30px;
 }

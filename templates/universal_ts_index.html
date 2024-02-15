@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <link rel="stylesheet" href="static/styles/save_button.css">
+  <link rel="stylesheet" href="static/styles/info_button.css">
 
   <style>
   body {
@@ -248,6 +249,9 @@
 
   <!-- The following will be populated by js-->
   <div id="info_wrapper"></div>
+
+  <!-- The following will be populated by js-->
+  <div id="save_wrapper"></div>
 </body>
 
 <script>
@@ -285,10 +289,10 @@ async function update() {
     }
 
     if (get.save != ""){
-        document.getElementById("info_wrapper").innerHTML =
-        "<div class=\"wrap-collabsible\">" + "<a " + get.save + `>
-          <label for=\"collapsible3\" class=\"lbl-toggle\" tabindex=\"0\">
-          <img id=\"info_logo\" src=\"static/save.png\"/></label></a></div>`
+        document.getElementById("save_wrapper").innerHTML =
+        "<div class=\"save-wrap-collabsible\">" + "<a " + get.save + `>
+          <label for=\"save-collapsible3\" class=\"save-lbl-toggle\" tabindex=\"0\">
+          <img id=\"save_logo\" src=\"static/save.png\"/></label></a></div>`
     }
 
     //

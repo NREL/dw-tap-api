@@ -310,8 +310,13 @@ def serve_12x24(req_id, req_args):
   #     return
 
       output = timeseries_to_12_by_24(atmospheric_df)
-      info = "The shown dataset includes %d timesteps between %s and %s." % \
+      info = "Source of data: <a href=\"https://www.nrel.gov/grid/wind-toolkit.html\" target=\"_blank\" rel=\"noopener noreferrer\">NREL's WTK dataset</a>, covering 2007-2013."
+      info += "<br><br>The shown subset of the model data includes %d timesteps between %s and %s." % \
         (len(atmospheric_df), atmospheric_df.datetime.tolist()[0], atmospheric_df.datetime.tolist()[-1])
+      info += """<br><br>To get the shown point estimates, TAP API performed horizontal and vertical interpolation based on the TAP team's
+       previous research published at: <a href=\"https://www.nrel.gov/docs/fy21osti/78412.pdf\" target=\"_blank\" rel=\"noopener noreferrer\">https://www.nrel.gov/docs/fy21osti/78412.pdf</a>.
+       Specifically, the Inverse-Distance Weighting was used for horizontal interpolation and linear interpolation between the two adjacent heights in the model data was used for vertical interpolation.
+       """
       json_output = {'output': output, "info": info}
       with open(output_dest, 'w') as f:
           json.dump(json_output, f)
@@ -369,8 +374,17 @@ def serve_monthly(req_id, req_args):
       # Adding info map after output
       #output += "<br><br>Selected location:<br><div id=\"infomap\"></div>"
 
-      info = "The shown dataset includes %d timesteps between %s and %s." % \
+      #info = "The shown dataset includes %d timesteps between %s and %s." % \
+      #    (len(atmospheric_df), atmospheric_df.datetime.tolist()[0], atmospheric_df.datetime.tolist()[-1])
+
+      info = "Source of data: <a href=\"https://www.nrel.gov/grid/wind-toolkit.html\" target=\"_blank\" rel=\"noopener noreferrer\">NREL's WTK dataset</a>, covering 2007-2013."
+      info += "<br><br>The shown subset of model data includes %d timesteps between %s and %s." % \
         (len(atmospheric_df), atmospheric_df.datetime.tolist()[0], atmospheric_df.datetime.tolist()[-1])
+      info += """<br><br>To get the shown point estimates, TAP API performed horizontal and vertical interpolation based on the TAP team's
+       previous research published at: <a href=\"https://www.nrel.gov/docs/fy21osti/78412.pdf\" target=\"_blank\" rel=\"noopener noreferrer\">https://www.nrel.gov/docs/fy21osti/78412.pdf</a>.
+       Specifically, the Inverse-Distance Weighting was used for horizontal interpolation and linear interpolation between the two adjacent heights in the model data was used for vertical interpolation.
+       """
+
       # Adding info map inside the info collapsable box doesn't quite work; there is a strage display problem where map shows up partially
       #info += "<br><br>Selected location:<br><div id=\"infomap\"></div>"
 
@@ -411,13 +425,25 @@ def serve_ts(req_id, req_args):
       atmospheric_df = atmospheric_df.round(3)
       if "Unnamed: 0" in atmospheric_df.columns:
           atmospheric_df.drop(columns=["Unnamed: 0"], inplace=True)
+      if "year" in atmospheric_df.columns:
+          # Year is redundant if datetime is there
+          atmospheric_df.drop(columns=["year"], inplace=True)
 
       # Saving to file
       csv_dest = "%s/ts-%s.csv" % (csv_dir, req_id)
       atmospheric_df.to_csv(csv_dest, index=False)
 
       output = atmospheric_df.to_csv(index=False).replace("\n", "<br>")
-      info = ""
+      #info = ""
+
+      info = "Source of data: <a href=\"https://www.nrel.gov/grid/wind-toolkit.html\" target=\"_blank\" rel=\"noopener noreferrer\">NREL's WTK dataset</a>, covering 2007-2013."
+      info += "<br><br>The shown subset of model data includes %d timesteps between %s and %s." % \
+        (len(atmospheric_df), atmospheric_df.datetime.tolist()[0], atmospheric_df.datetime.tolist()[-1])
+      info += """<br><br>To get the shown point estimates, TAP API performed horizontal and vertical interpolation based on the TAP team's
+       previous research published at: <a href=\"https://www.nrel.gov/docs/fy21osti/78412.pdf\" target=\"_blank\" rel=\"noopener noreferrer\">https://www.nrel.gov/docs/fy21osti/78412.pdf</a>.
+       Specifically, the Inverse-Distance Weighting was used for horizontal interpolation and linear interpolation between the two adjacent heights in the model data was used for vertical interpolation.
+       """
+
       #save = "Download: static/raw/ts-%s.csv" % req_id
       proposed_fname="%.6f_%.6f_%.1f.csv" % (lat, lon, height)
       save = "href=\"%s\" download=\"%s\"" % (csv_dest, proposed_fname)
@@ -496,11 +522,20 @@ def serve_bc(req_id, req_args):
       else:
           # Todo: check to make sure that atmospheric_df is not empty
 
-          output, info = bc_for_point(lon=lon, lat=lat, height=height, \
+          output, bc_info = bc_for_point(lon=lon, lat=lat, height=height, \
                                       model_data=atmospheric_df, \
                                       bc_dir=selected_bc_loc,\
                                       plot_dest = 'static/bc.png') # plot_dest="outputs/fig-%s.png" % req_id)
 
+          basic_info = "Source of data: <a href=\"https://www.nrel.gov/grid/wind-toolkit.html\" target=\"_blank\" rel=\"noopener noreferrer\">NREL's WTK dataset</a>, covering 2007-2013."
+          basic_info += "<br><br>The shown subset of model data includes %d timesteps between %s and %s." % \
+                        (len(atmospheric_df), atmospheric_df.datetime.tolist()[0], atmospheric_df.datetime.tolist()[-1])
+          basic_info += """<br><br>To get the shown point estimates, TAP API performed horizontal and vertical interpolation based on the TAP team's
+                 previous research published at: <a href=\"https://www.nrel.gov/docs/fy21osti/78412.pdf\" target=\"_blank\" rel=\"noopener noreferrer\">https://www.nrel.gov/docs/fy21osti/78412.pdf</a>.
+                 Specifically, the Inverse-Distance Weighting was used for horizontal interpolation and linear interpolation between the two adjacent heights in the model data was used for vertical interpolation.
+                 """
+
+          info = basic_info + "<br><br> Additionally, <strong>bias correction (BC)</strong> was applied to the point estimates. Details:<br><br>" + bc_info
           #info = "The shown dataset includes %d timesteps between %s and %s." % \
           #    (len(atmospheric_df), atmospheric_df.datetime.tolist()[0], atmospheric_df.datetime.tolist()[-1])
 
