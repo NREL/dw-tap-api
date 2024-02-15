@@ -89,13 +89,31 @@ def plot_monthly_avg(atmospheric_df, ws_column="ws", datetime_column="datetime",
     fig, ax = plt.subplots(figsize=(10, 3))
     xvals = list(range(1, 13)) # for showing monthly data
 
-    for year, grp in df.groupby("year"):
-        monthly_avg = grp[[ws_column, "month"]].groupby("month").agg("mean")
-        ax.plot(monthly_avg, label=str(year), linestyle="--", alpha=0.4)
+    nyears = df["year"].nunique()
+    if nyears > 1:
+        for year, grp in df.groupby("year"):
+            monthly_avg = grp[[ws_column, "month"]].groupby("month").agg("mean")
+            ax.plot(monthly_avg, label=str(year), linestyle="--", alpha=0.4)
 
-    if show_avg_across_years:
+        if show_avg_across_years:
+            monthly_avg_across_years = df.groupby("month")[ws_column].agg("mean")
+            ax.plot(monthly_avg_across_years, label="Avg across years (labeled)", marker="o")
+            if label_avg_across_years:
+                ylim0 = ax.get_ylim()[0]
+                ylim1 = ax.get_ylim()[1]
+                yoffset = ylim1 / 20  # express offest as a fraction of height
+                yvals = pd.Series(monthly_avg_across_years.tolist())
+                a = pd.concat({'x': pd.Series(xvals),
+                               'y': yvals,
+                               'val': yvals}, axis=1)
+                for i, point in a.iterrows():
+                    t = ax.text(point['x'], point['y'] + yoffset, "%.2f" % point['val'], fontsize=7)
+                    t.set_bbox(dict(facecolor='lightgray', alpha=0.75, edgecolor='red'))
+                ax.set_ylim([ylim0, ylim1*1.25])
+    else:
+        single_year = df["year"].tolist()[0]
         monthly_avg_across_years = df.groupby("month")[ws_column].agg("mean")
-        ax.plot(monthly_avg_across_years, label="Avg across years (labeled)", marker="o")
+        ax.plot(monthly_avg_across_years, linestyle="--", label="Year: " + str(single_year), marker="o")
         if label_avg_across_years:
             ylim0 = ax.get_ylim()[0]
             ylim1 = ax.get_ylim()[1]

@@ -371,7 +371,7 @@
                 <label for="fname">Hub height, meters:</label>
                 </td>
                 <td>
-                <input type="text" class="text_field" id="hub_height" value="40"><br>
+                <input type="text" class="text_field" id="hub_height" value="35"><br>
                 </td>
             </form>
           </tr>
@@ -381,7 +381,7 @@
                 <label for="fname">Years (2007,...,2013):</label>
                 </td>
                 <td>
-                <input type="text" class="text_field" id="years" value="2012,2013"><br>
+                <input type="text" class="text_field" id="years" value="2013"><br>
                 </td>
             </form>
           </tr>
@@ -394,6 +394,8 @@
              <label for="contactChoice2">12x24 table&nbsp;&nbsp;&nbsp;</label>
              <input type="radio" id="choice_ts" name="contact" value="ts" />
              <label for="contactChoice3">Raw timeseries&nbsp;&nbsp;&nbsp;</label>
+             <input type="radio" id="choice_bc" name="contact" value="bc" />
+             <label for="contactChoice4">Bias-corrected wind speeds</label>
            </div>
             </td>
           </tr >
@@ -474,18 +476,21 @@ function getWindData() {
       } else if (document.getElementById('choice_12x24').checked) {
           endpoint = "12x24";
       }
+      else if (document.getElementById('choice_bc').checked) {
+          endpoint = "bc";
+      }
       else {
         endpoint = "ts";
       }
 
       document.getElementById("fetching_msg").innerHTML = "";
-      // Old way: works locally, fails in AWS
-      //window.location.href = "http://localhost:8080" + "/" + endpoint + "?height=" + hub_height + "m&" + latlon + "&year=" + years;
+
+      window.location.href = "http://localhost:8080" + "/" + endpoint + "?height=" + hub_height + "m&" + latlon + "&year=" + years;
       // New way: opens a new tab
-      window.open(
-        "http://localhost:8080" + "/" + endpoint + "?height=" + hub_height + "m&" + latlon + "&year=" + years,
-        '_blank' // <- This is what makes it open in a new window.
-        );
+      //window.open(
+      //  "http://localhost:8080" + "/" + endpoint + "?height=" + hub_height + "m&" + latlon + "&year=" + years,
+      //  '_blank' // <- This is what makes it open in a new window.
+      //  );
       }
     }
   );
