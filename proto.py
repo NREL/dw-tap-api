@@ -23,6 +23,7 @@ from v2 import validated_params_v2_w_year
 from hsds_helpers import connected_hsds_file
 from bc import bc_for_point
 from infomap import get_infomap_script
+from windrose import WindroseAxes
 
 server_started_at = datetime.datetime.now()
 
@@ -35,9 +36,14 @@ templates_dir = "templates"
 if not os.path.exists("%s/served" % templates_dir):
   os.mkdir("%s/served" % templates_dir)
 
+# Csv and png outputs will be saved in the following dirs;
+# Having them live inside static is important becuase it makes them accessible to the outside
 csv_dir = "static/raw"
 if not os.path.exists(csv_dir):
   os.mkdir(csv_dir)
+plot_dir = "static/raw"
+if not os.path.exists(plot_dir):
+  os.mkdir(plot_dir)
 
 # def instantiate_from_template(src, dest, old_text, new_text):
 #     """ Copy src file to dest with replacement of old_text with new_text """
@@ -160,6 +166,15 @@ def plot_monthly_avg(atmospheric_df, ws_column="ws", datetime_column="datetime",
     if show:
         plt.show()
 
+def plot_windrose(df, save_to_file=True):
+    ax = WindroseAxes.from_ax()
+    ax.bar(df.wd, df.ws, normed=True, opening=0.8, edgecolor='white')
+    ax.set_legend()
+    if save_to_file == True:
+        plt.savefig('%s.png' % title, dpi=300)
+    elif type(save_to_file) == str:
+        plt.savefig(save_to_file, dpi=300)
+
 def timeseries_to_12_by_24(df, styling=True, format="html"):
     res = df
 
@@ -250,6 +265,7 @@ else:
 # Now that URL_prefix is determined for the current env, prepare templates from universal ones
 # Universal here means that those template can be used for AWS and non-AWS envs
 src_dest_names = [("universal_monthly_index.html", "monthly_index.html"),\
+                  ("universal_windrose_index.html", "windrose_index.html"),\
                   ("universal_12x24_index.html", "12x24_index.html"),\
                   ("universal_ts_index.html", "ts_index.html"),\
                   ("universal_bc_index.html", "bc_index.html"),\
@@ -392,6 +408,66 @@ def serve_monthly(req_id, req_args):
 
       #info = "The shown dataset includes %d timesteps between %s and %s." % \
       #    (len(atmospheric_df), atmospheric_df.datetime.tolist()[0], atmospheric_df.datetime.tolist()[-1])
+
+      info = "Source of data: <a href=\"https://www.nrel.gov/grid/wind-toolkit.html\" target=\"_blank\" rel=\"noopener noreferrer\">NREL's WTK dataset</a>, covering 2007-2013."
+      info += "<br><br>The shown subset of model data includes %d timesteps between %s and %s." % \
+        (len(atmospheric_df), atmospheric_df.datetime.tolist()[0], atmospheric_df.datetime.tolist()[-1])
+      info += """<br><br>To get the shown point estimates, TAP API performed horizontal and vertical interpolation based on the TAP team's
+       previous research published at: <a href=\"https://www.nrel.gov/docs/fy21osti/78412.pdf\" target=\"_blank\" rel=\"noopener noreferrer\">https://www.nrel.gov/docs/fy21osti/78412.pdf</a>.
+       Specifically, the Inverse-Distance Weighting was used for horizontal interpolation and linear interpolation between the two adjacent heights in the model data was used for vertical interpolation.
+       """
+
+      # Adding info map inside the info collapsable box doesn't quite work; there is a strage display problem where map shows up partially
+      #info += "<br><br>Selected location:<br><div id=\"infomap\"></div>"
+
+      json_output = {'output': output, "info": info}
+      with open(output_dest, 'w') as f:
+          json.dump(json_output, f)
+      return
+  except Exception as e:
+      output = "The following error has occurred:<br>" + str(e)
+      info = ""
+      json_output = {'output': output, "info": info}
+      with open(output_dest, 'w') as f:
+          json.dump(json_output, f)
+      return
+
+def serve_windrose(req_id, req_args):
+  output_dest = os.path.join(outputs_dir, req_id)
+  try:
+      height, lat, lon, year_list = validated_params_v2_w_year(req_args)
+      f = connected_hsds_file(req_args, config)
+      dt = pd.read_csv("wtk-dt.csv")
+      dt["datetime"] = pd.to_datetime(dt["datetime"])
+      dt["year"] = dt["datetime"].apply(lambda x: x.year)
+
+      subsets=[]
+      for yr in year_list:
+          idx = dt[dt["year"] == yr].index
+          subsets.append(getData(f, lat, lon, height,
+                                 "IDW",
+                                 power_estimate=False,
+                                 inverse_monin_obukhov_length=False,
+                                 start_time_idx=idx[0], end_time_idx=idx[-1], time_stride=1,
+                                 saved_dt=dt))
+      atmospheric_df = pd.concat(subsets)
+      atmospheric_df.index = range(len(atmospheric_df))
+
+      plot_name = "%s/windrose_%s.png" % (plot_dir, req_id)
+      plot_windrose(atmospheric_df, save_to_file=plot_name)
+
+      output = "Selected location:<br><div id=\"infomap\"></div><br><br>" + \
+      """
+      <div classes="centered">
+      <div>
+        <table>
+            <tr>
+              <td><img id=\"windrose_plot\" src=\"%s\"/></td>
+            </tr>
+        </table>
+      </div>
+      </div>
+      """ % plot_name
 
       info = "Source of data: <a href=\"https://www.nrel.gov/grid/wind-toolkit.html\" target=\"_blank\" rel=\"noopener noreferrer\">NREL's WTK dataset</a>, covering 2007-2013."
       info += "<br><br>The shown subset of model data includes %d timesteps between %s and %s." % \
@@ -720,6 +796,34 @@ def root(path):
         #                           old_text="const FETCH_STR = \"/output?req_id=NEED_SPECIFIC_REQ_ID\";",\
         #                           new_text="const FETCH_STR = \"/output?req_id=%s\";" % req_id)
         instantiate_from_template(os.path.join(templates_dir, "monthly_index.html"),\
+                                  os.path.join(templates_dir, "served", html_name),\
+                                  [("const FETCH_STR = \"/output?req_id=NEED_SPECIFIC_REQ_ID\";",\
+                                  "const FETCH_STR = \"/output?req_id=%s\";" % req_id),\
+                                  ("const lat = \"NEED_SPECIFIC_LAT\";",\
+                                  "const lat = %.6f;" % lat),\
+                                  ("const lon = \"NEED_SPECIFIC_LON\";",\
+                                  "const lon = %.6f;" % lon)])
+
+        # Step 3: Render the final, filled out template
+        return render_template(os.path.join("served", html_name))
+
+    elif req_endpoint == "windrose":
+
+        # Step 1: spin up a separate thread for processing
+        th = Thread(target=serve_windrose, args=(req_id, req_args))
+        th.start()
+
+        # Step 2: from monthly_index.html create html inside served/ for specic request, with specifif lat & lon
+        # Universal here means that the template can be used for AWS and non-AWS envs
+        html_name = "windrose_%s.html" % req_id
+        height, lat, lon, year_list = validated_params_v2_w_year(req_args)
+
+        # Copy from a template and replace the string that has the endpoint for fetching outputs from
+        # instantiate_from_template(os.path.join(templates_dir, "monthly_index.html"),\
+        #                           os.path.join(templates_dir, "served", html_name),
+        #                           old_text="const FETCH_STR = \"/output?req_id=NEED_SPECIFIC_REQ_ID\";",\
+        #                           new_text="const FETCH_STR = \"/output?req_id=%s\";" % req_id)
+        instantiate_from_template(os.path.join(templates_dir, "windrose_index.html"),\
                                   os.path.join(templates_dir, "served", html_name),\
                                   [("const FETCH_STR = \"/output?req_id=NEED_SPECIFIC_REQ_ID\";",\
                                   "const FETCH_STR = \"/output?req_id=%s\";" % req_id),\

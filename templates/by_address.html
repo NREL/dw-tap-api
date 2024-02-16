@@ -388,14 +388,16 @@
           <tr class="spaceUnder">
             <td colspan=2>
               <div>
-             <input type="radio" id="choice_monthly" name="contact" value="monthly" checked />
-             <label for="contactChoice1">Monthly plot&nbsp;&nbsp;&nbsp;</label>
-             <input type="radio" id="choice_12x24" name="contact" value="12x24" />
-             <label for="contactChoice2">12x24 table&nbsp;&nbsp;&nbsp;</label>
-             <input type="radio" id="choice_ts" name="contact" value="ts" />
-             <label for="contactChoice3">Raw timeseries&nbsp;&nbsp;&nbsp;</label>
-             <input type="radio" id="choice_bc" name="contact" value="bc" />
-             <label for="contactChoice4">Bias-corrected wind speeds</label>
+                <input type="radio" id="choice_monthly" name="contact" value="monthly" checked />
+                <label for="contactChoice1">Monthly plot&nbsp;&nbsp;</label>
+                <input type="radio" id="choice_12x24" name="contact" value="12x24" />
+                <label for="contactChoice2">12x24 table&nbsp;&nbsp;</label>
+                <input type="radio" id="choice_windrose" name="contact" value="windrose"/>
+                <label for="contactChoice3">Wind rose&nbsp;&nbsp;</label>
+                <input type="radio" id="choice_ts" name="contact" value="ts" />
+                <label for="contactChoice4">Raw timeseries&nbsp;&nbsp;&nbsp;</label>
+                <input type="radio" id="choice_bc" name="contact" value="bc" />
+                <label for="contactChoice5">Bias-corrected wind speeds</label>
            </div>
             </td>
           </tr >
@@ -473,8 +475,12 @@ function getWindData() {
       var endpoint = "";
       if (document.getElementById('choice_monthly').checked) {
           endpoint = "monthly";
-      } else if (document.getElementById('choice_12x24').checked) {
+      }
+      else if (document.getElementById('choice_12x24').checked) {
           endpoint = "12x24";
+      }
+      else if (document.getElementById('choice_windrose').checked) {
+          endpoint = "windrose";
       }
       else if (document.getElementById('choice_bc').checked) {
           endpoint = "bc";

@@ -1,0 +1,290 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="static/styles/info_button.css">
+  <link rel="stylesheet" href="static/styles/maps.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+  body {
+    background-color: white; <!--#D64F2A;-->
+  }
+
+  #dynamicContent {
+    font-family: Verdana !important;
+  }
+
+  #dynamicContent caption {
+    font-size: 20px;
+    color: black;
+    padding-bottom: 30px;
+  }
+
+  #dynamicContent table {
+    border-collapse: collapse;
+    width: 100%;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    text-align: center;
+    border-radius: 10px !important;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    margin: auto;
+    margin-top: 50px;
+    margin-bottom: 50px;
+  }
+
+  #dynamicContent table th {
+    background-color: #D2B48C;
+    font-weight: bold;
+    letter-spacing: 1px;
+    padding: 8px 25px 8px 25px;
+    color: black;
+    border-top: 1px solid #fff;
+    border-bottom: 1px solid #ccc;
+  }
+
+  .progress {
+    display: flex;
+    position: absolute;
+    height: 100%;
+    width: 100%;
+  }
+
+  .status {
+    color: #0172b4;
+    margin: auto;
+  }
+
+  #workingText h2 {
+    font-family: Verdana;
+    font-size: 20px;
+  }
+
+  .status h2 {
+    padding: 50px;
+    font-size: 80px;
+    font-weight: bold;
+  }
+
+  #progBar {
+    width: 100%
+  }
+
+  #progBar img {
+    width: 90px;
+    height: 150px;
+    position: absolute;
+    left: 50%;
+    margin: -50px 0 0 -50px;
+  }
+
+  #aboutText {
+    width: 100%
+  }
+
+  #aboutText a {
+    margin-top: 300px;
+    left: 50%;
+    top: 65%;
+    font-family: Verdana;
+    font-size: 18px;
+  }
+
+  #initial {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  #initial table {
+    text-align: center;
+    vertical-align: middle;
+    border-collapse: separate;
+    border: solid #808080 1px;
+    border-radius: 10px;
+    padding-bottom: 40px;
+  }
+
+  #initial_r1 {
+    font-family: Verdana;
+    font-size: 20px;
+    padding-top: 20px;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+  }
+
+  #initial_r2 {
+    width: 100px;
+    height: 150px;
+    left: 50%;
+    padding-bottom: 30px;
+  }
+
+  #initial_r3 {
+    font-family: Verdana;
+    font-size: 16px;
+  }
+  #initial_r4 {
+    font-family: Verdana;
+    font-size: 16px;
+  }
+  #initial_r3_td {
+    padding-bottom: 20px;
+  }
+
+  #colormap {
+    width: 450px;
+  }
+
+  #colormap_wrapper {
+    margin-top: -30px;
+  }
+
+  #colormap_table {
+    width: 450px !important;
+    color: black;
+    font-size: 22px;
+    border: none !important;
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0.1) !important;
+  }
+  #colormap_min_cell {
+    text-align: left;
+    justify-content: left;
+  }
+  #colormap_max_cell {
+    text-align: right;
+    justify-content: right;
+  }
+  .centered {
+    justify-content: center;
+    text-align: center;
+  }
+
+  #windrose_plot {
+      width: 800px;
+  }
+
+
+
+  </style>
+
+  <title>Status Update</title>
+
+</head>
+
+<body>
+  <div class="progress">
+    <div class="status">
+
+      <!--
+      <div id="workingText"><h2>TAP API is working...</h2></div>
+      <div id="progBar"><img src="{{url_for('static', filename='turbine.gif')}}"/></div>
+      <div id="aboutText"><a href="https://www.nrel.gov/wind/tools-assessing-performance.html" target="_blank" rel="noopener noreferrer">More about NREL's TAP project</a></div>
+      -->
+
+      <div id="initial">
+        <table>
+          <tr>
+            <td><h2 id="initial_r1">TAP API is working...</h2></td>
+          </tr>
+          <tr>
+            <td><img id="initial_r2" src="{{url_for('static', filename='turbine.gif')}}"/></td>
+          </tr>
+          <tr>
+            <td id="initial_r3_td"><a id="initial_r3" href="http://localhost:8080/info" target="_blank" rel="noopener noreferrer">
+              List of TAP API's capabilities</a></td>
+          </tr>
+          <tr>
+            <td><a id="initial_r4" href="https://www.nrel.gov/wind/tools-assessing-performance.html" target="_blank" rel="noopener noreferrer">
+              More about NREL's TAP project</a></td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- The following will be populated by js-->
+      <div id="dynamicContent"></div>
+
+      <!-- The following will be populated by js-->
+      <div id="info_wrapper"></div>
+
+    </div>
+  </div>
+</body>
+
+<script>
+var timeout;
+
+function loadJS(FILE_URL, async = true) {
+  let scriptEle = document.createElement("script");
+
+  scriptEle.setAttribute("src", FILE_URL);
+  scriptEle.setAttribute("type", "text/javascript");
+  scriptEle.setAttribute("async", async);
+
+  document.body.appendChild(scriptEle);
+
+  // success event
+  scriptEle.addEventListener("load", () => {
+    console.log("File loaded")
+  });
+   // error event
+  scriptEle.addEventListener("error", (ev) => {
+    console.log("Error on loading file", ev);
+  });
+}
+
+async function update() {
+
+  let get;
+
+  try {
+    const FETCH_STR = "/output?req_id=NEED_SPECIFIC_REQ_ID"; // NEED_SPECIFIC_REQ_ID will be replaced for individual requests
+    const res = await fetch(FETCH_STR);
+
+    get = await res.json();
+  } catch (e) {
+    console.error("Error: ", e);
+  }
+
+  if (get.output != ""){
+
+    document.getElementById("initial").innerHTML = "";
+    document.getElementById("dynamicContent").innerHTML = get.output;
+
+    // Add js needed to render the show map
+    const lat = "NEED_SPECIFIC_LAT"; // NEED_SPECIFIC_LAT will be replaced for individual requests
+    const lon = "NEED_SPECIFIC_LON"; // NEED_SPECIFIC_LON will be replaced for individual requests
+    loadJS("http://localhost:8080/infomap?lat=" + lat + "&lon=" + lon, false);
+
+    if (get.info != ""){
+        // The following is based on: https://www.digitalocean.com/community/tutorials/css-collapsible
+        document.getElementById("info_wrapper").innerHTML = `
+        <div class=\"wrap-collabsible\">
+          <input id=\"collapsible3\" class=\"toggle\" type=\"checkbox\">
+          <label for=\"collapsible3\" class=\"lbl-toggle\" tabindex=\"0\"><img id=\"info_logo\" src=\"static/info.png\"/></label>
+          <div class=\"collapsible-content\">
+          <div class=\"content-inner\">
+            <p id=\"info_text\">
+            ` + get.info + "</p></div></div></div>"
+    }
+
+    clearTimeout(timeout);
+    return false;
+  }
+
+  timeout = setTimeout(update, 1000);
+}
+
+update();
+</script>
+
+</html>
+<!--
+Notes:
+http://localhost:8080 (2 places) will be populated when universal_monthly_index.html becomes monthly_index.html for the current environment (AWS or not)
+NEED_SPECIFIC_REQ_ID, NEED_SPECIFIC_LAT and NEED_SPECIFIC_LON will be populated in the second pass, when monthly_index.htm becomes served/monthly_<req_id>.html
+-->
