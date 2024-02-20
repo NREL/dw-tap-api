@@ -242,25 +242,44 @@ else:
     host = config["production"]["host"]
     port = config["production"]["port"]
 
+# # Identify the current environment
+# # URL_prefix should NOT include "/" at the end, otherwise there will be errors
+# if os.environ.get('AWS_EXECUTION_ENV') == "AWS_ECS_EC2":
+#     running_in_aws = True
+#     if port == 80 or port == "80":
+#         URL_prefix = "https://dw-tap.nrel.gov"
+#     else:
+#         URL_prefix = "https://dw-tap.nrel.gov:%s" % str(port)
+# else:
+#     running_in_aws = False
+#     # This case is for running locally (container should be accessed via port 8080 even though inside it the server runs on part 80)
+#     URL_prefix = "http://localhost:8080"
+
 # Identify the current environment
-# This method came from checking tap-api-prod ECS container on 02/13/2023
 # URL_prefix should NOT include "/" at the end, otherwise there will be errors
-if os.environ.get('AWS_EXECUTION_ENV') == "AWS_ECS_EC2":
+if os.environ.get('ENV') == "prod":
     running_in_aws = True
     if port == 80 or port == "80":
         URL_prefix = "https://dw-tap.nrel.gov"
     else:
         URL_prefix = "https://dw-tap.nrel.gov:%s" % str(port)
+elif os.environ.get('ENV') == "stage":
+    running_in_aws = True
+    if port == 80 or port == "80":
+        URL_prefix = "https://dw-tap-stage.stratus.nrel.gov"
+    else:
+        URL_prefix = "https://dw-tap-stage.stratus.nrel.gov:%s" % str(port)
+elif os.environ.get('ENV') == "dev":
+    running_in_aws = True
+    if port == 80 or port == "80":
+        URL_prefix = "https://dw-tap-dev.stratus.nrel.gov"
+    else:
+        URL_prefix = "https://dw-tap-dev.stratus.nrel.gov:%s" % str(port)
 else:
     running_in_aws = False
-
     # This case is for running locally (container should be accessed via port 8080 even though inside it the server runs on part 80)
     URL_prefix = "http://localhost:8080"
 
-    # if port == 80 or port == "80":
-    #     URL_prefix = "http://localhost"
-    # else:
-    #     URL_prefix = "http://localhost:%s" % str(port)
 
 # Now that URL_prefix is determined for the current env, prepare templates from universal ones
 # Universal here means that those template can be used for AWS and non-AWS envs
