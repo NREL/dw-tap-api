@@ -64,9 +64,24 @@ def validated_params_v2_w_year(request):
 
     if 'year' in args:
         year_raw = args['year']
+        # Remove spaces
+        year_raw = year_raw.replace(" ","")
         try:
+            year_list_full = []
             # Works for a list of years and also for a single year
-            year_list = [int(yr) for yr in year_raw.split(",")]
+            year_list = year_raw.split(",")
+            print("year_list:", year_list)
+            for el in year_list:
+                if "-" in el:
+                    # Year range with a dash
+                    year_start, year_end = int(el.split("-")[0]), int(el.split("-")[1])
+                    for x in range(year_start, year_end + 1):
+                        year_list_full.append(x)
+                else:
+                    # Single year
+                    year_list_full.append(int(el))
+            year_list = year_list_full
+
         except ValueError:
             raise InvalidUsage(("Year needs to be an integer or a comma-separated list of integers."))
     else:
