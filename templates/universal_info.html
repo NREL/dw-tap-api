@@ -225,6 +225,11 @@
             <td><a href="URL_PREFIX/by_address">URL_PREFIX/by_address</a></td>
             <td width="350px">After providing a valid address, you will be able to see wind data for that location. You can also choose the output format.</td>
           </tr>
+          <tr>
+            <td><strong>Energy Estimation<sup>(NEW)</sup></strong></td>
+            <td><a href="URL_PREFIX/energy">URL_PREFIX/energy</a></td>
+            <td width="350px">Choose a point on the map and a power curve to estimate the amount of energy produced.</td>
+          </tr>
           </table>
 
           <h4>The capabilities listed below allow to change <mark> highlighted parameters</mark> in specific requests (<a href="https://github.com/NREL/dw-tap-api/blob/master/docs/capabilities_params.md">read more about <mark>parameters</mark></a>):</h4>
@@ -258,6 +263,11 @@
             <td><strong>Bias-corrected wind speeds<sup>(NEW)</sup></strong></td>
             <td><a href="URL_PREFIX/bc?height=35.00m&lat=39.7412&lon=-105.1686&year=2012" target="_blank" rel="noopener noreferrer">URL_PREFIX/bc?<mark>height=35.00m</mark>&<mark>lat=39.7412</mark>&<mark>lon=-105.1686</mark>&<mark>year=2011</mark></a></td>
             <td width="350px">Apply bias correction using observational data and show monthly average wind speeds, with and without bias correction.</td>
+          </tr>
+          <tr>
+            <td><strong>Estimate kWh production<sup>(NEW)</sup></strong></td>
+            <td><a href="URL_PREFIX/kwh?height=35.00m&lat=39.7412&lon=-105.1686&year=2012&pc=nrel-reference-100kW" target="_blank" rel="noopener noreferrer">URL_PREFIX/kwh?<mark>height=35.00m</mark>&<mark>lat=39.7412</mark>&<mark>lon=-105.1686</mark>&<mark>year=2011</mark>&<mark>pc=nrel-reference-100kW</mark></a></td>
+            <td width="350px">Use the specified power curve to estimate kWh production over the specified period of time.</td>
           </tr>
         </table>
         <br>

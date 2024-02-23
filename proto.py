@@ -14,6 +14,7 @@ import shutil
 import os
 import requests
 import urllib
+import glob
 import matplotlib
 import matplotlib.pyplot as plt
 matplotlib.use('agg')
@@ -24,6 +25,7 @@ from hsds_helpers import connected_hsds_file
 from bc import bc_for_point
 from infomap import get_infomap_script
 from windrose import WindroseAxes
+from powercurve import PowerCurve
 
 server_started_at = datetime.datetime.now()
 
@@ -44,6 +46,19 @@ if not os.path.exists(csv_dir):
 plot_dir = "static/raw"
 if not os.path.exists(plot_dir):
   os.mkdir(plot_dir)
+
+powercurves_dir = "powercurves"
+# Create dict with keys being names of all available power curves (without extensions)
+# and values being the corresponding PowerCurve objects
+powercurves = {}
+powercurve_default = ""
+for fname in glob.glob(powercurves_dir + '/*.csv'):
+    powercurve_name = os.path.basename(fname).replace(".csv", "")
+    powercurves[powercurve_name] = PowerCurve(fname)
+    if powercurve_name == "nrel-reference-100kW":
+        powercurve_default = powercurve_name
+if not powercurve_default:
+    powercurve_default = powercurves.keys()[0]
 
 # def instantiate_from_template(src, dest, old_text, new_text):
 #     """ Copy src file to dest with replacement of old_text with new_text """
@@ -290,7 +305,9 @@ src_dest_names = [("universal_monthly_index.html", "monthly_index.html"),\
                   ("universal_bc_index.html", "bc_index.html"),\
                   ("universal_info.html", "info.html"),\
                   ("universal_on_map.html", "on_map.html"),\
-                  ("universal_by_address.html", "by_address.html")]
+                  ("universal_by_address.html", "by_address.html"),\
+                  ("universal_kwh_index.html", "kwh_index.html"),\
+                  ("universal_energy.html", "energy.html")]
 for src_dest in src_dest_names:
     t_src, t_dest = src_dest[0], src_dest[1]
     t_src = os.path.join(templates_dir, t_src)
@@ -662,6 +679,105 @@ def serve_bc(req_id, req_args):
           json.dump(json_output, f)
       return
 
+def serve_kwh(req_id, req_args):
+  output_dest = os.path.join(outputs_dir, req_id)
+  try:
+
+      height, lat, lon, year_list = validated_params_v2_w_year(req_args)
+      if 'pc' in req_args:
+          pc = req_args['pc']
+          if not (pc in powercurves.keys()):
+              pc = powercurve_default
+      else:
+          pc = powercurve_default
+
+      f = connected_hsds_file(req_args, config)
+
+      # Time index can be obtained from f but reading it from a previously saved file is faster
+      dt = pd.read_csv("wtk-dt.csv")
+      dt["datetime"] = pd.to_datetime(dt["datetime"])
+      dt["year"] = dt["datetime"].apply(lambda x: x.year)
+
+      subsets=[]
+      for yr in year_list:
+          idx = dt[dt["year"] == yr].index
+          subsets.append(getData(f, lat, lon, height,
+                                  "IDW",
+                                  power_estimate=False,
+                                  inverse_monin_obukhov_length=False,
+                                  start_time_idx=idx[0], end_time_idx=idx[-1], time_stride=1,
+                                  saved_dt=dt))
+      atmospheric_df = pd.concat(subsets)
+      atmospheric_df.index = range(len(atmospheric_df))
+      if "Unnamed: 0" in atmospheric_df.columns:
+          atmospheric_df.drop(columns=["Unnamed: 0"], inplace=True)
+      atmospheric_df['year'] = atmospheric_df['datetime'].dt.year
+      atmospheric_df['month'] = atmospheric_df['datetime'].dt.month
+      atmospheric_df["Month-Year"] = atmospheric_df['month'].astype(str).apply(lambda x: x.zfill(2)) + "-" + atmospheric_df['year'].astype(str)
+
+      # Add power colum
+      atmospheric_df["kw"] = powercurves[pc].windspeed_to_kw(atmospheric_df, 'ws')
+
+      # Calculate the time difference between consecutive rows
+      atmospheric_df['interval_hrs'] = atmospheric_df['datetime'].diff().fillna(pd.Timedelta(seconds=0)).dt.components.hours
+
+      # Energy as the power * time product
+      atmospheric_df["kwh"] = atmospheric_df["kw"] * atmospheric_df['interval_hrs']
+
+      atmospheric_df_agg = atmospheric_df.groupby("Month-Year").agg(avg_ws=("ws", "mean"), \
+      median_ws=("ws", "median"), \
+      energy_total=("kwh", "sum"))
+      atmospheric_df_agg.rename(columns={"avg_ws": "Avg. wind speed, m/s", "median_ws": "Median wind speed, m/s", "energy_total": "Energy produced, kWh"}, \
+      inplace=True)
+      atmospheric_df_agg = atmospheric_df_agg.round(3)
+
+      # Add summary row
+      atmospheric_df_agg = pd.concat([atmospheric_df_agg,\
+      pd.DataFrame([{"Avg. wind speed, m/s": "Overall avg.: %.3f" % (atmospheric_df_agg["Avg. wind speed, m/s"].mean()),\
+                     "Median wind speed, m/s": "Overall median: %.3f" % (atmospheric_df["ws"].median()),\
+                     "Energy produced, kWh": "Total: %.3f" % (atmospheric_df_agg["Energy produced, kWh"].sum())}], index=["Summary"])])
+
+      output_table = atmospheric_df_agg.to_html(classes='energy_table')
+
+      output = "Selected location:<br><div id=\"infomap\"></div><br><br>" + \
+      """
+      <div classes="centered">
+      <div>
+        <table>
+            <tr>
+              <td>
+              %s
+              </td>
+            </tr>
+        </table>
+      </div>
+      </div>
+      """ % output_table
+
+      #output = str(atmospheric_df.head()).replace("\n", "<br>")
+
+      info = "Source of data: <a href=\"https://www.nrel.gov/grid/wind-toolkit.html\" target=\"_blank\" rel=\"noopener noreferrer\">NREL's WTK dataset</a>, covering 2007-2013."
+      info += "<br><br>The shown subset of the model data includes %d timesteps between %s and %s." % \
+        (len(atmospheric_df), atmospheric_df.datetime.tolist()[0], atmospheric_df.datetime.tolist()[-1])
+      info += """<br><br>To get the shown point estimates, TAP API performed horizontal and vertical interpolation based on the TAP team's
+       previous research published at: <a href=\"https://www.nrel.gov/docs/fy21osti/78412.pdf\" target=\"_blank\" rel=\"noopener noreferrer\">https://www.nrel.gov/docs/fy21osti/78412.pdf</a>.
+       Specifically, the Inverse-Distance Weighting was used for horizontal interpolation and linear interpolation between the two adjacent heights in the model data was used for vertical interpolation.
+       """
+      info += "<br><br>Selected power curve: %s" % pc
+
+      json_output = {'output': output, "info": info}
+      with open(output_dest, 'w') as f:
+          json.dump(json_output, f)
+      return
+  except Exception as e:
+      output = "The following error has occurred:<br>" + str(e)
+      info = ""
+      json_output = {'output': output, "info": info}
+      with open(output_dest, 'w') as f:
+          json.dump(json_output, f)
+      return
+
+
 @app.route('/output', methods=['GET'])
 def get_output():
     """ Check if output file for requested req_id has been cretead and, if so, return its contents as part of a json in the form expected by the js in html page """
@@ -732,6 +848,10 @@ def by_address():
 @app.route('/on_map', methods=['GET'])
 def on_map():
     return render_template("on_map.html")
+
+@app.route('/energy', methods=['GET'])
+def energy():
+    return render_template("energy.html")
 
 @app.route('/status', methods=['GET'])
 def status():
@@ -887,6 +1007,29 @@ def root(path):
                                       os.path.join(templates_dir, "served", html_name),\
                                       [("const FETCH_STR = \"/output?req_id=NEED_SPECIFIC_REQ_ID\";",\
                                       "const FETCH_STR = \"/output?req_id=%s\";" % req_id)])
+
+            return render_template(os.path.join("served", html_name))
+
+    elif req_endpoint == "kwh":
+            th = Thread(target=serve_kwh, args=(req_id, req_args))
+            th.start()
+
+            html_name = "kwh_%s.html" % req_id
+            height, lat, lon, year_list = validated_params_v2_w_year(req_args)
+
+            # Copy from a template and replace the string that has the endpoint for fetching outputs from
+            # instantiate_from_template(os.path.join(templates_dir, "bc_index.html"),\
+            #                           os.path.join(templates_dir, "served", html_name),
+            #                           old_text="const FETCH_STR = \"/output?req_id=NEED_SPECIFIC_REQ_ID\";",\
+            #                           new_text="const FETCH_STR = \"/output?req_id=%s\";" % req_id)
+            instantiate_from_template(os.path.join(templates_dir, "kwh_index.html"),\
+                                      os.path.join(templates_dir, "served", html_name),\
+                                      [("const FETCH_STR = \"/output?req_id=NEED_SPECIFIC_REQ_ID\";",\
+                                      "const FETCH_STR = \"/output?req_id=%s\";" % req_id),\
+                                      ("const lat = \"NEED_SPECIFIC_LAT\";",\
+                                      "const lat = %.6f;" % lat),\
+                                      ("const lon = \"NEED_SPECIFIC_LON\";",\
+                                      "const lon = %.6f;" % lon)])
 
             return render_template(os.path.join("served", html_name))
 
