@@ -1,0 +1,408 @@
+<!doctype html>
+<html>
+
+<head>
+  <title>TAP API: map</title>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="static/styles/accordion.css">
+  <link rel="stylesheet" href="static/styles/banner.css">
+  <link rel="stylesheet" href="static/styles/gmap.css">
+  <link rel="stylesheet" href="static/styles/map3.css">
+
+  <!-- Using jquery to gray out the screen when location is selected -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+
+  <!-- Attempting to resize results accordiong when window is resized; needs more work
+  <script>
+  function handleWindowSize() {
+   results_accordion_update();
+   console.log("resized")
+  }
+  window.addEventListener('resize', handleWindowSize);
+  </script>
+  -->
+
+</head>
+<body>
+
+  <div class="top-banner">
+    <a href="https://www.nrel.gov/wind/tools-assessing-performance.html"><img id="banner_tap_ui" src="static/tapui.png"/></a>
+    <img id="banner_nrel" src="static/nrel.jpg"/>
+  </div>
+
+  <div class="pac-card" id="pac-card">
+      <div>
+      <!-- Borrowed from: https://developers.google.com/maps/documentation/javascript/examples/places-autocomplete#maps_places_autocomplete-javascript-->
+      <div id="title">Autocomplete search</div>
+      <div id="type-selector" class="pac-controls">
+        <input
+          type="radio"
+          name="type"
+          id="changetype-all"
+          checked="checked"
+        />
+        <label for="changetype-all">All</label>
+
+        <input type="radio" name="type" id="changetype-establishment" />
+        <label for="changetype-establishment">establishment</label>
+
+        <input type="radio" name="type" id="changetype-address" />
+        <label for="changetype-address">address</label>
+
+        <input type="radio" name="type" id="changetype-geocode" />
+        <label for="changetype-geocode">geocode</label>
+
+        <input type="radio" name="type" id="changetype-cities" />
+        <label for="changetype-cities">(cities)</label>
+
+        <input type="radio" name="type" id="changetype-regions" />
+        <label for="changetype-regions">(regions)</label>
+      </div>
+      <br />
+      <div id="strict-bounds-selector" class="pac-controls">
+        <input type="checkbox" id="use-location-bias" value="" checked />
+        <label for="use-location-bias">Bias to map viewport</label>
+
+        <input type="checkbox" id="use-strict-bounds" value="" />
+        <label for="use-strict-bounds">Strict bounds</label>
+      </div>
+    </div>
+    <!--<div id="pac-container">
+      <input id="pac-input" type="text" placeholder="Enter a location" />
+    </div>
+    -->
+  </div>
+
+
+
+  <div id="map"></div>
+
+
+
+  <div id="infowindow-content">
+    <span id="place-name" class="title"></span><br />
+    <span id="place-address"></span>
+  </div>
+
+  <div class="accordion_wrapper">
+  <button class="accordion">Hub height</button>
+  <div class="panel">
+    <div class="vspace"></div>
+    <input type="text" class="text_field" id="hub_height" value="35"><br>
+    <label for="fname">Hub height, meters</label>
+    <div class="vspace"></div>
+  </div>
+
+  <button class="accordion">Years</button>
+  <div class="panel">
+    <div class="vspace"></div>
+    <input type="text" class="text_field" id="years" value="2013"><br>
+    <label for="fname">Supported: 2007-2013.<br>Specify: <ins>2013</ins> (single year), <ins>2011-2013</ins> (range), <ins>2007,2010-2013</ins> (combination).<br></label>
+    <div class="vspace"></div>
+  </div>
+
+  <button class="accordion">Output</button>
+  <div class="panel">
+    <div class="vspace"></div>
+    <div class="output_selection">
+      <input type="radio" id="output_report" name="output" value="report" checked />
+      <label for="Choice1">Wind report (incl. monthly plot, 12x24, bias correction, etc.)</label><br>
+      <input type="radio" id="output_report" name="output" value="raw" />
+      <label for="Choice2">Raw timeseries</label><br>
+    </div>
+    <div class="vspace"></div>
+  </div>
+
+  <button class="accordion">Power curve</button>
+  <div class="panel">
+    <select name="powercurve" id="powercurve">
+      <option value="N/A" selected="selected">N/A</option>
+      <option value="nrel-reference-2.5kW">nrel-reference-2.5kW</option>
+      <option value="nrel-reference-100kW">nrel-reference-100kW</option>
+      <option value="nrel-reference-250kW">nrel-reference-250kW</option>
+      <option value="nrel-reference-2000kW">nrel-reference-2000kW</option>
+      <option value="bergey-excel-15">bergey-excel-15</option>
+      <option value="eocycle-25">eocycle-25</option>
+      <option value="northern-100">northern-100</option>
+    </select><br>
+    <label for="fname">N/A means the results will include only wind data, without energy estimates</label>
+    <div class="vspace"></div>
+  </div>
+
+  <button class="accordion">Address</button>
+  <div class="panel">
+    <div class="vspace"></div>
+
+    <input id="pac-input" type="text" placeholder="Enter a location" /><br>
+    <label for="fname">Type in address or navigate to it using the map.</label>
+    <div class="vspacel"></div>
+  </div>
+
+</div>
+
+<div id="resultsPane" class="resultsPane">
+  <a href="#" class="close-thin" onclick="unblock_screen()"></a>
+
+  <div id="loading_outer" class="loading_outer">
+  <div class="loading">
+    <table>
+      <tr>
+        <td><h2 id="tap_is_working">TAP API is working...</h2></td>
+      </tr>
+      <tr>
+        <td><img id="turbine" src="{{url_for('static', filename='turbine.gif')}}"/></td>
+      </tr>
+      <tr>
+        <td><a id="more_info" href="https://www.nrel.gov/wind/tools-assessing-performance.html" target="_blank" rel="noopener noreferrer">
+          Open new tab with info about NREL's TAP project</a></td>
+      </tr>
+    </table>
+  </div>
+  </div>
+
+  <div id="results_pane_content" class="results_pane_content">
+  <div id="results_accordion_wrapper" class="results_accordion_wrapper">
+  <!-- Example of an accordion element
+  <button class="results_accordion">Map</button>
+  <div class="results_panel">
+    <div class="vspace"></div>
+    <p id="map_contents">Texttexttexttext<p>
+    <div class="vspace"></div>
+  </div>
+  -->
+  </div>
+  </div>
+</div>
+
+  <!--
+    The `defer` attribute causes the callback to execute after the full HTML
+    document has been parsed. For non-blocking uses, avoiding race conditions,
+    and consistent behavior across browsers, consider loading using Promises.
+    See https://developers.google.com/maps/documentation/javascript/load-maps-js-api
+    for more information.
+    -->
+
+  <!-- Old but working script:
+    <script src='https://maps.googleapis.com/maps/api/js?key=REPLACE_WITH_API_KEY&callback=initMap&libraries=places&loading=async'
+      defer>
+    </script>
+  -->
+
+    <script>
+      var api_key = '{{ google_maps_api_key }}'; // quotes are important
+      //console.log("api_key: " + api_key);
+      var script = document.createElement('script');
+      script.src = 'https://maps.googleapis.com/maps/api/js?key=' + api_key + '&callback=initMap&libraries=places&loading=async';
+      // Append the 'script' element to 'head'
+      document.head.appendChild(script);
+    </script>
+
+    <script src="static/js/initmap.js"></script>
+    <script src="static/js/accordion.js"></script>
+
+    <script>
+
+    function block_screen() {
+
+      // Show div with turbine (inside the results pane)
+      $("#loading_outer").css("display", "block");
+      $('#map_contents').text("");
+
+      // Block screen (add blocking div)
+      if ($('#screenBlock').length === 0) {
+        $('<div id="screenBlock"></div>').appendTo('body');
+        $('#screenBlock').css( { opacity: 0,} );
+        $('#screenBlock').addClass('blockDiv');
+        $('#screenBlock').animate({opacity: 0.7}, 200);
+      }
+      // Add results pane
+      if ($('#resultsPane').length === 0) {
+        // If not present already
+        $('<div id="resultsPane"></div>').appendTo('body');
+        $('#resultsPane').addClass('resultsPane');
+      }
+      else {
+        // If present but not being shown
+          $("#resultsPane").css("display", "block");
+      }
+
+      // Hide div with turbine
+      //$("#loading_outer").css("display", "none");
+
+      // Get rid of old results
+      $("#results_accordion_wrapper").empty();
+
+    }
+
+    function unblock_screen() {
+      $("#resultsPane").css("display", "none");
+
+      $('#screenBlock').animate({opacity: 0}, 200, function() {
+          $('#screenBlock').remove();
+      });
+
+    }
+
+    /**
+     * @param {"SHA-1"|"SHA-256"|"SHA-384"|"SHA-512"} algorithm https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest
+     * @param {string|Blob} data
+     * Source: https://stackoverflow.com/questions/59777670/how-can-i-hash-a-string-with-sha256
+     */
+    async function getHash(algorithm, data) {
+
+      const main = async (msgUint8) => { // https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest#converting_a_digest_to_a_hex_string
+        const hashBuffer = await crypto.subtle.digest(algorithm, msgUint8)
+        const hashArray = Array.from(new Uint8Array(hashBuffer))
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join(''); // convert bytes to hex string
+      }
+
+      if (data instanceof Blob) {
+        const arrayBuffer = await data.arrayBuffer()
+        const msgUint8 = new Uint8Array(arrayBuffer)
+        return await main(msgUint8)
+      }
+      const encoder = new TextEncoder()
+      const msgUint8 = encoder.encode(data)
+      return await main(msgUint8)
+    }
+
+    async function make_data_request() {
+
+      if ($('#output_report').prop("checked")) {
+        var output_type = "report";
+      }
+      else {
+        var output_type = "raw";
+      };
+
+
+      var req_fields = JSON.stringify({
+                lat: window.lat,
+                lon: window.lon,
+                height: $('#hub_height').val(),
+                years: $('#years').val(),
+                powercurve: $('#powercurve').val(),
+                output_type: output_type,
+              });
+
+      // Using hash of request fields as request ID
+      var req_id = await getHash("SHA-256", req_fields);
+      console.log(req_id);
+
+      window.req_id = req_id;
+
+      var req = {
+              method: "POST",
+              body: JSON.stringify({
+                lat: window.lat,
+                lon: window.lon,
+                height: $('#hub_height').val(),
+                years: $('#years').val(),
+                powercurve: $('#powercurve').val(),
+                output_type: output_type,
+                id: req_id,
+              }),
+              headers: {
+                //"Content-type": "application/json; charset=UTF-8"
+                // Avoiding error described at: https://stackoverflow.com/questions/5584923/a-cors-post-request-works-from-plain-javascript-but-why-not-with-jquery
+                "Content-type": "text/plain"
+              }
+            };
+
+      const response = await fetch("/data_request", req);
+      const response_json = await response.json();
+      return response_json;
+    }
+
+    async function fetch_results() {
+      let get;
+
+      try {
+        const FETCH_STR = "/data_request?id=" + window.req_id;
+        //console.log("fetch str: " + FETCH_STR)
+        const res = await fetch(FETCH_STR);
+        get = await res.json();
+      } catch (e) {
+        console.error("Error: ", e);
+      }
+
+      if (Object.keys(get).length > 0){
+
+        // Detected non-empty output file for the requested ID
+        //console.log("NOT EMPTY")
+
+        // Hide div with turbine
+        $('#loading_outer').fadeOut(function() {
+            $('#loading_outer').css("display", "none");
+        });
+
+        if ("raw" in get) {
+          console.log("Processing case with raw timeseries sent as output.")
+          // Modeling contents of results_accordion_wrapper after this simple exmaple:
+          // <button class="results_accordion">Map</button>
+          // <div class="results_panel">
+          //   <p id="map_contents">Texttexttexttext<p>
+          // </div>
+
+          $('#results_accordion_wrapper').append( '<button class="results_accordion">Raw timeseries</button>');
+          $('#results_accordion_wrapper').append( '<div class="results_panel"></div>' );
+          $('#results_accordion_wrapper .results_panel').append('<button type="button" class="download_raw_timeseries">Download</button>')
+          $('#results_accordion_wrapper .results_panel').append( '<p id="raw_contents">' + get.raw + '</p>');
+        }
+        else {
+          console.log("Processing case with wind report sent as output.")
+          if ("monthly" in get) {
+            $('#results_accordion_wrapper').append( '<button class="results_accordion">Monthly plot</button>');
+            $('#results_accordion_wrapper').append( '<div class="results_panel monthly_panel"></div>' );
+            $('#results_accordion_wrapper .monthly_panel').append( '<div id="contents">' + get["monthly"] + '</div>');
+          }
+          if ("12x24" in get) {
+            $('#results_accordion_wrapper').append( '<button class="results_accordion">12x24 Table</button>');
+            $('#results_accordion_wrapper').append( '<div class="results_panel table_12x24_panel"></div>' );
+            $('#results_accordion_wrapper .table_12x24_panel').append( '<div id="contents">' + get["12x24"] + '</div>');
+          }
+          if ("windrose" in get) {
+            $('#results_accordion_wrapper').append( '<button class="results_accordion">Wind rose</button>');
+            $('#results_accordion_wrapper').append( '<div class="results_panel windrose_panel"></div>' );
+            $('#results_accordion_wrapper .windrose_panel').append( '<div id="contents">' + get["windrose"] + '</div>');
+          }
+          if ("info" in get) {
+            $('#results_accordion_wrapper').append( '<button class="results_accordion">More info</button>');
+            $('#results_accordion_wrapper').append( '<div class="results_panel info_panel"></div>' );
+            $('#results_accordion_wrapper .info_panel').append( '<div id="info_contents">' + get["info"] + '</div>');
+          }
+
+        }
+
+
+        results_accordion_update();
+
+
+        clearTimeout(timeout);
+        return false;
+      }
+
+      timeout = setTimeout(fetch_results, 1000);
+    }
+
+    function fetch_and_show_results() {
+        // Helps abandon old IDs
+        window.req_id = "";
+
+        block_screen();
+
+        // Post request that will start the process of data fetching and prearation of output
+        make_data_request().then(response_json => {
+          console.log(response_json);
+        });
+
+        // Get requests that will be checking for the completed output
+        fetch_results();
+    }
+
+    </script>
+
+</body>
+</html>
