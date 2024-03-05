@@ -29,10 +29,22 @@ from powercurve import PowerCurve
 
 server_started_at = datetime.datetime.now()
 
+if "GOOGLE_MAPS_API_KEY" in os.environ:
+    given_google_maps_api_key = os.environ.get('GOOGLE_MAPS_API_KEY')
+else:
+    given_google_maps_api_key = ""
+
 # Necessary directories: create if not there
 outputs_dir = "outputs"
 if not os.path.exists(outputs_dir):
   os.mkdir(outputs_dir)
+
+# pending_dir = "static/pending/"
+# if not os.path.exists(pending_dir):
+#   os.mkdir(pending_dir)
+completed_dir = "static/completed/"
+if not os.path.exists(completed_dir):
+  os.mkdir(completed_dir)
 
 templates_dir = "templates"
 if not os.path.exists("%s/served" % templates_dir):
@@ -43,7 +55,8 @@ if not os.path.exists("%s/served" % templates_dir):
 csv_dir = "static/raw"
 if not os.path.exists(csv_dir):
   os.mkdir(csv_dir)
-plot_dir = "static/raw"
+
+plot_dir = "static/plots/"
 if not os.path.exists(plot_dir):
   os.mkdir(plot_dir)
 
@@ -207,29 +220,26 @@ def timeseries_to_12_by_24(df, styling=True, format="html"):
     overall_mean = res.mean().mean()
 
     if styling:
-        res = res.style.background_gradient("BuPu", axis=1).format(precision=3).set_caption("12x24 average wind speeds. Overall average: %.3f" % overall_mean)
+        res = res.style.background_gradient("BuPu", axis=1).format(precision=3).set_caption("Overall average: <strong>%.3f</strong>" % overall_mean)
     if format=="dataframe":
         return res
     elif format=="html":
-        html = res.to_html(classes='12_by_24')
+        #html = res.to_html(classes='12_by_24')
         # Add colormap image
         #html += "<div id=\"colormap_wrapper\"><p id=\"colormap_min\">Min=%.3f</p><img id=\"colormap\" src=\"static/colormap.png\"/></div>" % (min_ws)
 
-        html += """
-        <div classes="centered">
-        <div id="colormap_wrapper">
-          <table id="colormap_table">
-              <tr>
-                <td id="colormap_min_cell">Min=%.3f</td>
-                <td id="colormap_max_cell">Max=%.3f</td>
-              </tr>
-              <tr>
-                <td colspan=2><img id=\"colormap\" src=\"static/colormap.png\"/></td>
-              </tr>
-          </table>
-        </div>
-        </div>
-        """ % (min_ws, max_ws)
+        html = "<div class=\"centered\">%s</div>" % (res.to_html(table_id='12_by_24'))
+
+        # <tr>
+        #   <td id="colormap_min_cell">Min=%.3f</td>
+        #   <td id="colormap_max_cell">Max=%.3f</td>
+        # </tr>
+        # <tr>
+        #   <td colspan=2><img id=\"colormap\" src=\"static/colormap.png\"/></td>
+        # </tr>
+
+        # """ % (min_ws, max_ws)
+
 
         return html
     else:
@@ -296,6 +306,8 @@ else:
     URL_prefix = "http://localhost:8080"
 
 
+
+
 # Now that URL_prefix is determined for the current env, prepare templates from universal ones
 # Universal here means that those template can be used for AWS and non-AWS envs
 src_dest_names = [("universal_monthly_index.html", "monthly_index.html"),\
@@ -305,6 +317,7 @@ src_dest_names = [("universal_monthly_index.html", "monthly_index.html"),\
                   ("universal_bc_index.html", "bc_index.html"),\
                   ("universal_info.html", "info.html"),\
                   ("universal_on_map.html", "on_map.html"),\
+                  ("universal_on_map3.html", "on_map3.html"),\
                   ("universal_by_address.html", "by_address.html"),\
                   ("universal_kwh_index.html", "kwh_index.html"),\
                   ("universal_energy.html", "energy.html")]
@@ -849,6 +862,180 @@ def by_address():
 def on_map():
     return render_template("on_map.html")
 
+@app.route('/map', methods=['GET'])
+def map():
+    return render_template("on_map3.html", google_maps_api_key=given_google_maps_api_key)
+
+
+def process_year_input(year_raw):
+
+    if len(year_raw) > 0:
+        # Remove spaces
+        year_raw = year_raw.replace(" ","")
+        try:
+            year_list_full = []
+            # Works for a list of years and also for a single year
+            year_list = year_raw.split(",")
+            for el in year_list:
+                if "-" in el:
+                    # Year range with a dash
+                    year_start, year_end = int(el.split("-")[0]), int(el.split("-")[1])
+                    for x in range(year_start, year_end + 1):
+                        year_list_full.append(x)
+                else:
+                    # Single year
+                    year_list_full.append(int(el))
+            year_list = year_list_full
+
+        except ValueError:
+            raise InvalidUsage(("Year needs to be an integer or a comma-separated list of integers."))
+    else:
+        # Use latest year if not specified
+        year_list = [2013]
+
+    for yr in year_list:
+        if yr < 2007 or yr > 2013:
+            raise InvalidUsage("Each selected year needs to be between 2007 and 2013. One of the selected years: %s" % str(yr))
+
+    # unique and sorted
+    year_list = sorted(list(set(year_list)))
+    return year_list
+
+def serve_data_request(data):
+    try:
+        id = data["id"]
+
+        # Creates an empty pending file
+        # with open(os.path.join(pending_dir, id), 'w') as fp:
+        #     pass
+
+        year_list = process_year_input(data["years"])
+        f = connected_hsds_file(req_args, config)
+        # Time index can be obtained from f but reading it from a previously saved file is faster
+        dt = pd.read_csv("wtk-dt.csv")
+        dt["datetime"] = pd.to_datetime(dt["datetime"])
+        dt["year"] = dt["datetime"].apply(lambda x: x.year)
+
+        subsets=[]
+
+        for yr in year_list:
+            idx = dt[dt["year"] == yr].index
+            df = getData(f, float(data["lat"]), float(data["lon"]), float(data["height"]),
+                                    "IDW",
+                                    power_estimate=False,
+                                    inverse_monin_obukhov_length=False,
+                                    start_time_idx=idx[0], end_time_idx=idx[-1], time_stride=1,
+                                    saved_dt=dt)
+            print(df.head())
+            subsets.append(df)
+        atmospheric_df = pd.concat(subsets)
+        atmospheric_df.index = range(len(atmospheric_df))
+        atmospheric_df = atmospheric_df.round(3)
+        if "Unnamed: 0" in atmospheric_df.columns:
+            atmospheric_df.drop(columns=["Unnamed: 0"], inplace=True)
+        if "year" in atmospheric_df.columns:
+            # Year is redundant if datetime is there
+            atmospheric_df.drop(columns=["year"], inplace=True)
+
+        if data["output_type"] == "raw":
+            output_dest = os.path.join(completed_dir, id)
+            with open(output_dest, 'w') as f:
+                json.dump({"raw": atmospheric_df.to_csv(index=False).replace("\n", "<br>")}, f)
+            print("Saved output to: %s" % output_dest)
+        else:
+            # Assume data["output_type"] == "report" (only 2 options are available now)
+
+            output_dest = os.path.join(completed_dir, id)
+
+            plot_dest = os.path.join(plot_dir, "monthly-%s.png" % id)
+            plot_monthly_avg(atmospheric_df, \
+                           title="Location: (%f, %f), %.0fm hub height" % (float(data["lat"]), float(data["lon"]), float(data["height"])),\
+                           save_to_file=plot_dest,\
+                           show_avg_across_years=True,
+                           show_overall_avg=True,
+                           show=False)
+            #return flask.send_file('saved.png')
+
+            output_monthly = """
+            <div class="centered">
+            <div>
+            <table>
+                <tr>
+                  <td><img id=\"monthly_plot\" src=\"%s\"/></td>
+                </tr>
+            </table>
+            </div>
+            </div>
+            """ % plot_dest
+
+            output_12x24_table = timeseries_to_12_by_24(atmospheric_df)
+            output_12x24 = """
+            <div class="centered">
+            <div>
+            <table>
+                <tr>
+                  <td>
+                  %s
+                  </td>
+                </tr>
+            </table>
+            </div>
+            </div>
+            """ % output_12x24_table
+
+            plot_dest = os.path.join(plot_dir, "windrose_-%s.png" % id)
+            plot_windrose(atmospheric_df, save_to_file=plot_dest)
+            output_windrose = """
+            <div class="centered">
+                <img id=\"windrose_plot\" src=\"%s\"/></td>
+            </div>
+            """ % plot_dest
+
+            info = "Source of data: <a href=\"https://www.nrel.gov/grid/wind-toolkit.html\" target=\"_blank\" rel=\"noopener noreferrer\">NREL's WTK dataset</a>, covering 2007-2013."
+            info += "<br><br>The shown subset of the model data includes %d timesteps between %s and %s." % \
+                (len(atmospheric_df), atmospheric_df.datetime.tolist()[0], atmospheric_df.datetime.tolist()[-1])
+            info += """<br><br>To get the shown point estimates, TAP API performed horizontal and vertical interpolation based on the TAP team's
+            previous research published at: <a href=\"https://www.nrel.gov/docs/fy21osti/78412.pdf\" target=\"_blank\" rel=\"noopener noreferrer\">https://www.nrel.gov/docs/fy21osti/78412.pdf</a>.
+            Specifically, the Inverse-Distance Weighting was used for horizontal interpolation and linear interpolation between the two adjacent heights in the model data was used for vertical interpolation.
+            """
+
+            with open(output_dest, 'w') as f:
+                json.dump({"monthly": output_monthly, "12x24": output_12x24, "windrose": output_windrose, "info": info}, f)
+
+            print("Saved output to: %s" % output_dest)
+
+    except Exception as e:
+        print("error: " + str(e))
+        output = "Error: " + str(e)
+
+
+@app.route('/data_request', methods=['POST', 'GET'])
+def data_request():
+    if request.method == 'GET':
+        # Check if output file for requested req_id has been cretead and,
+        # if so, return its contents as part of a json """
+        req_args = request.args
+        if 'id' in req_args:
+            id = request.args['id']
+            if id == "":
+                output = {}
+            else:
+                output_path = os.path.join(completed_dir, id)
+                if os.path.exists(output_path):
+                    output = open(output_path, 'r').read()
+                else:
+                    output = {}
+        else:
+            output = {}
+        return output
+
+    elif request.method == 'POST':
+        # POST is used when the page requests new data
+        data = json.loads(request.data)
+        serve_data_request(data)
+        return data
+
+
 @app.route('/energy', methods=['GET'])
 def energy():
     return render_template("energy.html")
@@ -861,6 +1048,7 @@ def status():
     output += "Host: " + str(host) + "<br>"
     output += "Port: " + str(port) + "<br>"
     output += "URL_prefix: " + URL_prefix + "<br>"
+    output += "Google Maps API key: %s<br>" % ("provided" if given_google_maps_api_key else "not provided")
     req_args = request.args
     try:
         f = connected_hsds_file(req_args, config)

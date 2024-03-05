@@ -1,0 +1,299 @@
+#banner_tap_ui {
+  height: 60px;
+  margin-top: 10px;
+}
+
+#banner_nrel {
+  width: 200px;
+  margin-top: 8px;
+  margin-right: 40px;
+  float: right;
+  height: 60px;
+}
+
+.vspace{
+ margin-bottom: 10px;
+}
+
+.vspacel{
+  margin-bottom: 40px;
+}
+
+#powercurve {
+  font-size: 22px;
+  font-family: Verdana;
+  margin-top: 20px;
+  min-width: 400px;
+}
+
+#powercurve option {
+  font-size: 22px;
+  font-family: Verdana;
+  background-color: #ffffff;
+}
+
+.gm-svpc  {
+  /* Hide google's drop-the-human button*/
+  display: none !important;
+}
+
+.gm-fullscreen-control {
+  /* Hide full screen button */
+  display: none !important;
+}
+
+#custom_infomap_content {
+  font-size: 20px;
+}
+
+#getwind_button {
+  /* Old style:
+  font-size: 20px;
+  display: inline-block;
+  outline: 0;
+  border: 0;
+  cursor: pointer;
+  color: #fff;
+  font-weight: 500;
+  border-radius: 4px;
+  height: 45px;
+  padding: 0px 25px;
+  text-shadow: rgb(0 0 0 / 25%) 0px 3px 8px;
+  background: linear-gradient(92.88deg, rgb(69, 94, 181) 9.16%, rgb(86, 67, 204) 43.89%, rgb(103, 63, 215) 64.72%);
+  transition: all 0.5s ease 0s;
+  :hover{
+      box-shadow: rgb(80 63 205 / 50%) 0px 1px 40px;
+      transition: all 0.1s ease 0s;
+  }
+  */
+  height: 45px;
+  display: inline-block;
+  outline: none;
+  cursor: pointer;
+  padding: 0 25px;
+  background-color: #0070d2;
+  border-radius: 0.25rem;
+  border: 1px solid #0070d2;
+  color: #fff;
+  font-size: 20px;
+  line-height: 30px;
+  font-weight: 400;
+  text-align: center;
+  :hover {
+      background-color: #005fb2;
+      border-color: #005fb2;
+  }
+
+}
+
+.blockDiv {
+  /* Needed for graying out entire screen*/
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  background-color: #FFF;
+  z-index: 100;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.resultsPane {
+  width: 80% !important;
+  height: 80% !important;
+  z-index: 200;
+  background-color: white !important; /* #F5F5F5 !important; */
+  position: absolute;
+  top: 10%;
+  left: 10%;
+  border-radius: 5px;
+  border-width: 1px;
+  border-color: #808080;
+  border-style: solid;
+  display: none;
+
+  max-height: 80%;
+}
+
+.results_pane_content {
+  overflow-y: scroll; /*allows vertical scrolling*/
+  width: 100%;
+  height: calc(100% - 35px);;
+  top: 35px;
+  position: relative;
+}
+
+/* Close Button */
+[class*='close-'] {
+  color: #777;
+  font: 34px/100% arial, sans-serif;
+  position: absolute;
+  right: 15px;
+  text-decoration: none;
+  text-shadow: 0 1px 0 #fff;
+  top: 5px;
+}
+.close-thin:after {
+  content: '×'; /* UTF-8 symbol */
+}
+
+/* Increase size of x in InfoWindow */
+.gm-ui-hover-effect {
+  top: 0px !important;
+  right: 10px !important;
+}
+.gm-ui-hover-effect span {
+  width: 24px !important;
+  height: 24px !important;
+}
+
+/* Overwrite the default to keep the scrollbar always visible (needed for results accordion) */
+::-webkit-scrollbar {
+    -webkit-appearance: none;
+    width: 12px;
+}
+::-webkit-scrollbar-thumb {
+    border-radius: 3px;
+    background-color: rgba(0,0,0,.5);
+    -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
+}
+
+.loading {
+  width: 480px;
+  text-align: center;
+  margin: 0 auto;
+  font-family: Verdana;
+  color: #444;
+  top: 50%;
+  -ms-transform: translateY(-50%);
+  transform: translateY(-50%);
+  position: relative;
+}
+.loading_outer {
+  text-align: center;
+  width: 100%;
+  height: 100%;
+}
+
+#turbine {
+  height: 180px;
+  margin-bottom: 10px;
+  margin-top: 10px;
+}
+
+/* Styling input fields */
+input[type=text] {
+  width: 100%;
+  padding: 12px 10px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+  box-sizing: border-box;
+  border: none;
+  border-bottom: 2px solid gray;
+  font-family: Verdana;
+  font-size: 22px;
+}
+
+.output_selection {
+  font-family: Verdana;
+  font-size: 22px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.download_raw_timeseries {
+  /*
+  display: inline-block;
+  outline: none;
+  cursor: pointer;
+  padding: 0 16px;
+  background-color: #fff;
+  border-radius: 0.25rem;
+  border: 1px solid #dddbda;
+  color: #0070d2;
+  font-size: 13px;
+  line-height: 30px;
+  font-weight: 400;
+  text-align: center;
+  :hover {
+      background-color: #f4f6f9;
+  }
+  */
+  height: 45px;
+  display: inline-block;
+  outline: none;
+  cursor: pointer;
+  padding: 0 25px;
+  background-color: #0070d2;
+  border-radius: 0.25rem;
+  border: 1px solid #0070d2;
+  color: #fff;
+  font-size: 20px;
+  line-height: 30px;
+  font-weight: 400;
+  text-align: center;
+  :hover {
+      background-color: #005fb2;
+      border-color: #005fb2;
+  }
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+#raw_contents {
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+#contents {
+  margin-top: 20px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+#monthly_plot {
+  width: 80%;
+}
+
+#table_12x24_panel{
+  width: 80%;
+}
+
+.centered {
+  text-align: center;
+}
+
+#colormap_table {
+  /*width: 450px !important;*/
+  color: black;
+  font-size: 18px;
+  border: none !important;
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0.1) !important;
+  margin: auto;
+}
+
+.table_12x24_panel table {
+  /*width: 450px !important;*/
+  color: black;
+  font-size: 18px;
+  border: none !important;
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0.1) !important;
+  margin: auto;
+}
+
+.table_12x24_panel table th, .table_12x24_panel table td{
+  padding-top: 5px;
+  padding-bottom: 5px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+#windrose_plot {
+  width: 45%;
+}
+
+#info_contents {
+  margin-top: 20px;
+  margin-bottom: 40px;
+  font-family: Verdana;
+  font-size: 22px;
+}

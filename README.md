@@ -7,6 +7,14 @@ The processing includes height selection, time interval selection, spatial inter
 
 ## How To Use
 
+## Latest
+
+Run the latest version locally with: 
+```
+export GOOGLE_MAPS_API_KEY=PROVIDE_YOUR_KEY && python proto.py 
+```
+In AWS, the necessary environment key will be set (Parameter Store in SSM provies control over the environment variables).
+
 ### Deploy as a Container (requires Docker on the host)
 
 Build:
