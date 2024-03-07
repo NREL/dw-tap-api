@@ -368,6 +368,11 @@
             $('#results_accordion_wrapper').append( '<div class="results_panel windrose_panel"></div>' );
             $('#results_accordion_wrapper .windrose_panel').append( '<div id="contents">' + get["windrose"] + '</div>');
           }
+          if (("energy" in get) && (get["energy"] !== "")) {
+            $('#results_accordion_wrapper').append( '<button class="results_accordion">Energy</button>');
+            $('#results_accordion_wrapper').append( '<div class="results_panel energy_panel"></div>' );
+            $('#results_accordion_wrapper .energy_panel').append( '<div id="contents">' + get["energy"] + '</div>');
+          }
           if ("info" in get) {
             $('#results_accordion_wrapper').append( '<button class="results_accordion">More info</button>');
             $('#results_accordion_wrapper').append( '<div class="results_panel info_panel"></div>' );

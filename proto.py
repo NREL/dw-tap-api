@@ -991,6 +991,43 @@ def serve_data_request(data):
             </div>
             """ % plot_dest
 
+            if data["powercurve"] in powercurves.keys():
+                pc = data["powercurve"]
+
+                atmospheric_df['year'] = atmospheric_df['datetime'].dt.year
+                atmospheric_df['month'] = atmospheric_df['datetime'].dt.month
+                atmospheric_df["Month-Year"] = atmospheric_df['month'].astype(str).apply(lambda x: x.zfill(2)) + "-" + atmospheric_df['year'].astype(str)
+                # Add power colum
+                atmospheric_df["kw"] = powercurves[pc].windspeed_to_kw(atmospheric_df, 'ws')
+                # Calculate the time difference between consecutive rows
+                atmospheric_df['interval_hrs'] = atmospheric_df['datetime'].diff().fillna(pd.Timedelta(seconds=0)).dt.components.hours
+
+                # Energy as the power * time product
+                atmospheric_df["kwh"] = atmospheric_df["kw"] * atmospheric_df['interval_hrs']
+
+                atmospheric_df_agg = atmospheric_df.groupby("Month-Year").agg(avg_ws=("ws", "mean"), \
+                    median_ws=("ws", "median"), \
+                    energy_total=("kwh", "sum"))
+                atmospheric_df_agg.rename(columns={"avg_ws": "Avg. wind speed, m/s", "median_ws": "Median wind speed, m/s", "energy_total": "Energy produced, kWh"}, \
+                    inplace=True)
+                atmospheric_df_agg = atmospheric_df_agg.round(3)
+
+                # Add summary row
+                atmospheric_df_agg = pd.concat([atmospheric_df_agg,\
+                    pd.DataFrame([{"Avg. wind speed, m/s": "Overall avg.: %.3f" % (atmospheric_df_agg["Avg. wind speed, m/s"].mean()),\
+                                   "Median wind speed, m/s": "Overall median: %.3f" % (atmospheric_df["ws"].median()),\
+                                   "Energy produced, kWh": "Total: %.3f" % (atmospheric_df_agg["Energy produced, kWh"].sum())}], index=["Summary"])])
+
+                energy_table = atmospheric_df_agg.to_html(classes='energy_table')
+
+                output_energy = """
+                <div classes="centered">
+                <div>%s</div>
+                </div>
+                """ % energy_table
+            else:
+                output_energy = ""
+
             info = "Source of data: <a href=\"https://www.nrel.gov/grid/wind-toolkit.html\" target=\"_blank\" rel=\"noopener noreferrer\">NREL's WTK dataset</a>, covering 2007-2013."
             info += "<br><br>The shown subset of the model data includes %d timesteps between %s and %s." % \
                 (len(atmospheric_df), atmospheric_df.datetime.tolist()[0], atmospheric_df.datetime.tolist()[-1])
@@ -1000,7 +1037,7 @@ def serve_data_request(data):
             """
 
             with open(output_dest, 'w') as f:
-                json.dump({"monthly": output_monthly, "12x24": output_12x24, "windrose": output_windrose, "info": info}, f)
+                json.dump({"monthly": output_monthly, "12x24": output_12x24, "windrose": output_windrose, "energy": output_energy, "info": info}, f)
 
             print("Saved output to: %s" % output_dest)
 
