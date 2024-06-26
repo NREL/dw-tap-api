@@ -1,5 +1,5 @@
 # Use a minimal image
-FROM python:3.11.7
+FROM python:3.11
 
 LABEL MAINTAINER="Dmitry Duplyakin <dmitry.duplyakin@nrel.gov>"
 
