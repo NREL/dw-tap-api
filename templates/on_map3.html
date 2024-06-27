@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="static/styles/banner.css">
   <link rel="stylesheet" href="static/styles/gmap.css">
   <link rel="stylesheet" href="static/styles/map3.css">
+  <link rel="stylesheet" href="static/styles/wtkled_results.css">
 
   <!-- Using jquery to gray out the screen when location is selected -->
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
@@ -95,14 +96,17 @@
     <div class="vspace"></div>
   </div>
 
+  <!--
   <button class="accordion">Years</button>
   <div class="panel">
-    <div class="vspace"></div>
+     <div class="vspace"></div>
     <input type="text" class="text_field" id="years" value="2013"><br>
     <label for="fname">Supported: 2007-2013.<br>Specify: <ins>2013</ins> (single year), <ins>2011-2013</ins> (range), <ins>2007,2010-2013</ins> (combination).<br></label>
     <div class="vspace"></div>
   </div>
+  -->
 
+  <!--
   <button class="accordion">Output</button>
   <div class="panel">
     <div class="vspace"></div>
@@ -114,6 +118,7 @@
     </div>
     <div class="vspace"></div>
   </div>
+  -->
 
   <button class="accordion">Power curve</button>
   <div class="panel">
@@ -131,6 +136,16 @@
     <div class="vspace"></div>
   </div>
 
+  <button class="accordion">Data source</button>
+  <div class="panel">
+    <select name="datasource" id="datasource">
+      <option value="WTK-LED" selected="selected">WTK-LED (2001-2020)</option>
+      <option value="WTK">WTK (2007-2013)</option>
+    </select><br>
+    <label for="fname">More info about datasets: link</label>
+    <div class="vspace"></div>
+  </div>
+
   <button class="accordion">Address</button>
   <div class="panel">
     <div class="vspace"></div>
@@ -140,6 +155,12 @@
     <div class="vspacel"></div>
   </div>
 
+</div>
+
+<!-- Replacement for the hidden accordion/controlled parameter element-->
+<button style="visibility:hidden;">Years</button>
+<div class="panel" style="visibility:hidden;">
+  <input type="text" class="text_field" id="years" value="2013" style="visibility:hidden;"><br>
 </div>
 
 <div id="resultsPane" class="resultsPane">
@@ -284,6 +305,7 @@
                 height: $('#hub_height').val(),
                 years: $('#years').val(),
                 powercurve: $('#powercurve').val(),
+                datasource: $('#datasource').val(),
                 output_type: output_type,
               });
 
@@ -301,6 +323,7 @@
                 height: $('#hub_height').val(),
                 years: $('#years').val(),
                 powercurve: $('#powercurve').val(),
+                datasource: $('#datasource').val(),
                 output_type: output_type,
                 id: req_id,
               }),
@@ -338,7 +361,40 @@
             $('#loading_outer').css("display", "none");
         });
 
-        if ("raw" in get) {
+        if ("wtk_led_summary" in get) {
+          console.log("Rendering wtk-led summary.")
+
+          $('#results_accordion_wrapper').append( '<button class="results_accordion">Summary</button>');
+          $('#results_accordion_wrapper').append( '<div class="results_panel summary_panel"></div>' );
+          $('#results_accordion_wrapper .summary_panel').append( '<div id="contents">' + get["wtk_led_summary"] + '</div>');
+
+          // May need to think about structuring different cases better!
+          if ("wtk_led_feasibility" in get) {
+            $('#results_accordion_wrapper').append( '<button class="results_accordion">Feasibility</button>');
+            $('#results_accordion_wrapper').append( '<div class="results_panel feasibility_panel"></div>' );
+            $('#results_accordion_wrapper .feasibility_panel').append( '<div id="contents">' + get["wtk_led_feasibility"] + '</div>');
+          }
+
+          if ("wtk_led_data" in get) {
+            $('#results_accordion_wrapper').append( '<button class="results_accordion">Data (yearly averages)</button>');
+            $('#results_accordion_wrapper').append( '<div class="results_panel data_panel"></div>' );
+            $('#results_accordion_wrapper .data_panel').append( '<div id="contents">' + get["wtk_led_data"] + '</div>');
+          }
+
+          if ("uncertainty_summary" in get) {
+            $('#results_accordion_wrapper').append( '<button class="results_accordion">Uncertainty Summary</button>');
+            $('#results_accordion_wrapper').append( '<div class="results_panel uncertainty_summary_panel"></div>' );
+            $('#results_accordion_wrapper .uncertainty_summary_panel').append( '<div id="contents">' + get["uncertainty_summary"] + '</div>');
+          }
+
+          if ("uncertainty_data" in get) {
+            $('#results_accordion_wrapper').append( '<button class="results_accordion">Raw Uncertainty Data (daily, 1 year)</button>');
+            $('#results_accordion_wrapper').append( '<div class="results_panel uncertainty_data_panel"></div>' );
+            $('#results_accordion_wrapper .uncertainty_data_panel').append( '<div id="contents">' + get["uncertainty_data"] + '</div>');
+          }
+        }
+        // the rest of rendering is for WTK
+        else if ("raw" in get) {
           console.log("Processing case with raw timeseries sent as output.")
           // Modeling contents of results_accordion_wrapper after this simple exmaple:
           // <button class="results_accordion">Map</button>
@@ -381,9 +437,7 @@
 
         }
 
-
         results_accordion_update();
-
 
         clearTimeout(timeout);
         return false;

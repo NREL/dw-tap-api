@@ -1,0 +1,41 @@
+.summary_table {
+  width: 90%;
+  margin-left: auto;
+  margin-right: auto;
+}
+.summary_table_metric {
+  font-size: x-large;
+}
+.summary_table_value {
+  font-size: xxx-large;
+  font-weight: bold;
+}
+.summary_table_desc {
+  font-size: small;
+}
+
+
+.yearly_table {
+  width: 90%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.yearly_table_metric {
+  font-size: large;
+}
+.yearly_table_value {
+  font-size: x-large;
+  font-weight: bold;
+}
+
+.contents hr {
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.detailed_yearly_table {
+  width: 40%;
+  margin-left: auto;
+  margin-right: auto;
+}
