@@ -5,10 +5,10 @@
 
 #banner_nrel {
   width: 200px;
-  margin-top: 8px;
+  margin-top: 12px;
   margin-right: 40px;
   float: right;
-  height: 60px;
+  /*height: 60px; */
 }
 
 .vspace{
@@ -297,3 +297,194 @@ input[type=text] {
   font-family: Verdana;
   font-size: 22px;
 }
+
+.powercurve_fieldset {
+  border-width: 0;
+  line-height: 32px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.hubheight_fieldset {
+  border-width: 0;
+  line-height: 32px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.hubheight_label {
+  margin-top: 10px;
+}
+
+.details_label {
+  font-family: "Lato",sans-serif;
+  font-size: 28px;
+  font-weight: 400;
+  text-decoration: underline;
+}
+
+#windwatts_loading {
+  height: 60px;
+  margin-bottom: 0;
+}
+
+.loading_screen_table {
+  width: 100%;
+}
+
+.production_label {
+  font-family: "Lato",sans-serif;
+  font-size: 28px;
+  font-weight: 400;
+  margin-bottom: 10px;
+}
+
+.estimates_by_month_table {
+  border-collapse: collapse;
+  width: 90%;
+}
+.estimates_by_month_table td, .estimates_by_month_table th {
+  border: 0px solid #ddd;
+  padding: 8px;
+}
+.estimates_by_month_table tr:nth-child(even){background-color: #f2f2f2;}
+.estimates_by_month_table th {
+  padding-top: 12px;
+  padding-bottom: 12px;
+  text-align: center;
+  background-color: #e4e4e4;
+  color: black;
+}
+
+.estimates_by_year_table {
+  border-collapse: collapse;
+  width: 90%;
+}
+.estimates_by_year_table td, .estimates_by_year_table th {
+  border: 0px solid #ddd;
+  padding: 8px;
+}
+.estimates_by_year_table tr:nth-child(even){background-color: #f2f2f2;}
+.estimates_by_year_table th {
+  padding-top: 12px;
+  padding-bottom: 12px;
+  text-align: center;
+  background-color: #e4e4e4;
+  color: black;
+}
+
+.results_text li {
+  margin-left: 25px;
+}
+
+.tr_top_align {
+  vertical-align: top;
+}
+
+/* Styling for the hub height slider */
+.options {
+  width: 90%;
+  margin-left: 5%;
+  margin-right: 5%;
+  margin-top: 10px;
+  /*width: 30em;*/
+  border-radius: 1em;
+  padding: 0 0 1em 0;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+}
+
+.ticks {
+  display: flex;
+  margin-left: -5%;
+  margin-right: -5%;
+}
+
+.o_txt {
+  flex: 1;
+}
+
+.slider {
+  width: 87%; /* manually adjust this to look right */
+  margin: auto;
+  cursor: grab;
+  margin-top: 20px;
+}
+
+/* End of Styling for the hub height slider */
+
+
+/* styling for tool tips */
+
+.fa-solid, .fas {
+font-weight: 900;
+color: gray;
+}
+
+.tooltip {
+	/*background-color: #ffaffc;
+	border-radius: 10px;
+	padding: 10px 15px;
+  margin: 15px;
+  text-align: center;*/
+	position: relative;
+}
+
+.tooltip::after {
+	background-color: #e4e4e4;
+	border-radius: 10px;
+	width: 350px;
+	color: black;
+	display: none;
+	padding: 10px 15px;
+	position: absolute;
+	text-align: center;
+	z-index: 999;
+}
+
+.tooltip::before {
+	background-color: #e4e4e4;
+	content: ' ';
+	display: none;
+	position: absolute;
+	width: 15px;
+	height: 15px;
+	z-index: 999;
+}
+
+.tooltip:hover::after {
+	display: block;
+}
+
+.tooltip:hover::before {
+	display: block;
+}
+
+.tooltip.monthly_table_tooltip::after {
+	content: 'Table shown below details the wind speed and energy output for each month based on the average of 20 years at the selected site.';
+	top: 0;
+	left: 50%;
+  margin-left: 100px;
+	transform: translate(-50%, calc(-100% - 10px));
+}
+.tooltip.monthly_table_tooltip::before {
+	top: 0;
+	left: 50%;
+	transform: translate(-50%, calc(-100% - 5px)) rotate(45deg);
+}
+
+.tooltip.yearly_table_tooltip::after {
+	content: 'Table shown below gives the total energy output for the lowest and highest of 20 years, as well as the average year.';
+	top: 0;
+	left: 50%;
+  margin-left: 100px;
+	transform: translate(-50%, calc(-100% - 10px));
+}
+.tooltip.yearly_table_tooltip::before {
+	top: 0;
+	left: 50%;
+	transform: translate(-50%, calc(-100% - 5px)) rotate(45deg);
+}
+
+/* end of styling for tool tips*/

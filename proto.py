@@ -15,6 +15,7 @@ import os
 import requests
 import urllib
 import glob
+import calendar
 import matplotlib
 import matplotlib.pyplot as plt
 matplotlib.use('agg')
@@ -31,12 +32,15 @@ import geopandas as gpd
 import heapq
 import scipy.interpolate
 import numpy as np
+from html_maker import *
 
 # Start of WTK-LED fucntions
 # Code below is copied from the uncertainty notebook by Caleb Phillips
 # This function fetches the grid point index and returns as an indexed geodataframe
 def get_index():
-    base_url = "https://wtk-csv-testing-dav-sandbox.s3.us-west-2.amazonaws.com"
+    # For sample:
+    #base_url = "https://wtk-csv-testing-dav-sandbox.s3.us-west-2.amazonaws.com"
+    base_url = "https://wtk-led.s3.us-west-2.amazonaws.com"
     file_path = f"/location_index.csv.gz"
     index = gpd.GeoDataFrame(pd.read_csv(base_url+file_path))
     index['location'] = gpd.GeoSeries(gpd.points_from_xy(index.longitude, index.latitude))
@@ -60,7 +64,9 @@ def parse_mohr(mohr):
     return int(m), int(h)
 
 def get_1224(idx, year=2020, add_year_col=False):
-    base_url = "https://wtk-csv-testing-dav-sandbox.s3.us-west-2.amazonaws.com/1224"
+    # For sample:
+    #base_url = "https://wtk-csv-testing-dav-sandbox.s3.us-west-2.amazonaws.com/1224"
+    base_url = "https://wtk-led.s3.us-west-2.amazonaws.com/1224"
     file_path = f"/year={year}/varset=all/index={idx}/{idx}_{year}_all.csv.gz"
     res = pd.read_csv(base_url + file_path)
     res["m"], res["h"] = zip(*res["mohr"].apply(parse_mohr))
@@ -68,19 +74,74 @@ def get_1224(idx, year=2020, add_year_col=False):
         res["year"] = year
     return res
 
-def get_1224_20yrs(idx):
-    df = pd.concat([get_1224(idx, year=yr, add_year_col=True) for yr in range(2001, 2021)])
-    return df
+def get_1224_20yrs(idx, ws_col_for_estimating_power, selected_powercurve, relevant_columns_only=True):
+   # Example of the dataframe returned by this func (wtih relevant_columns_only=True):
+   #
+   # year  mohr month  h  windspeed_40m  windspeed_40m_kw  winddirection_40m
+   # 0  2001   101   Jan  1           4.31         10.765848             334.29
+   # 1  2001   102   Jan  2           5.07         17.058348             323.40
+   # 2  2001   103   Jan  3           5.38         20.721432             302.85
 
-def get_1224_20yrs_yearly_avg(idx, wind_only=True):
     df = pd.concat([get_1224(idx, year=yr, add_year_col=True) for yr in range(2001, 2021)])
-    df.drop(columns=["mohr", "m", "h"], inplace=True)
-    res = df.groupby("year").agg("mean")
-    if wind_only:
-        cols = [c for c in res.columns if "wind" in c]
-        return res[cols]
+
+    df.rename(columns={"m": "month"}, inplace=True)
+    # df.month = df.month.apply(lambda x: calendar.month_abbr[x]) -- converting months to Jan, Feb, etc. should happen last to avoid messing up the other of months
+
+    if ws_col_for_estimating_power in df.columns:
+        df[ws_col_for_estimating_power + "_kw"] = selected_powercurve.windspeed_to_kw(df, ws_col_for_estimating_power)
+    if relevant_columns_only:
+        wd_col = ws_col_for_estimating_power.replace("speed", "direction")
+        relevant_columns = ["year", "mohr", "month", "h", ws_col_for_estimating_power, ws_col_for_estimating_power + "_kw", wd_col]
+        return df[relevant_columns]
     else:
-        return res
+        return df
+
+def df2yearly_avg(df, ws_column, kw_column):
+    tmp = df.drop(columns=["mohr", "month", "h"] + [x for x in df.columns if "winddirection" in x])
+    #res = tmp.groupby("year").agg("mean")
+    res = tmp.groupby("year").agg(avg_ws=(ws_column, "mean"), kwh_total=(kw_column, "sum")) # kwh_total will sum for all months and all hours
+
+    res["kwh_total"] = res["kwh_total"] * 30 # Coarse estimation: 30 days in every month; no need to /20.0 for individual years
+    res.rename(columns={"avg_ws": "Average wind speed, m/s", "kwh_total": "kWh produced"}, inplace=True)
+
+    # res["kWh produced"] = res["kWh produced"].astype(float).map('{:,.0f}'.format)
+    # res["Average wind speed, m/s"] = res["Average wind speed, m/s"].astype(float).map('{:,.2f}'.format)
+
+    # Return entired dataframe, with all years
+    # return res
+
+    # Create df with low, avg, high year
+
+    res = res.sort_values("Average wind speed, m/s")
+    #return res
+
+    res_avg = pd.DataFrame(res.mean()).T
+    res_avg.index=["Average year"]
+    #return res_avg
+
+    res_3years = pd.concat([res.iloc[[0]], res_avg, res.iloc[[-1]]])
+    res_3years["kWh produced"] = res_3years["kWh produced"].astype(float).map('{:,.0f}'.format)
+    res_3years["Average wind speed, m/s"] = res_3years["Average wind speed, m/s"].astype(float).map('{:,.2f}'.format)
+
+    res_3years.index = ["Lowest year (%s)" % str(res_3years.index[0]), \
+                        res_3years.index[1], \
+                        "Highest year (%s)" % str(res_3years.index[2])]
+
+    return res_3years
+
+def df2monthly_avg(df, ws_column, kw_column):
+    tmp = df.drop(columns=["year", "mohr", "h"] + [x for x in df.columns if "winddirection" in x])
+    #res = tmp.groupby("month").agg("mean")
+    res = tmp.groupby("month").agg(avg_ws=(ws_column, "mean"), kwh_total=(kw_column, "sum")) # kwh_total will sum for all hours and all years
+
+    res["kwh_total"] = res["kwh_total"] * 30 / 20.0 # Coarse estimation: 30 days in every month & 20 years
+    res.rename(columns={"avg_ws": "Average wind speed, m/s", "kwh_total": "kWh produced"}, inplace=True)
+    res.index = pd.Series(res.index).apply(lambda x: calendar.month_abbr[x])
+
+    res["kWh produced"] = res["kWh produced"].astype(float).map('{:,.0f}'.format)
+    res["Average wind speed, m/s"] = res["Average wind speed, m/s"].astype(float).map('{:,.2f}'.format)
+
+    return res
 
 def yearly_avg_df_to_closest_heights(yearly_avg, selected_height, heights_count=1):
     # Use columns that are of format: windspeed_XYZm where XYZ are integers
@@ -103,7 +164,9 @@ def yearly_avg_df_to_closest_heights(yearly_avg, selected_height, heights_count=
     return closest_heights, closest_heights_columns
 
 def get_uncertainty_dataframe(location,height=40):
-    base_url = "https://wtk-csv-testing-dav-sandbox.s3.us-west-2.amazonaws.com/uncertainty"
+    # For sample:
+    #base_url = "https://wtk-csv-testing-dav-sandbox.s3.us-west-2.amazonaws.com/uncertainty"
+    base_url = "https://wtk-led.s3.us-west-2.amazonaws.com/uncertainty"
     file_path = f"/height={height}/index={location}/{location}_{height}m.csv.gz"
     return pd.read_csv(base_url+file_path)
 
@@ -289,9 +352,9 @@ def plot_monthly_avg(atmospheric_df, ws_column="ws", datetime_column="datetime",
     if show:
         plt.show()
 
-def plot_windrose(df, save_to_file=True):
+def plot_windrose(df, ws_column="ws", wd_column="wd", save_to_file=True):
     ax = WindroseAxes.from_ax()
-    ax.bar(df.wd, df.ws, normed=True, opening=0.8, edgecolor='white')
+    ax.bar(df[wd_column], df[ws_column], normed=True, opening=0.8, edgecolor='white')
     ax.set_legend()
     if save_to_file == True:
         plt.savefig('%s.png' % title, dpi=300)
@@ -957,10 +1020,14 @@ def by_address():
 def on_map():
     return render_template("on_map.html")
 
-@app.route('/map', methods=['GET'])
-def map():
-    return render_template("on_map3.html", google_maps_api_key=given_google_maps_api_key)
+# Old version: serving WindWatts at /map
+#@app.route('/map', methods=['GET'])
+#def map():
+#    return render_template("on_map3.html", google_maps_api_key=given_google_maps_api_key)
 
+@app.route('/', methods=['GET'])
+def map():
+   return render_template("on_map3.html", google_maps_api_key=given_google_maps_api_key)
 
 def process_year_input(year_raw):
 
@@ -1011,7 +1078,7 @@ def feasibility_test(estimate, thresh, result_prefix=True):
             result = "not feasible &#10007;"
     return sign, result
 
-def dailty_udf_to_summary(udf):
+def daily_udf_to_summary(udf):
     """ Use daily uncertainty to create a summary """
     p50 = udf["percentile_50"].mean()
     p25 = udf["percentile_25"].mean()
@@ -1022,6 +1089,7 @@ def dailty_udf_to_summary(udf):
     #return p25, p50, p75, p25_percent_diff_from_p50, p75_percent_diff_from_p50
 
     summary = """
+                    <p class="results_disclaimer_text"><span>OLD CONTENT BELOW. TO BE UPDATED.</span></p><br><br>
                     <table border="0" cellspacing="10" class="yearly_table">
                     	<tbody>
                     		<tr>
@@ -1057,6 +1125,14 @@ def dailty_udf_to_summary(udf):
         """ % (p25_percent_diff_from_p50, p75_percent_diff_from_p50)
     return summary
 
+def ws_to_level(ws, moderate_resource_thresh_ms, high_resource_thresh_ms):
+    if ws < moderate_resource_thresh_ms:
+        return "Low"
+    elif ws >= moderate_resource_thresh_ms and ws < high_resource_thresh_ms:
+        return "Moderate"
+    else:
+        return "High"
+
 def serve_data_request(data):
     try:
         id = data["id"]
@@ -1066,11 +1142,18 @@ def serve_data_request(data):
         #     pass
 
         year_list = process_year_input(data["years"])
-        f = connected_hsds_file(req_args, config)
+        #f = connected_hsds_file(req_args, config) # Need for hsds requests (not needed for WTK-LED s3 fetching)
+
         # Time index can be obtained from f but reading it from a previously saved file is faster
         dt = pd.read_csv("wtk-dt.csv")
         dt["datetime"] = pd.to_datetime(dt["datetime"])
         dt["year"] = dt["datetime"].apply(lambda x: x.year)
+        selected_powercurve = powercurves[data["powercurve"]]
+
+        closest_height = float(data["height"])
+        ws_column = "windspeed_" + str(int(data["height"])) + "m"
+        wd_column = ws_column.replace("windspeed", "winddirection")
+        kw_column = "windspeed_" + str(int(data["height"])) + "m" + "_kw"
 
         # New code for WTK-LED (WTK is a default handled below this if)
         if data["datasource"] == "WTK-LED":
@@ -1079,137 +1162,85 @@ def serve_data_request(data):
             output_dest = os.path.join(completed_dir, id)
 
             # Fetching WTK-LED
-            point = closest_grid_point(wtkled_index, data["lat"], data["lon"])
+            #point = closest_grid_point(wtkled_index, data["lat"], data["lon"])
+            #df_1224_20years = get_1224_20yrs(point['index'], ws_column, selected_powercurve, relevant_columns_only=True)
+            #print("obtained df_1224_20years:")
+            #print(df_1224_20years.head())
 
-            yearly_avg = get_1224_20yrs_yearly_avg(point['index'])
-            closest_heights, closest_heights_columns = yearly_avg_df_to_closest_heights(yearly_avg, float(data["height"]), heights_count=2)
-            yearly_avg_closest_heights = yearly_avg[closest_heights_columns]
+            attempt_lim = 5
+            error_str = ""
+            for attempt in range(attempt_lim):
+                try:
+                    error_str = ""
+                    print("Fetching WTK-LED data. Attempt: %d of %d" % (attempt, attempt_lim))
+                    point = closest_grid_point(wtkled_index, data["lat"], data["lon"])
+                    df_1224_20years = get_1224_20yrs(point['index'], ws_column, selected_powercurve, relevant_columns_only=True)
+                except Exception as e:
+                    print("Error in fetching WTK-LED data. Will wait a little and try again")
+                    print("Exception: %s" % str(e))
+                    error_str = "An error occurred during fetching WTK-LED data. If it is an intermittent, network issue, may need to try again later! To help with troubleshooting, here is the error message: %s" % str(e)
+                    time.sleep(0.5)
+                    continue
+                else:
+                    print("Fetching WTK-LED data was successful")
+                    error_str = ""
+                    break
 
-            overall_mean = yearly_avg_closest_heights[closest_heights_columns[0]].mean()
+            if error_str:
+                with open(output_dest, 'w') as f:
+                    json.dump({"error": error_str}, f)
+                print("Saved error info to: %s" % output_dest)
+                return
 
-            udf = get_uncertainty_dataframe(point['index'])
-            udf['doy'] = udf.index # assume the day of year is the index, which would be true once all 12 months of data are present
-            uncertainty_summary = dailty_udf_to_summary(udf)
+            yearly_df = df2yearly_avg(df_1224_20years, ws_column, kw_column)
+            kwh_produced_avg_year = yearly_df["kWh produced"].tolist()[1] # Average year comes after the lowest
+            monthly_df = df2monthly_avg(df_1224_20years, ws_column, kw_column)
+
+            overall_mean = df_1224_20years[ws_column].mean()
+
+            feasibility_thresh = feasibility_thresh_by_height(float(data["height"]))
+            moderate_resource_thresh_ms = feasibility_thresh - 1.0
+            high_resource_thresh_ms = feasibility_thresh + 1.0
+            ws_level = ws_to_level(overall_mean, moderate_resource_thresh_ms, high_resource_thresh_ms)
+
+            #udf = get_uncertainty_dataframe(point['index'])
+            #udf['doy'] = udf.index # assume the day of year is the index, which would be true once all 12 months of data are present
+            #uncertainty_summary = daily_udf_to_summary(udf)
+
             #udf['iqr'] = udf['percentile_75'] - df['percentile_25'] # compute inter quartile range
             #udf['uncertainty'] = udf['percentile_95'] - udf['percentile_5'] # compute inter quartile range
             #udf
 
-            #summary += "<br>WTK-LED point:<br>%s" % str(point).replace("\n", "<br>")
-            #data = yearly_avg.to_html() #yearly_avg.to_string().replace("\n", "<br>")
+            summary = summary_to_html(float(data["lat"]), float(data["lon"]), closest_height, data["powercurve"], overall_mean, ws_level, kwh_produced_avg_year)
 
-            summary = """
-                <table border="0" cellspacing="10" class="summary_table">
-                	<tbody>
-                		<tr>
-                			<td><span class="summary_table_metric">All-time wind speed average, m/s:</span></td>
-                		</tr>
-                		<tr>
-                			<td><span class="summary_table_value">%.2f</span></td>
-                		</tr>
-                		<tr>
-                			<td><span class="summary_table_desc">estimated using 12x24 summaries from WTK-LED<br>for 2001-2020 at %d meters.</span></td>
-                		</tr>
-                	</tbody>
-                </table>
-            """ % (overall_mean, closest_heights[0])
+            windrose_plot_name = "%s/%s_windrose.png" % (plot_dir, id)
+            plot_windrose(df_1224_20years, ws_column, wd_column, save_to_file=windrose_plot_name)
 
-            summary += """
-                <hr>
-                <table border="0" cellspacing="10" class="yearly_table">
-                	<tbody>
-                		<tr>
-                			<td><span class="yearly_table_metric">Wind speed average for<br><u>lowest</u> year (%d):</span></td>
-                            <td><span class="yearly_table_metric">Wind speed average for<br><u>median</u> year (%d):</span></td>
-                            <td><span class="yearly_table_metric">Wind speed average for<br><u>highest</u> year (%d):</span></td>
-                		</tr>
-                		<tr>
-                			<td><span class="yearly_table_value">%.2f</span></td>
-                            <td><span class="yearly_table_value">%.2f</span></td>
-                            <td><span class="yearly_table_value">%.2f</span></td>
-                		</tr>
-                	</tbody>
-                </table>
-            """ % (2008, 2010, 2012, overall_mean*0.9, overall_mean*1.0, overall_mean*1.1)
+            windresource = windresource_to_html(overall_mean, \
+                ws_level, \
+                moderate_resource_thresh_ms=feasibility_thresh-1.0,\
+                high_resource_thresh_ms=feasibility_thresh+1.0,\
+                closest_height=closest_height, \
+                windrose_plot_name=windrose_plot_name)
 
-            #summary += "<br>Selected location (lon, lat): %s, %s " % (data["lon"], data["lat"])
-            #summary += "<br>Closest heights: %s" % str(closest_heights)
 
-            feasibility_thresh = feasibility_thresh_by_height(float(data["height"]))
-
-            f_sign, f_res = feasibility_test(overall_mean, feasibility_thresh)
-
-            feasibility = """
-                <table border="0" cellspacing="10" class="summary_table">
-                	<tbody>
-                		<tr>
-                			<td><span class="summary_table_metric">Checking all-time wind speed average:</span></td>
-                		</tr>
-                		<tr>
-                			<td><span class="summary_table_metric">%.2f %s %.2f</span></td>
-                		</tr>
-                		<tr>
-                			<td><span class="summary_table_metric">%.2f&mdash;feasibility threshold determined using common favorable wind speeds: link</span></td>
-                		</tr>
-                		<tr>
-                			<td><span class="summary_table_value">%s</span></td>
-                		</tr>
-                	</tbody>
-                </table>
-            """ % (overall_mean, f_sign, feasibility_thresh, feasibility_thresh, f_res)
-
-            lo_year_sign, lo_year_res = feasibility_test(overall_mean, feasibility_thresh, result_prefix=False)
-            median_year_sign, median_year_res = feasibility_test(overall_mean, feasibility_thresh, result_prefix=False)
-            hi_year_sign, hi_year_res = feasibility_test(overall_mean, feasibility_thresh, result_prefix=False)
-
-            feasibility += """
-                <br><hr><br>
-                <table border="0" cellspacing="10" class="yearly_table">
-                	<tbody>
-                		<tr>
-                			<td><span class="yearly_table_metric">Checking <u>lowest</u> year (%d):</span></td>
-                            <td><span class="yearly_table_metric">Checking <u>median</u> year (%d):</span></td>
-                            <td><span class="yearly_table_metric">Checking <u>highest</u> year (%d):</span></td>
-                		</tr>
-                		<tr>
-                			<td><span class="yearly_table_metric">%.2f %s %.2f</span></td>
-                            <td><span class="yearly_table_metric">%.2f %s %.2f</span></td>
-                            <td><span class="yearly_table_metric">%.2f %s %.2f</span></td>
-                		</tr>
-                		<tr>
-                			<td><span class="summary_table_value">%s</span></td>
-                            <td><span class="summary_table_value">%s</span></td>
-                            <td><span class="summary_table_value">%s</span></td>
-                		</tr>
-                	</tbody>
-                </table>
-            """ % (2008, 2010, 2012, \
-            overall_mean*0.9, lo_year_sign, feasibility_thresh, \
-            overall_mean*1.0, median_year_sign, feasibility_thresh, \
-            overall_mean*1.1, hi_year_sign, feasibility_thresh, \
-            lo_year_res, median_year_res, hi_year_res)
-
-            feasibility += """
-                <br><hr><br>
-                <table border="0" cellspacing="10" class="feasibility_desc_table">
-                	<tbody>
-                		<tr>
-                			<td>feasible &#10004; vs. not feasible &#10007; &mdash; this determination is made using intentionally simplified method. [More info to be added]</td>
-                		</tr>
-                    </tbody>
-                <table>
-                """
 
             # Rounding
-            yearly_avg_closest_heights = yearly_avg_closest_heights.round(2)
-            udf = udf.round(2)
+            #yearly_df = yearly_df.round(2)
+            #monthly_df = monthly_df.round(2)
+            #udf = udf.round(2)
 
-            data = yearly_avg_closest_heights.to_html(classes="detailed_yearly_table")
-            uncertainty_data = udf.to_html(classes="detailed_yearly_table")
+            #data = yearly_avg_closest_heights.to_html(classes="detailed_yearly_table")
+            energyproduction = energyproduction_to_html(monthly_df, yearly_df)
+
+            #uncertainty_data = udf.to_html(classes="detailed_yearly_table")
 
             with open(output_dest, 'w') as f:
-                json.dump({"wtk_led_summary": summary, "wtk_led_feasibility": feasibility, "wtk_led_data": data, \
-                "uncertainty_summary": uncertainty_summary, "uncertainty_data": uncertainty_data}, f)
-
+                json.dump({"wtk_led_summary": summary, "wtk_led_windresource": windresource,
+                    "wtk_led_energyproduction": energyproduction}, #, \
+                    #"uncertainty_summary": uncertainty_summary, \
+                    #"uncertainty_data": uncertainty_data},\
+                f)
             print("Saved output to: %s" % output_dest)
 
         else: # WTK dataset
@@ -1394,9 +1425,9 @@ def status():
     output += "WTK-LED index: %d columns, %d rows" % (len(wtkled_index.columns), len(wtkled_index))
     return output
 
-@app.route('/', methods=['GET'])
-def serve_slash():
-    return render_template("info.html")
+#@app.route('/', methods=['GET'])
+#def serve_slash():
+#    return render_template("info.html")
 
 #@app.route('/', methods=['GET'])
 @app.route('/<path:path>')

@@ -34,11 +34,16 @@ html {
 */
 
 .top-banner span{
-  width: 50px;
-  heigth: 28px;
+  width: 700px;
   line-height: 28px;
-  background-color: #a1c45a;
-  border-radius: 20px;
+  background-color: #E6F4F1;
+  border-radius: 3px;
+  margin-left: 20px;
+  margin-top: 25px;
+  position: absolute;
+  font-family: Verdana;
+  text-align: center;
+  font-size: 16px;
 }
 
 .top-banner a:hover {

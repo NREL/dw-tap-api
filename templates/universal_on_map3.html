@@ -4,6 +4,7 @@
 <head>
   <title>TAP API: map</title>
   <meta charset="UTF-8">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <link rel="stylesheet" href="static/styles/accordion.css">
   <link rel="stylesheet" href="static/styles/banner.css">
   <link rel="stylesheet" href="static/styles/gmap.css">
@@ -29,8 +30,9 @@
 <body>
 
   <div class="top-banner">
-    <a href="https://www.nrel.gov/wind/tools-assessing-performance.html"><img id="banner_tap_ui" src="static/tapui.png"/></a>
-    <img id="banner_nrel" src="static/nrel.jpg"/>
+    <a href="https://www.nrel.gov/wind/tools-assessing-performance.html"><img id="banner_tap_ui" src="static/windwatts_beta_w.png"/></a>
+    <span> To start, click on the map or navigate to a specific location using "Address".</span>
+    <img id="banner_nrel" src="static/NREL-logo-reversed.png"/>
   </div>
 
   <div class="pac-card" id="pac-card">
@@ -88,12 +90,72 @@
   </div>
 
   <div class="accordion_wrapper">
+
+  <button class="accordion">Address</button>
+  <div class="panel">
+    <div class="vspace"></div>
+
+    <input id="pac-input" type="text" placeholder="Enter a location" /><br>
+    <label for="fname">Type in address or navigate to it using the map.</label>
+    <div class="vspacel"></div>
+  </div>
+
+
   <button class="accordion">Hub height</button>
   <div class="panel">
+    <br>
+    <label for="fname" class="hubheight_label">Closest value (in meters) to the considered hub height:</label>
+    <!-- Improved version: select from options
+    <fieldset class="hubheight_fieldset">
+      <input type="radio" id="hubheightChoice1" name="hub_height" value="30"/>
+      <label for="hubheightChoice1">30</label>
+      <br>
+      <input type="radio" id="hubheightChoice2" name="hub_height" value="40" checked="checked"/>
+      <label for="hubheightChoice2">40</label>
+      <br>
+      <input type="radio" id="hubheightChoice3" name="hub_height" value="60" />
+      <label for="hubheightChoice3">60</label>
+      <br>
+      <input type="radio" id="hubheightChoice4" name="hub_height" value="80" />
+      <label for="hubheightChoice4">80</label>
+      <br>
+      <input type="radio" id="hubheightChoice4" name="hub_height" value="100" />
+      <label for="hubheightChoice4">100</label>
+    </fieldset>
+    -->
+
+    <!-- Original version: type in your value
     <div class="vspace"></div>
     <input type="text" class="text_field" id="hub_height" value="35"><br>
     <label for="fname">Hub height, meters</label>
     <div class="vspace"></div>
+    -->
+
+    <!-- Slider based on example fromL: https://stackoverflow.com/questions/26612700/ticks-for-type-range-html-input -->
+    <div class="options">
+      <input class="hub_height" type="range" min="1" max="7" step="1" list="steplist" value="1" />
+      <!---
+      <datalist id="steplist">
+         <option>30</option>
+         <option>40</option>
+         <option>60</option>
+         <option>80</option>
+         <option>100</option>
+         <option>120</option>
+         <option>140</option>
+      </datalist>
+      -->
+      <div class="ticks">
+        <span class="o_txt">30</span>
+        <span class="o_txt">40</span>
+        <span class="o_txt">60</span>
+        <span class="o_txt">80</span>
+        <span class="o_txt">100</span>
+        <span class="o_txt">120</span>
+        <span class="o_txt">140</span>
+      </div>
+    </div>
+
   </div>
 
   <!--
@@ -122,20 +184,48 @@
 
   <button class="accordion">Power curve</button>
   <div class="panel">
+    <fieldset class="powercurve_fieldset">
+      <input type="radio" id="powercurveChoice1" name="powercurve" value="nrel-reference-2.5kW" />
+      <label for="powercurveChoice1">NREL's reference powercurve for 2.5kW</label>
+      <br>
+      <input type="radio" id="powercurveChoice2" name="powercurve" value="nrel-reference-100kW" checked="checked"/>
+      <label for="powercurveChoice2">NREL's reference powercurve for 100kW</label>
+      <br>
+      <input type="radio" id="powercurveChoice3" name="powercurve" value="nrel-reference-250kW" />
+      <label for="powercurveChoice3">NREL's reference powercurve for 250kW</label>
+      <br>
+      <input type="radio" id="powercurveChoice4" name="powercurve" value="nrel-reference-2000kW" />
+      <label for="powercurveChoice4">NREL's reference powercurve for 2000kW</label>
+    </fieldset>
+    <label for="fname">Make sure the selected turbine class matches the hub height (higher hub heights should be chosen for larger turbines).</label>
+    <div class="vspace"></div>
+  </div>
+    <!--
     <select name="powercurve" id="powercurve">
       <option value="N/A" selected="selected">N/A</option>
       <option value="nrel-reference-2.5kW">nrel-reference-2.5kW</option>
-      <option value="nrel-reference-100kW">nrel-reference-100kW</option>
+      <option value="nrel-reference-100kW" selected="selected">nrel-reference-100kW</option>
       <option value="nrel-reference-250kW">nrel-reference-250kW</option>
       <option value="nrel-reference-2000kW">nrel-reference-2000kW</option>
+
       <option value="bergey-excel-15">bergey-excel-15</option>
       <option value="eocycle-25">eocycle-25</option>
       <option value="northern-100">northern-100</option>
-    </select><br>
-    <label for="fname">N/A means the results will include only wind data, without energy estimates</label>
-    <div class="vspace"></div>
-  </div>
 
+    </select>
+    <br><label for="fname">N/A means the results will include only wind data, without energy estimates</label>
+    <div class="vspace"></div>
+    -->
+
+    <button class="accordion">About WindWatts</button>
+    <div class="panel">
+      <br>
+      <label for="fname">Read more about the tool at: <a href="https://www.nrel.gov/wind/tools-assessing-performance.html" target="_blank" rel="noopener noreferrer">WindWatts page</a>.</label>
+      <div class="vspace"></div>
+      <div class="vspace"></div>
+    </div>
+
+  <!--
   <button class="accordion">Data source</button>
   <div class="panel">
     <select name="datasource" id="datasource">
@@ -145,15 +235,7 @@
     <label for="fname">More info about datasets: link</label>
     <div class="vspace"></div>
   </div>
-
-  <button class="accordion">Address</button>
-  <div class="panel">
-    <div class="vspace"></div>
-
-    <input id="pac-input" type="text" placeholder="Enter a location" /><br>
-    <label for="fname">Type in address or navigate to it using the map.</label>
-    <div class="vspacel"></div>
-  </div>
+  -->
 
 </div>
 
@@ -163,21 +245,35 @@
   <input type="text" class="text_field" id="years" value="2013" style="visibility:hidden;"><br>
 </div>
 
+<!-- Replacement for the hidden accordion/controlled parameter element-->
+<button style="display:none;">Data source</button>
+<div class="panel" style="display:none;">
+  <select name="datasource" id="datasource">
+    <option value="WTK-LED" selected="selected">WTK-LED (2001-2020)</option>
+    <option value="WTK">WTK (2007-2013)</option>
+  </select>
+  <!-- <br> <label for="fname">More info about datasets: link</label>
+  <div class="vspace"></div> -->
+</div>
+
+
 <div id="resultsPane" class="resultsPane">
   <a href="#" class="close-thin" onclick="unblock_screen()"></a>
 
   <div id="loading_outer" class="loading_outer">
   <div class="loading">
-    <table>
+    <table class="loading_screen_table">
       <tr>
-        <td><h2 id="tap_is_working">TAP API is working...</h2></td>
+        <!-- <td><h2 id="tap_is_working">TAP API is working...</h2></td> -->
+        <img id="windwatts_loading" src="static/windwatts_beta_b.png"/>
       </tr>
       <tr>
         <td><img id="turbine" src="{{url_for('static', filename='turbine.gif')}}"/></td>
       </tr>
       <tr>
+        <br>
         <td><a id="more_info" href="https://www.nrel.gov/wind/tools-assessing-performance.html" target="_blank" rel="noopener noreferrer">
-          Open new tab with info about NREL's TAP project</a></td>
+          Read more about WindWatts</a></td>
       </tr>
     </table>
   </div>
@@ -298,13 +394,31 @@
         var output_type = "raw";
       };
 
+      //let selected_height = document.querySelector('input[name="hub_height"]:checked').value; # old version with the option list
+
+      // This dict needs to match exactly the labels in the element of class: ticks; can be implemented better!
+      const hub_heights = {
+        1: 30,
+        2: 40,
+        3: 60,
+        4: 80,
+        5: 100,
+        6: 120,
+        7: 140
+      };
+      let selected_height = hub_heights[document.querySelector('input[class="hub_height"]').value];
+
+      let selected_powercurve = document.querySelector('input[name="powercurve"]:checked').value;
+      //console.log("make_data_request(), selected_height:" + selected_height);
 
       var req_fields = JSON.stringify({
                 lat: window.lat,
                 lon: window.lon,
-                height: $('#hub_height').val(),
+                //height: $('#hub_height').val(),
+                height: selected_height,
                 years: $('#years').val(),
-                powercurve: $('#powercurve').val(),
+                //powercurve: $('#powercurve').val(),
+                powercurve: selected_powercurve,
                 datasource: $('#datasource').val(),
                 output_type: output_type,
               });
@@ -320,9 +434,11 @@
               body: JSON.stringify({
                 lat: window.lat,
                 lon: window.lon,
-                height: $('#hub_height').val(),
+                //height: $('#hub_height').val(),
+                height: selected_height,
                 years: $('#years').val(),
-                powercurve: $('#powercurve').val(),
+                //powercurve: $('#powercurve').val(),
+                powercurve: selected_powercurve,
                 datasource: $('#datasource').val(),
                 output_type: output_type,
                 id: req_id,
@@ -338,6 +454,19 @@
       const response_json = await response.json();
       return response_json;
     }
+
+    const escapeHTML = str =>
+      str.replace(
+        /[&<>'"]/g,
+        tag =>
+          ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            "'": '&#39;',
+            '"': '&quot;'
+          }[tag] || tag)
+      );
 
     async function fetch_results() {
       let get;
@@ -361,7 +490,13 @@
             $('#loading_outer').css("display", "none");
         });
 
-        if ("wtk_led_summary" in get) {
+        // Handle errors first
+        if ("error" in get) {
+          console.log("Rendering an error message.")
+          $('#results_accordion_wrapper').append( '<p>' + escapeHTML(get["error"]) + ' </p>');
+        }
+
+        else if ("wtk_led_summary" in get) {
           console.log("Rendering wtk-led summary.")
 
           $('#results_accordion_wrapper').append( '<button class="results_accordion">Summary</button>');
@@ -369,29 +504,29 @@
           $('#results_accordion_wrapper .summary_panel').append( '<div id="contents">' + get["wtk_led_summary"] + '</div>');
 
           // May need to think about structuring different cases better!
-          if ("wtk_led_feasibility" in get) {
-            $('#results_accordion_wrapper').append( '<button class="results_accordion">Feasibility</button>');
-            $('#results_accordion_wrapper').append( '<div class="results_panel feasibility_panel"></div>' );
-            $('#results_accordion_wrapper .feasibility_panel').append( '<div id="contents">' + get["wtk_led_feasibility"] + '</div>');
+          if ("wtk_led_windresource" in get) {
+            $('#results_accordion_wrapper').append( '<button class="results_accordion">Wind Resource</button>');
+            $('#results_accordion_wrapper').append( '<div class="results_panel windresource_panel"></div>' );
+            $('#results_accordion_wrapper .windresource_panel').append( '<div id="contents">' + get["wtk_led_windresource"] + '</div>');
           }
 
-          if ("wtk_led_data" in get) {
-            $('#results_accordion_wrapper').append( '<button class="results_accordion">Data (yearly averages)</button>');
-            $('#results_accordion_wrapper').append( '<div class="results_panel data_panel"></div>' );
-            $('#results_accordion_wrapper .data_panel').append( '<div id="contents">' + get["wtk_led_data"] + '</div>');
+          if ("wtk_led_energyproduction" in get) {
+            $('#results_accordion_wrapper').append( '<button class="results_accordion">Energy Production</button>');
+            $('#results_accordion_wrapper').append( '<div class="results_panel energyproduction_panel"></div>' );
+            $('#results_accordion_wrapper .energyproduction_panel').append( '<div id="contents">' + get["wtk_led_energyproduction"] + '</div>');
           }
 
-          if ("uncertainty_summary" in get) {
-            $('#results_accordion_wrapper').append( '<button class="results_accordion">Uncertainty Summary</button>');
-            $('#results_accordion_wrapper').append( '<div class="results_panel uncertainty_summary_panel"></div>' );
-            $('#results_accordion_wrapper .uncertainty_summary_panel').append( '<div id="contents">' + get["uncertainty_summary"] + '</div>');
-          }
+          //if ("uncertainty_summary" in get) {
+          //  $('#results_accordion_wrapper').append( '<button class="results_accordion">Uncertainty Summary</button>');
+          //  $('#results_accordion_wrapper').append( '<div class="results_panel uncertainty_summary_panel"></div>' );
+          //  $('#results_accordion_wrapper .uncertainty_summary_panel').append( '<div id="contents">' + get["uncertainty_summary"] + '</div>');
+          //}
 
-          if ("uncertainty_data" in get) {
-            $('#results_accordion_wrapper').append( '<button class="results_accordion">Raw Uncertainty Data (daily, 1 year)</button>');
-            $('#results_accordion_wrapper').append( '<div class="results_panel uncertainty_data_panel"></div>' );
-            $('#results_accordion_wrapper .uncertainty_data_panel').append( '<div id="contents">' + get["uncertainty_data"] + '</div>');
-          }
+          //if ("uncertainty_data" in get) {
+          //  $('#results_accordion_wrapper').append( '<button class="results_accordion">Raw Uncertainty Data (daily, 1 year)</button>');
+          //  $('#results_accordion_wrapper').append( '<div class="results_panel uncertainty_data_panel"></div>' );
+          //  $('#results_accordion_wrapper .uncertainty_data_panel').append( '<div id="contents">' + get["uncertainty_data"] + '</div>');
+          //}
         }
         // the rest of rendering is for WTK
         else if ("raw" in get) {
