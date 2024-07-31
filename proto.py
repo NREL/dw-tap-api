@@ -22,6 +22,8 @@ matplotlib.use('agg')
 
 from dw_tap.data_fetching import getData
 from v2 import validated_params_v2_w_year
+from v2 import validated_params_v2
+from v2 import validated_latlon
 from hsds_helpers import connected_hsds_file
 from bc import bc_for_point
 from infomap import get_infomap_script
@@ -33,6 +35,7 @@ import heapq
 import scipy.interpolate
 import numpy as np
 from html_maker import *
+import flask
 
 # Start of WTK-LED fucntions
 # Code below is copied from the uncertainty notebook by Caleb Phillips
@@ -1374,6 +1377,26 @@ def serve_data_request(data):
         print("error: " + str(e))
         output = "Error: " + str(e)
 
+
+@app.route('/1224', methods=['GET'])
+def serve_1224():
+    """ Endpoint serving WTK-LED 12x24 data for 20 years.
+
+    Access it at using URLs like: <hostname>:<port>/1224?lat=39.76004&lon=-105.14058
+    """
+    lat, lon = validated_latlon(request)
+    point = closest_grid_point(wtkled_index, lat, lon)
+    df_1224_20years = get_1224_20yrs(point['index'],
+        ws_col_for_estimating_power="nonexistent_column", # This helps avoid power estimation
+        selected_powercurve=None, # No power estimation
+        relevant_columns_only=False) # Show all columns/data instead of a subset
+    return df_1224_20years.to_csv(index=False)
+
+# API/documentation route
+@app.route('/api', methods=['GET'])
+def api():
+    # Serve documentation produced by apiDoc
+    return flask.send_file('docs/index.html')
 
 @app.route('/data_request', methods=['POST', 'GET'])
 def data_request():
