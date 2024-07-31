@@ -5,15 +5,29 @@
 This is an endpoint repository -- it contains the code that runs a Flask app serving the processed WTK data. 
 The processing includes height selection, time interval selection, spatial interpolation, vertical interpolation, and wind rose calculations.    
 
+When UI/API is running, you can:
+
+1. See WindWatts-beta by navigating your browswer to:
+```
+<server's hostname>:<server's port>
+```
+2. Run example API query, by going to a link like this (change the values if necessary)
+```
+<server's hostname>:<server's port>/1224?lat=39.76004&lon=-105.14058
+```
+3. Check server info at:
+```
+<server's hostname>:<server's port>/status
+```
+
+For a local deployment, these links would be:
+```
+http://localhost:8080
+http://localhost:8080/1224?lat=39.76004&lon=-105.14058
+http://localhost:8080/status
+```
+
 ## How To Use
-
-## Latest
-
-Run the latest version locally with: 
-```
-export GOOGLE_MAPS_API_KEY=PROVIDE_YOUR_KEY && python proto.py 
-```
-In AWS, the necessary environment key will be set (Parameter Store in SSM provies control over the environment variables).
 
 ### Deploy as a Container (requires Docker on the host)
 
@@ -64,7 +78,12 @@ Interactive HTML page with API documentation is produced using apiDoc. It can be
 ```
 apidoc -i . -o docs/ -t apidoc-template
 ```
-The output can be seen by opening `docs/index.html` in a browser. The flask app is configured to serve this documentation page (and related files) at "/" (i.e., "home") route.
+The output can be seen by opening `docs/index.html` in a browser. The flask app is configured to serve this documentation page (and related files) at the "/api" route.
+
+For installing apiDoc on osx, run:
+```
+brew install apidoc
+```
 
 ### More about the Project
 
