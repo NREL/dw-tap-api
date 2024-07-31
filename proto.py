@@ -658,5 +658,10 @@ def status():
     output += "WTK-LED index: %d columns, %d rows" % (len(wtkled_index.columns), len(wtkled_index))
     return output
 
+# DO NOT DELETE: /info route is needed for checking the health of the service during deployment
+@app.route('/info', methods=['GET'])
+def info():
+    return status()
+
 if __name__ == '__main__':
     app.run(host=host, port=port, debug=True)
