@@ -1,5 +1,5 @@
-# Use a minimal image
-FROM python:3.11
+# Update base image for KEV CVE-2024-36971  
+FROM python:3.11.10
 
 LABEL MAINTAINER="Dmitry Duplyakin <dmitry.duplyakin@nrel.gov>"
 

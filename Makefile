@@ -35,7 +35,7 @@ $(info BRANCH_NAME="$(BRANCH_NAME)")
 
 # git release version - use for rollbacks
 
-TAG ?= $(BASE_IMAGE_TAG)-$(BRANCH_NAME)-$(HEAD_VER)
+TAG ?= $(BASE_IMAGE_TAG)-$(BRANCH_NAME)-$(HEAD_VER)-$(date + %s)
 
 .PHONY: build push
 
