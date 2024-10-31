@@ -605,6 +605,35 @@ def serve_1224():
         relevant_columns_only=False) # Show all columns/data instead of a subset
     return df_1224_20years.to_csv(index=False)
 
+# API endpoint for batch requests -- early version
+@app.route('/batch', methods=['GET'])
+def serve_batch():
+    """ Endpoint serving multiple requests passed in a single json.
+
+    Access it at using URL: <hostname>:<port>/batch with attached json via GET method
+    """
+
+    # Consider: always serving a json as a response, with "error" keys pointing to empty or non-empty strings
+
+    if request.method == 'GET':
+        if not request.data:
+            return "This endpoint is expecting request data wrapped in a JSON object." # Maybe add link to a page with API doc
+
+        try:
+            req_json = json.loads(request.data)
+        except Exception as e:
+            return "JSON parsing error. Make sure valid JSON is used. Error: " + str(e)
+
+        if 'windwatts-api-request' not in req_json:
+            return "Required key is missing in provided JSON: windwatts-api-request."
+        else:
+            return type(req_json["windwatts-api-request"])
+
+        return req_json
+    else:
+        return "Use GET method with this endpoint."
+
+
 # API/documentation route -- not working now because apiDoc isn't working for buildings docs (deprecated)
 @app.route('/api', methods=['GET'])
 def api():
