@@ -140,7 +140,7 @@ run:
 clean:
 	-docker rm -f $(PROJECT_NAME)
 
-release: build push build-lambda push-lambda deploy
+release: build push deploy
 
 SELF_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
 include $(SELF_DIR)docker.mk
