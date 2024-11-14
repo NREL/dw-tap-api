@@ -1,4 +1,4 @@
-include .env
+include awscodebuild/.env
 
 default: up
 
