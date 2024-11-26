@@ -516,11 +516,12 @@
             $('#results_accordion_wrapper .energyproduction_panel').append( '<div id="contents">' + get["wtk_led_energyproduction"] + '</div>');
           }
 
-          if ("observations" in get) {
-            $('#results_accordion_wrapper').append( '<button class="results_accordion">Nearby Observations</button>');
-            $('#results_accordion_wrapper').append( '<div class="results_panel observations_panel"></div>' );
-            $('#results_accordion_wrapper .observations_panel').append( '<div id="contents">' + get["observations"] + '</div>');
-          }
+          // Temporarily disable showing of obs section
+          //if ("observations" in get) {
+          //  $('#results_accordion_wrapper').append( '<button class="results_accordion">Nearby Observations</button>');
+          //  $('#results_accordion_wrapper').append( '<div class="results_panel observations_panel"></div>' );
+          //  $('#results_accordion_wrapper .observations_panel').append( '<div id="contents">' + get["observations"] + '</div>');
+          //}
 
           //if ("uncertainty_summary" in get) {
           //  $('#results_accordion_wrapper').append( '<button class="results_accordion">Uncertainty Summary</button>');
