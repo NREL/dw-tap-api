@@ -123,6 +123,25 @@ const MapView = () => {
         console.log("Analyzing Wind Data for coordinates:", infoWindowPosition);
     };
 
+    const handleSaveLocation = () => {
+        const formattedLat = infoWindowPosition.lat.toFixed(2);
+        const formattedLng = infoWindowPosition.lng.toFixed(2);
+        const newLocation = {
+            name: `(${formattedLat}, ${formattedLng})`,
+            lat: infoWindowPosition.lat,
+            lng: infoWindowPosition.lng,
+        };
+        setSavedLocations([...savedLocations, newLocation]);
+    };
+
+    const deleteRecentLocation = (idx) => {
+        setRecentSearches(recentSearches.filter((_, i) => i !== idx));
+    };
+
+    const deleteSavedLocation = (idx) => {
+        setSavedLocations(savedLocations.filter((_, i) => i !== idx));
+    };
+
     if (!isLoaded) {
         return <div>Loading...</div>;
     }
@@ -153,6 +172,7 @@ const MapView = () => {
                             position={infoWindowPosition}
                             onCloseClick={() => setInfoWindowVisible(false)}
                             onAnalyzeClick={handleAnalyzeData}
+                            onSaveLocation={handleSaveLocation}
                         />
                     )}
                 </GoogleMap>
@@ -169,6 +189,8 @@ const MapView = () => {
                 setLocation={handleSetLocation}
                 savedLocations={savedLocations}
                 recentSearches={recentSearches}
+                deleteRecentLocation={deleteRecentLocation}
+                deleteSavedLocation={deleteSavedLocation}
             />
         </Box>
     );

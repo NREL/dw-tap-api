@@ -2,7 +2,7 @@ import { InfoWindowF } from '@react-google-maps/api';
 import { Box, Typography, Button } from '@mui/material';
 import PropTypes from 'prop-types';
 
-const InfoPopup = ({ position, onCloseClick, onAnalyzeClick }) => {
+const InfoPopup = ({ position, onCloseClick, onAnalyzeClick, onSaveLocation }) => {
     return (
         <InfoWindowF position={position} onCloseClick={onCloseClick}>
             <Box>
@@ -10,7 +10,13 @@ const InfoPopup = ({ position, onCloseClick, onAnalyzeClick }) => {
                 <Typography variant="body2" marginBottom={3}>
                     Coordinates: ({position.lat}, {position.lng})
                 </Typography>
-                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
+                    <Button variant="contained" 
+                        color="primary" 
+                        size='small'
+                        onClick={onSaveLocation}>
+                        Save Location
+                    </Button>
                     <Button variant="contained" 
                         color="primary" 
                         size='small'
@@ -21,7 +27,7 @@ const InfoPopup = ({ position, onCloseClick, onAnalyzeClick }) => {
             </Box>
         </InfoWindowF>
     );
-};
+  };
 
 InfoPopup.propTypes = {
     position: PropTypes.shape({
@@ -30,6 +36,7 @@ InfoPopup.propTypes = {
     }).isRequired,
     onCloseClick: PropTypes.func.isRequired,
     onAnalyzeClick: PropTypes.func.isRequired,
+    onSaveLocation: PropTypes.func.isRequired,
   };
 
 export default InfoPopup;

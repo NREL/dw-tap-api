@@ -1,10 +1,13 @@
 import PropTypes from 'prop-types';
-import { BookmarkBorder, Schedule, HelpOutline, Email } from '@mui/icons-material';
-import { Divider, Drawer, List, ListItemIcon, ListItemText, Box, ListItemButton } from '@mui/material';
+import { BookmarkBorder, Schedule, HelpOutline, Email, Clear } from '@mui/icons-material';
+import { Divider, Drawer, List, ListItemIcon, ListItemText, Box, ListItemButton, IconButton } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { Link } from 'react-router-dom';
 
-function SideBar({ openSideBar, toggleSidebar, setLocation, savedLocations, recentSearches }) {
+function SideBar({ openSideBar, toggleSidebar, 
+  setLocation, 
+  savedLocations, deleteSavedLocation, 
+  recentSearches, deleteRecentLocation }) {
 
   const TrimmedListItemText = styled(ListItemText)({
     '.MuiTypography-root': {
@@ -61,10 +64,25 @@ function SideBar({ openSideBar, toggleSidebar, setLocation, savedLocations, rece
             <ListItemButton
               key={"saved_searches" + idx}
               onClick={() => setLocation({ lat: location.lat, lng: location.lng})}
+              sx={{ pr: 2, '&:hover .delete-icon': { display: 'block' } }}
             >
               <TrimmedListItemText 
                 primary={location.name}
                 />
+              <IconButton
+                edge="end"
+                aria-label='delete'
+                className='delete-icon'
+                sx={{
+                  display: 'none',
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  deleteSavedLocation(idx);
+                }}
+              >
+                <Clear />
+              </IconButton>
             </ListItemButton>
           ))}
           <Divider />
@@ -81,10 +99,25 @@ function SideBar({ openSideBar, toggleSidebar, setLocation, savedLocations, rece
             <ListItemButton 
               key={"recent_searches" + idx}
               onClick={() => setLocation({ lat: location.lat, lng: location.lng})}
+              sx={{ pr: 2, '&:hover .delete-icon': { display: 'block' } }}
             >
               <TrimmedListItemText 
                 primary={location.name}
                 />
+              <IconButton
+                edge="end"
+                aria-label='delete'
+                className='delete-icon'
+                sx={{
+                  display: 'none',
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  deleteRecentLocation(idx);
+                }}
+              >
+                <Clear />
+              </IconButton>
             </ListItemButton>
           ))}
         </List>
@@ -104,6 +137,7 @@ SideBar.propTypes = {
       name: PropTypes.string.isRequired,
     })
   ).isRequired,
+  deleteSavedLocation: PropTypes.func.isRequired,
   recentSearches: PropTypes.arrayOf(
     PropTypes.shape({
       lat: PropTypes.number.isRequired,
@@ -111,6 +145,7 @@ SideBar.propTypes = {
       name: PropTypes.string.isRequired,
     })
   ).isRequired,
+  deleteRecentLocation: PropTypes.func.isRequired,
 };
 
 export default SideBar;
