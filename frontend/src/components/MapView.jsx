@@ -119,10 +119,6 @@ const MapView = () => {
         });
     };
 
-    const handleAnalyzeData = () => {
-        console.log("Analyzing Wind Data for coordinates:", infoWindowPosition);
-    };
-
     const handleSaveLocation = () => {
         const formattedLat = infoWindowPosition.lat.toFixed(2);
         const formattedLng = infoWindowPosition.lng.toFixed(2);
@@ -171,7 +167,6 @@ const MapView = () => {
                         <InfoPopup
                             position={infoWindowPosition}
                             onCloseClick={() => setInfoWindowVisible(false)}
-                            onAnalyzeClick={handleAnalyzeData}
                             onSaveLocation={handleSaveLocation}
                         />
                     )}

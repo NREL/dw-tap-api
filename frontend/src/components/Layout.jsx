@@ -3,6 +3,7 @@ import { Outlet, Link as RouterLink } from 'react-router-dom';
 import { Link, Box } from '@mui/material';
 import { useState } from 'react';
 import Settings from './Settings';
+import Results from './Results';
 
 function Layout() {
     // const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/';
@@ -12,6 +13,9 @@ function Layout() {
     const [openSettings, setOpenSettings] = useState(false);
     const handleOpenSettings = () => setOpenSettings(true);
     const handleCloseSettings = () => setOpenSettings(false);
+    const [openResults, setOpenResults] = useState(false);
+    const handleOpenResults = () => setOpenResults(true);
+    const handleCloseResults = () => setOpenResults(false);
 
     return (
         <div>
@@ -27,10 +31,11 @@ function Layout() {
             />
             
             <Box sx={{ name: "content-box", minHeight: "80vh", height: 80, bgcolor: 'white', color: 'black' }}>
-                <Outlet context={{ handleOpenSettings }} />
+                <Outlet context={{ handleOpenSettings, handleOpenResults }} />
             </Box>
             <Footer />
             <Settings openSettings={openSettings} handleClose={handleCloseSettings} />
+            <Results openResults={openResults} handleClose={handleCloseResults} />
         </div>
     )
 }

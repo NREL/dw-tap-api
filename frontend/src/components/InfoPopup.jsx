@@ -1,8 +1,14 @@
 import { InfoWindowF } from '@react-google-maps/api';
 import { Box, Typography, Button } from '@mui/material';
 import PropTypes from 'prop-types';
+import { useOutletContext } from 'react-router-dom';
 
-const InfoPopup = ({ position, onCloseClick, onAnalyzeClick, onSaveLocation }) => {
+const InfoPopup = ({ position, onCloseClick, onSaveLocation }) => {
+    const { handleOpenResults } = useOutletContext();
+    const handleAnalyzeDataClick = () => {
+        onCloseClick();
+        handleOpenResults();
+    }
     return (
         <InfoWindowF position={position} onCloseClick={onCloseClick}>
             <Box>
@@ -20,7 +26,7 @@ const InfoPopup = ({ position, onCloseClick, onAnalyzeClick, onSaveLocation }) =
                     <Button variant="contained" 
                         color="primary" 
                         size='small'
-                        onClick={onAnalyzeClick}>
+                        onClick={handleAnalyzeDataClick}>
                         Analyze Data
                     </Button>
                 </Box>
@@ -35,7 +41,6 @@ InfoPopup.propTypes = {
       lng: PropTypes.number.isRequired,
     }).isRequired,
     onCloseClick: PropTypes.func.isRequired,
-    onAnalyzeClick: PropTypes.func.isRequired,
     onSaveLocation: PropTypes.func.isRequired,
   };
 
