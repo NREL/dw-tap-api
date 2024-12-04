@@ -139,7 +139,13 @@ const MapView = () => {
     };
 
     if (!isLoaded) {
-        return <div>Loading...</div>;
+        return (
+            <Backdrop open={true}
+                sx={(theme) => ({ color: '#fff', zIndex: theme.zIndex.drawer + 1 })}
+            >
+                <CircularProgress color="inherit" />
+            </Backdrop>
+        );
     }
 
     return (
@@ -148,7 +154,7 @@ const MapView = () => {
                 width: '100%', justifyContent: 'center', top: 0}}>
                 <SearchBar onPlaceSelected={handlePlaceSelected} toggleDrawer={toggleDrawer} />
             </Box>
-            {position ? (
+            {position &&
                 <GoogleMap
                     zoom={zoom}
                     center={position || defaultCenter}
@@ -171,13 +177,7 @@ const MapView = () => {
                         />
                     )}
                 </GoogleMap>
-            ) : (
-                <Backdrop
-                    sx={(theme) => ({ color: '#fff', zIndex: theme.zIndex.drawer + 1 })}
-                >
-                    <CircularProgress color="inherit" />
-                </Backdrop>
-            )}
+            }
             <SideBar
                 openSideBar={openSideBar}
                 toggleSidebar={toggleDrawer}
