@@ -1,37 +1,111 @@
-import { Modal } from "@mui/material";
+import { Modal, Box, Accordion, AccordionSummary, AccordionDetails, Typography, Link, ListItem, ListItemText, Grid2 } from "@mui/material";
+import { ExpandMore } from "@mui/icons-material";
 import PropTypes from 'prop-types';
+import ResultCard from "./ResultCard";
 
-const Results = ({ openResults, handleClose }) => {
-    const results = [
+const Results = ({ openResults, handleClose,  currentPosition, hubHeight, powerCurve}) => {
+
+    const settingOptions = [
         {
-            title: "Title 1",
-            description: "Description 1",
+            title: "Selected location (lat, lon)",
+            data: currentPosition && currentPosition.lat && currentPosition.lng ? 
+                `${currentPosition.lat}, ${currentPosition.lng}` : "Not selected"
         },
         {
-            title: "Title 2",
-            description: "Description 2",
+            title: "Selected hub height",
+            data: hubHeight ? `${hubHeight} meters` : "Not selected"
         },
         {
-            title: "Title 3",
-            description: "Description 3",
-        },
+            title: "Selected power curve",
+            data: powerCurve ? `nrel-reference-${powerCurve}kW` : "Not selected"
+        }
     ];
+
+    const resultCardData = [
+        {
+            title: "Wind Resource 1",
+            subheader: "Details about wind resource 1",
+            data: "Data for wind resource 1",
+            details: ["Detail 1", "Detail 2", "Detail 3"]
+        },
+        {
+            title: "Wind Resource 2",
+            subheader: "Details about wind resource 2",
+            data: "Data for wind resource 2",
+            details: ["Detail 1", "Detail 2", "Detail 3"]
+        },
+        {
+            title: "Wind Resource 3",
+            subheader: "Details about wind resource 3",
+            data: "Data for wind resource 3",
+            details: ["Detail 1", "Detail 2", "Detail 3"]
+        }
+    ];
+
     return (
         <Modal open={openResults} onClose={handleClose}>
-        <div>
-        {results.map((result, index) => (
-            <div key={index}>
-            <h3>{result.title}</h3>
-            <p>{result.description}</p>
-            </div>
-        ))}
-        </div>
+            <Box sx={{ 
+            position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', 
+            width:800, minWidth: 600, bgcolor: 'background.paper', p: 4 }}>
+                <Accordion>
+                    <AccordionSummary
+                        expandIcon={<ExpandMore />}
+                        aria-controls="summary-panel-content"
+                        id="summary-panel-header"
+                        bgcolor="primary.main"
+                    >
+                        <Typography variant="h5">Summary</Typography>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                        <Typography variant="body1" gutterBottom>
+                            Analysis presented below was performed using summary data from&nbsp;
+                            <Link href="https://www.energy.gov/eere/wind/articles/new-wind-resource-database-includes-updated-wind-toolkit"
+                                underline="hover" target="_blank" rel="noopener noreferrer">
+                                NREL&apos;s 20-year WTK-LED dataset
+                            </Link>&nbsp;using the following options:
+                        </Typography>
+                        <Grid2 container spacing={2}>
+                            {settingOptions.map((option, index) => (
+                                <Grid2 xs={12} sm={6} md={3} key={'setting_option_' + index}>
+                                    <ListItem sx={{ 
+                                        borderRadius: 1,
+                                        boxShadow: 3 }}>
+                                        <ListItemText primary={option.title} secondary={option.data} />
+                                    </ListItem>
+                                </Grid2>
+                            ))}
+                        </Grid2>
+                        
+                        <Grid2 container spacing={2}>
+                            {resultCardData.map((data, index) => (
+                                <Grid2 xs={12} sm={6} md={3} key={'result_card_' + index}>
+                                    <ResultCard data={data} />
+                                </Grid2>
+                            ))}
+                        </Grid2>
+                        <Typography variant="body2" color="textSecondary" marginTop={2}>
+                            Disclaimer: This summary represents a PRELIMINARY analysis. 
+                            Research conducted at national laboratories suggests that 
+                            multiple models should be used for more thorough analysis. 
+                            Reach out to a qualified installer for a refined estimate.
+                        </Typography>
+                    </AccordionDetails>
+                </Accordion>
+            </Box>
+
         </Modal>
     );
 };
+
 Results.propTypes = {
     openResults: PropTypes.bool.isRequired,
     handleClose: PropTypes.func.isRequired,
+    currentPosition: PropTypes.shape({
+        lat: PropTypes.number,
+        lng: PropTypes.number
+    }),
+    hubHeight: PropTypes.number,
+    powerCurve: PropTypes.number
 };
 
 export default Results;

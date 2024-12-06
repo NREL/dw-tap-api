@@ -13,9 +13,16 @@ function Layout() {
     const [openSettings, setOpenSettings] = useState(false);
     const handleOpenSettings = () => setOpenSettings(true);
     const handleCloseSettings = () => setOpenSettings(false);
+
+    // Results modal states
     const [openResults, setOpenResults] = useState(false);
     const handleOpenResults = () => setOpenResults(true);
     const handleCloseResults = () => setOpenResults(false);
+
+    // Settings modal states
+    const [currentPosition, setCurrentPosition] = useState(null);
+    const [hubHeight, setHubHeight] = useState(30);
+    const [powerCurve, setPowerCurve] = useState(100);
 
     return (
         <div>
@@ -31,11 +38,29 @@ function Layout() {
             />
             
             <Box sx={{ name: "content-box", minHeight: "80vh", height: 80, bgcolor: 'white', color: 'black' }}>
-                <Outlet context={{ handleOpenSettings, handleOpenResults }} />
+                <Outlet context={{ 
+                    handleOpenSettings, 
+                    handleOpenResults, 
+                    currentPosition,
+                    setCurrentPosition,
+                    }} />
             </Box>
             <Footer />
-            <Settings openSettings={openSettings} handleClose={handleCloseSettings} />
-            <Results openResults={openResults} handleClose={handleCloseResults} />
+            <Settings 
+                openSettings={openSettings} 
+                handleClose={handleCloseSettings} 
+                hubHeight={hubHeight}
+                setHubHeight={setHubHeight}
+                powerCurve={powerCurve}
+                setPowerCurve={setPowerCurve}
+                />
+            <Results 
+                openResults={openResults} 
+                handleClose={handleCloseResults}
+                currentPosition={currentPosition}
+                hubHeight={hubHeight}
+                powerCurve={powerCurve}
+                />
         </div>
     )
 }

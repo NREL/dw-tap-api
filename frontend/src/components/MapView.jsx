@@ -1,15 +1,16 @@
-import { GoogleMap, useJsApiLoader, InfoWindow, InfoWindowF } from "@react-google-maps/api";
+import { GoogleMap, useJsApiLoader } from "@react-google-maps/api";
 import { useEffect, useState } from "react";
 import SearchBar from "./SearchBar";
 import { Box, Backdrop, CircularProgress } from "@mui/material";
 import SideBar from "./Sidebar";
 import InfoPopup from "./InfoPopup";
+import { useOutletContext } from "react-router-dom";
 
 const libraries = ['places', 'marker'];
 
 const MapView = () => {
 
-    const [position, setPosition] = useState(null);
+    const { currentPosition, setCurrentPosition } = useOutletContext();
     const [zoom, setZoom] = useState(8);
     const defaultCenter = { lat: 39.7392, lng: -104.9903 };
     const [map, setMap] = useState(null);
@@ -50,7 +51,7 @@ const MapView = () => {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
-                    setPosition({
+                    setCurrentPosition({
                         lat: position.coords.latitude,
                         lng: position.coords.longitude,
                     });
@@ -63,19 +64,19 @@ const MapView = () => {
     }, []);
 
     useEffect(() => {
-        if (isLoaded && map && position && google.maps) {
+        if (isLoaded && map && currentPosition && google.maps) {
             const { AdvancedMarkerElement } = google.maps.marker;
             if (marker) {
                 marker.setMap(null);
             }
             const advancedMarker = new AdvancedMarkerElement({
-                position: position,
+                position: currentPosition,
                 map: map,
                 title: 'Default Location',
             });
             setMarker(advancedMarker);
         }
-    }, [position]);
+    }, [currentPosition]);
 
     const handlePlaceSelected = (place) => {
         handleSetLocation({
@@ -91,7 +92,7 @@ const MapView = () => {
     }
 
     const handleSetLocation = (location) => {
-        setPosition({
+        setCurrentPosition({
             lat: location.lat,
             lng: location.lng,
         });
@@ -154,10 +155,10 @@ const MapView = () => {
                 width: '100%', justifyContent: 'center', top: 0}}>
                 <SearchBar onPlaceSelected={handlePlaceSelected} toggleDrawer={toggleDrawer} />
             </Box>
-            {position &&
+            {currentPosition &&
                 <GoogleMap
                     zoom={zoom}
-                    center={position || defaultCenter}
+                    center={currentPosition || defaultCenter}
                     mapContainerStyle={{ height: "100%", width: "100%" }}
                     onLoad={(map) => { 
                         setMap(map);
