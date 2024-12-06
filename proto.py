@@ -578,7 +578,7 @@ def serve_data_request(data):
         #uncertainty_data = udf.to_html(classes="detailed_yearly_table")
 
         # new addition: summary of observational data
-        observations = locate_nearest_obs_sites("./obs/met_tower_obs_summary.geojson", \
+        observations = locate_nearest_obs_sites(["./obs/met_tower_obs_summary.geojson", "./obs/vendor_obs_summary.geojson"], \
             float(data["lat"]), float(data["lon"]), float(data["height"])).to_html(index=False)
 
         with open(output_dest, 'w') as f:
