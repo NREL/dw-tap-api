@@ -1,0 +1,17 @@
+ version: '3.9'
+ services:
+
+   dashboard:
+     build: 
+       context: ./
+     container_name: tap-api
+     hostname: tap-api
+     restart: always
+     ports:
+       - 8080:80
+     networks:
+       - network 
+
+ networks:
+   network:
+     driver: bridge
