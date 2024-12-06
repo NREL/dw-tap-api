@@ -1,5 +1,6 @@
-import { Box, Modal, Typography, Slider, Radio, RadioGroup, FormControlLabel, FormControl } from '@mui/material';
+import { Box, Modal, Typography, Slider, Radio, RadioGroup, FormControlLabel, FormControl, IconButton } from '@mui/material';
 import PropTypes from 'prop-types';
+import { Close } from '@mui/icons-material';
 
 const powerCurveOptions = [
   2.5, 100, 250, 2000
@@ -30,6 +31,17 @@ const Settings = ({ openSettings, handleClose, hubHeight, setHubHeight, powerCur
       <Box sx={{ 
           position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', 
           width: 400, bgcolor: 'background.paper', p: 4 }}>
+        <IconButton
+            aria-label="close"
+            onClick={handleClose}
+            sx={{
+                position: 'absolute',
+                right: 8,
+                top: 8,
+            }}
+        >
+            <Close />
+        </IconButton>
         <Typography id="settings-modal-title" variant="h5" component="h2">
           Settings
         </Typography>

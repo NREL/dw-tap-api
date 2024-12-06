@@ -1,7 +1,8 @@
 import { Modal, Box, Accordion, AccordionSummary, AccordionDetails, Typography, Link, ListItem, ListItemText, Grid2 } from "@mui/material";
-import { ExpandMore } from "@mui/icons-material";
+import { ExpandMore, Close } from "@mui/icons-material";
 import PropTypes from 'prop-types';
 import ResultCard from "./ResultCard";
+import { IconButton } from "@mui/material";
 
 const Results = ({ openResults, handleClose,  currentPosition, hubHeight, powerCurve}) => {
 
@@ -47,7 +48,18 @@ const Results = ({ openResults, handleClose,  currentPosition, hubHeight, powerC
             <Box sx={{ 
             position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', 
             width:800, minWidth: 600, bgcolor: 'background.paper', p: 4 }}>
-                <Accordion>
+                <IconButton
+                    aria-label="close"
+                    onClick={handleClose}
+                    sx={{
+                        position: 'absolute',
+                        right: 8,
+                        top: 8,
+                    }}
+                >
+                    <Close />
+                </IconButton>
+                <Accordion sx={{ mt: 3}} >
                     <AccordionSummary
                         expandIcon={<ExpandMore />}
                         aria-controls="summary-panel-content"
