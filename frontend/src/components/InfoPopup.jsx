@@ -11,10 +11,10 @@ const InfoPopup = ({ position, onCloseClick, onSaveLocation }) => {
     }
     return (
         <InfoWindowF position={position} onCloseClick={onCloseClick}>
-            <Box>
+            <Box minWidth={300}>
                 <Typography variant="h5" gutterBottom>Selected Location</Typography>
                 <Typography variant="body2" marginBottom={3}>
-                    Coordinates: ({position.lat}, {position.lng})
+                    Coordinates: ({position.lat.toFixed(3)}, {position.lng.toFixed(3)})
                 </Typography>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
                     <Button variant="contained" 

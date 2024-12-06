@@ -7,9 +7,9 @@ const Results = ({ openResults, handleClose,  currentPosition, hubHeight, powerC
 
     const settingOptions = [
         {
-            title: "Selected location (lat, lon)",
+            title: "Selected location (lat, lng)",
             data: currentPosition && currentPosition.lat && currentPosition.lng ? 
-                `${currentPosition.lat}, ${currentPosition.lng}` : "Not selected"
+                `${currentPosition.lat.toFixed(3)}, ${currentPosition.lng.toFixed(3)}` : "Not selected"
         },
         {
             title: "Selected hub height",
@@ -57,7 +57,7 @@ const Results = ({ openResults, handleClose,  currentPosition, hubHeight, powerC
                         <Typography variant="h5">Summary</Typography>
                     </AccordionSummary>
                     <AccordionDetails>
-                        <Typography variant="body1" gutterBottom>
+                        <Typography variant="body1" marginBottom={3}>
                             Analysis presented below was performed using summary data from&nbsp;
                             <Link href="https://www.energy.gov/eere/wind/articles/new-wind-resource-database-includes-updated-wind-toolkit"
                                 underline="hover" target="_blank" rel="noopener noreferrer">
@@ -69,7 +69,8 @@ const Results = ({ openResults, handleClose,  currentPosition, hubHeight, powerC
                                 <Grid2 xs={12} sm={6} md={3} key={'setting_option_' + index}>
                                     <ListItem sx={{ 
                                         borderRadius: 1,
-                                        boxShadow: 3 }}>
+                                        boxShadow: 3,
+                                        minWidth: 200 }}>
                                         <ListItemText primary={option.title} secondary={option.data} />
                                     </ListItem>
                                 </Grid2>
