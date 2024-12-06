@@ -21,6 +21,7 @@ import matplotlib.pyplot as plt
 matplotlib.use('agg')
 
 from dw_tap.data_fetching import getData
+from dw_tap.observations import locate_nearest_obs_sites
 from v2 import validated_params_v2_w_year
 from v2 import validated_params_v2
 from v2 import validated_latlon
@@ -576,9 +577,14 @@ def serve_data_request(data):
 
         #uncertainty_data = udf.to_html(classes="detailed_yearly_table")
 
+        # new addition: summary of observational data
+        observations = locate_nearest_obs_sites(["./obs/met_tower_obs_summary.geojson", "./obs/vendor_obs_summary.geojson"], \
+            float(data["lat"]), float(data["lon"]), float(data["height"])).to_html(index=False)
+
         with open(output_dest, 'w') as f:
             json.dump({"wtk_led_summary": summary, "wtk_led_windresource": windresource,
-                "wtk_led_energyproduction": energyproduction}, #, \
+                "wtk_led_energyproduction": energyproduction,
+                "observations": observations}, #, \
                 #"uncertainty_summary": uncertainty_summary, \
                 #"uncertainty_data": uncertainty_data},\
             f)
@@ -605,6 +611,49 @@ def serve_1224():
         relevant_columns_only=False) # Show all columns/data instead of a subset
     return df_1224_20years.to_csv(index=False)
 
+
+def serve_windwatts_api_request_windspeed(req):
+
+    if "lon" in req:
+        lon = req["lon"]
+    else:
+        return error2json("'lon', which is a required field of windwatts-api-request-windspeed, is missing.")
+
+    if "lat" in req:
+        lat = req["lat"]
+    else:
+        return error2json("'lat', which is a required field of windwatts-api-request-windspeed, is missing.")
+
+    if "height" in req:
+        height = req["height"]
+    else:
+        return error2json("'height', which is a required field of windwatts-api-request-windspeed, is missing.")
+
+    # ToDo: tweak the fetching code to use height
+
+    try:
+        point = closest_grid_point(wtkled_index, lat, lon)
+        df_1224_20years = get_1224_20yrs(point['index'],
+            ws_col_for_estimating_power="nonexistent_column", # This helps avoid power estimation
+            selected_powercurve=None, # No power estimation
+            relevant_columns_only=False) # Show all columns/data instead of a subset
+
+        return json.dumps({"data": str(df_1224_20years.columns)})
+        #return json.dumps({"data": df_1224_20years.to_csv(index=False),\
+        #                   "status": 0})
+    except Exception as e:
+        return error2json("Error in fetching wind data (WTK-LED 12x24). Error: " + str(e))
+
+def serve_windwatts_api_request_windenergy(req):
+    return "Serving wind energy: " + str(req)
+
+def error2json(msg, status=1):
+    """ Always serve error messages as json with 'message' and (non-zero) 'status' """
+    return json.dumps({"message": msg,\
+                       "status": status})
+
+
+
 # API endpoint for batch requests -- early version
 @app.route('/batch', methods=['GET'])
 def serve_batch():
@@ -613,25 +662,33 @@ def serve_batch():
     Access it at using URL: <hostname>:<port>/batch with attached json via GET method
     """
 
-    # Consider: always serving a json as a response, with "error" keys pointing to empty or non-empty strings
-
     if request.method == 'GET':
         if not request.data:
-            return "This endpoint is expecting request data wrapped in a JSON object." # Maybe add link to a page with API doc
+            return error2json("This endpoint is expecting request data wrapped in a JSON object.") # Maybe add link to a page with API doc
 
         try:
             req_json = json.loads(request.data)
         except Exception as e:
-            return "JSON parsing error. Make sure valid JSON is used. Error: " + str(e)
+            return error2json("JSON parsing error. Make sure valid JSON is used. Error: " + str(e))
 
-        if 'windwatts-api-request' not in req_json:
-            return "Required key is missing in provided JSON: windwatts-api-request."
-        else:
-            return type(req_json["windwatts-api-request"])
+        if ("windwatts-api-request-windspeed" not in req_json) and ("windwatts-api-request-windsenergy" not in req_json):
+            return error2json("Supported types of requests: windwatts-api-request-windspeed, windwatts-api-request-windenergy. Neither was selected in the submitted JSON")
 
-        return req_json
+        res = []
+
+        # Process windspeed requests first, energy requests second (this will allow caching of results of the windspeed requests)
+
+        if 'windwatts-api-request-windspeed' in req_json:
+            for r in req_json["windwatts-api-request-windspeed"]:
+                res.append(serve_windwatts_api_request_windspeed(r))
+
+        if 'windwatts-api-request-windenergy' in req_json:
+            for r in req_json["windwatts-api-request-windenergy"]:
+                res.append(serve_windwatts_api_request_windenergy(r))
+
+        return res
     else:
-        return "Use GET method with this endpoint."
+        return error2json("Use GET method with this endpoint.")
 
 
 # API/documentation route -- not working now because apiDoc isn't working for buildings docs (deprecated)

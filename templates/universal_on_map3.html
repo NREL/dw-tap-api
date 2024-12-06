@@ -220,7 +220,7 @@
     <button class="accordion">About WindWatts</button>
     <div class="panel">
       <br>
-      <label for="fname">Read more about the tool at: <a href="https://www.nrel.gov/wind/tools-assessing-performance.html" target="_blank" rel="noopener noreferrer">WindWatts page</a>.</label>
+      <label for="fname">Read more about the tool at: <a href="https://www.nrel.gov/wind/windwatts.html" target="_blank" rel="noopener noreferrer">WindWatts page</a>.</label>
       <div class="vspace"></div>
       <div class="vspace"></div>
     </div>
@@ -272,7 +272,7 @@
       </tr>
       <tr>
         <br>
-        <td><a id="more_info" href="https://www.nrel.gov/wind/tools-assessing-performance.html" target="_blank" rel="noopener noreferrer">
+        <td><a id="more_info" href="https://www.nrel.gov/wind/windwatts.html" target="_blank" rel="noopener noreferrer">
           Read more about WindWatts</a></td>
       </tr>
     </table>
@@ -514,6 +514,13 @@
             $('#results_accordion_wrapper').append( '<button class="results_accordion">Energy Production</button>');
             $('#results_accordion_wrapper').append( '<div class="results_panel energyproduction_panel"></div>' );
             $('#results_accordion_wrapper .energyproduction_panel').append( '<div id="contents">' + get["wtk_led_energyproduction"] + '</div>');
+          }
+
+          //Temporarily disable showing of obs section
+          if ("observations" in get) {
+           $('#results_accordion_wrapper').append( '<button class="results_accordion">Nearby Observations</button>');
+           $('#results_accordion_wrapper').append( '<div class="results_panel observations_panel"></div>' );
+           $('#results_accordion_wrapper .observations_panel').append( '<div id="contents">' + get["observations"] + '</div>');
           }
 
           //if ("uncertainty_summary" in get) {

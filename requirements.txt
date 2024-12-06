@@ -19,4 +19,6 @@ eccodes==1.2.0
 descartes
 joblib
 windrose
+appfleet-pipeline
+cfgrib
 tqdm
