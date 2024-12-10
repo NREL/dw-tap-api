@@ -1,13 +1,21 @@
-FROM node:18-alpine
+FROM node:18-slim
 
 WORKDIR /app
 
-EXPOSE 3000
+RUN apt-get update && \
+  apt-get install -y build-essential
 
-COPY package.json package-lock.json ./
+ENV YARN_IGNORE_OPTIONAL false
 
-RUN yarn install --silent
+COPY package.json yarn.lock ./
 
-COPY . ./
+RUN yarn --frozen-lockfile
 
-CMD ["yarn", "start"]
+# Debug: Check if the module is installed
+RUN ls -R node_modules/@rollup || echo "Module not found"
+
+COPY . .
+
+EXPOSE 5173
+
+CMD ["npm", "run", "dev"]
