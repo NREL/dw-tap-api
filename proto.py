@@ -579,7 +579,7 @@ def serve_data_request(data):
 
         # new addition: summary of observational data
         observations = locate_nearest_obs_sites(["./obs/met_tower_obs_summary.geojson", "./obs/vendor_obs_summary.geojson"], \
-            float(data["lat"]), float(data["lon"]), float(data["height"])).to_html(index=False)
+            float(data["lat"]), float(data["lon"]), float(data["height"]))
 
         with open(output_dest, 'w') as f:
             json.dump({"wtk_led_summary": summary, "wtk_led_windresource": windresource,
