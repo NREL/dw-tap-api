@@ -1,0 +1,28 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "5173:5173"
+    # Mount the code so changes are immediately reflected
+    volumes:
+      - ./frontend:/app
+    platform: linux/amd64
+    env_file:
+      - ./frontend/.env.development
+    command: ["yarn", "dev", "--host"]
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend:/app
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_RUN_PORT=5000
+      - FLASK_ENV=development
+    command: ["flask", "run", "--host=0.0.0.0", "--port=5000"]
