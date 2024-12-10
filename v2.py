@@ -50,6 +50,33 @@ def validated_params_v2(request):
 
     return height, lat, lon
 
+def validated_latlon(request):
+    try:
+        # Entire request is passed
+        args = request.args
+    except:
+        # Request's args are passed
+        args = request
+
+    if 'lat' in args:
+        try:
+            lat = float(args['lat'])
+        except ValueError:
+            raise InvalidUsage(("Lat (latitude) provided is invalid."
+                                "Needs to be a number."))
+    else:
+        raise InvalidUsage("Lat (latitude) is not provided.")
+
+    if 'lon' in args:
+        try:
+            lon = float(args['lon'])
+        except ValueError:
+            raise InvalidUsage(("Lon (longitude) provided is invalid."
+                                "Needs to be a number."))
+    else:
+        raise InvalidUsage("Lon (longitude) is not provided.")
+
+    return lat, lon
 
 def validated_params_v2_w_year(request):
     try:

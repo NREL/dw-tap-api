@@ -16,3 +16,6 @@ templates/ts_index.html
 templates/monthly_index.html
 static/plots/*
 static/completed/*
+templates/on_map3.html
+awscodebuild/.aws/
+awscodebuild/imageDetail.json

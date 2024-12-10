@@ -55,8 +55,9 @@ class PowerCurve(object):
         below_curve = df[kw < 0]
         above_curve = df[kw > self.max_ws]
 
-        self.below_curve.extend(zip(below_curve[dt_column].tolist(), below_curve[ws_column].tolist()))
-        self.above_curve.extend(zip(above_curve[dt_column].tolist(), above_curve[ws_column].tolist()))
+        if dt_column in df.columns:
+            self.below_curve.extend(zip(below_curve[dt_column].tolist(), below_curve[ws_column].tolist()))
+            self.above_curve.extend(zip(above_curve[dt_column].tolist(), above_curve[ws_column].tolist()))
 
         return kw
 

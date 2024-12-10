@@ -1,7 +1,7 @@
 {
-  "name": "DW-TAP API",
+  "name": "WindWatts API",
   "version": "1.0.0",
-  "description": "API for NREL's DW-TAP Project",
-  "title": "DW-TAP API",
-  "url" : "https://dw-tap.hpc.nrel.gov/v1"
+  "description": "API for NREL's WindWatts Tool",
+  "title": "WindWatts API",
+  "url" : "https://dw-tap.nrel.gov/api"
 }

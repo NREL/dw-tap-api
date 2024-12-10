@@ -1,5 +1,5 @@
-# Use a minimal image
-FROM python:3.11.7
+# Update base image for KEV CVE-2024-36971  
+FROM python:3.11.10
 
 LABEL MAINTAINER="Dmitry Duplyakin <dmitry.duplyakin@nrel.gov>"
 
@@ -58,5 +58,4 @@ EXPOSE 80
 #CMD ["python", "proto.py", "--production"]
 
 # Version that allows following a file with out and err messages
-CMD ["/bin/bash", "-c", "python proto.py --production >> proto.out 2>&1"]
-
+CMD ["/bin/bash", "-c", "python proto.py --production 2>&1"]
