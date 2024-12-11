@@ -4,13 +4,15 @@
     "lat": 39.74,
     "lon": -105.16,
     "height": 40,
-    "dataset": "wtk-led-1224"
+    "dataset": "wtk-led-1224",
+    "output": "avg"
   },
   {
     "lat": 39.91,
     "lon": -105.21,
     "height": 60,
-    "dataset": "wtk-led-1224"
+    "dataset": "wtk-led-1224",
+    "output": "all"
   }
   ],
 

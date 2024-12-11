@@ -640,7 +640,18 @@ def serve_windwatts_api_request_windspeed(req):
     else:
         return error2json("'height' should match exactly one of WTK-LED heights: %s." % str(height_supported_wtkled))
 
-    # ToDo: tweak the fetching code to use height
+    output_supported = ["avg", "all"]
+    if "output" in req:
+        if req["output"] in output_supported:
+            output = req["output"]
+        else:
+            return error2json("'output', which is a required field of windwatts-api-request-windspeed, needs to be one of: %s." % str(output_supported))
+    else:
+        # Default value
+        output = "all"
+
+    windspeed_col = "windspeed_" + str(int(height)) + "m"
+    cols = ["mohr", windspeed_col]
 
     try:
         point = closest_grid_point(wtkled_index, lat, lon)
@@ -649,10 +660,12 @@ def serve_windwatts_api_request_windspeed(req):
             selected_powercurve=None, # No power estimation
             relevant_columns_only=False) # Show all columns/data instead of a subset
 
-        # Debug:
-        #return json.dumps({"data": str(df_1224_20years.columns)})
-        return json.dumps({"data": df_1224_20years.to_csv(index=False),\
-                           "status": 0})
+        if output == "all":
+            res = df_1224_20years[cols].to_csv(index=False)
+        elif output == "avg":
+            res = round(df_1224_20years[windspeed_col].mean(), 2)
+
+        return json.dumps({'data': res, 'status': 0})
 
     except Exception as e:
         return error2json("Error in fetching wind data (WTK-LED 12x24). Error: " + str(e))
