@@ -20,3 +20,8 @@
   padding: 0;
   margin: 0;
 }
+
+/* needed to force the footer to comply with it's allowed space */
+.nrel-footer-wrapper footer .container {
+  max-width: 420 !important;
+}
