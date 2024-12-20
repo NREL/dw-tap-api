@@ -1,7 +1,6 @@
 .DS_Store
 __pycache__
 dist/
-dw_tap.egg-info/
 saved.png
 templates/served/*
 outputs/*
@@ -19,3 +18,13 @@ static/completed/*
 templates/on_map3.html
 
 .vscode/*
+
+*.swp
+package-lock.json
+.pytest_cache
+.venv
+*.egg-info
+
+# CDK asset staging directory
+.cdk.staging
+cdk.out

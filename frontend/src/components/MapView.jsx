@@ -2,8 +2,6 @@ import { GoogleMap, useJsApiLoader } from "@react-google-maps/api";
 import { useCallback, useEffect, useState } from "react";
 import SearchBar from "./SearchBar";
 import { Box, Backdrop, CircularProgress } from "@mui/material";
-import SideBar from "./Sidebar";
-import InfoPopup from "./InfoPopup";
 import { useOutletContext } from "react-router-dom";
 
 const libraries = ["places", "marker"];
@@ -15,13 +13,7 @@ const MapView = () => {
   const [map, setMap] = useState(null);
   const [marker, setMarker] = useState(null);
   const [infoWindowPosition, setInfoWindowPosition] = useState(null);
-  const [infoWindowVisible, setInfoWindowVisible] = useState(false);
 
-  // Sidebar States
-  const [openSideBar, setOpenSideBar] = useState(false);
-  const toggleDrawer = () => {
-    setOpenSideBar(!openSideBar);
-  };
   const [savedLocations, setSavedLocations] = useState([
     {
       name: "Location 1",
@@ -164,10 +156,7 @@ const MapView = () => {
           top: 0,
         }}
       >
-        <SearchBar
-          onPlaceSelected={handlePlaceSelected}
-          toggleDrawer={toggleDrawer}
-        />
+        <SearchBar onPlaceSelected={handlePlaceSelected} />
       </Box>
       {currentPosition && (
         <GoogleMap
@@ -181,25 +170,8 @@ const MapView = () => {
             mapId: import.meta.env.VITE_MAP_ID,
             gestureHandling: "greedy",
           }}
-        >
-          {/* {infoWindowVisible && infoWindowPosition && (
-            <InfoPopup
-              position={infoWindowPosition}
-              onCloseClick={() => setInfoWindowVisible(false)}
-              onSaveLocation={handleSaveLocation}
-            />
-          )} */}
-        </GoogleMap>
+        ></GoogleMap>
       )}
-      <SideBar
-        openSideBar={openSideBar}
-        toggleSidebar={toggleDrawer}
-        setLocation={handleSetLocation}
-        savedLocations={savedLocations}
-        recentSearches={recentSearches}
-        deleteRecentLocation={deleteRecentLocation}
-        deleteSavedLocation={deleteSavedLocation}
-      />
     </Box>
   );
 };

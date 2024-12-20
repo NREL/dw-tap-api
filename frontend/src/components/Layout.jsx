@@ -1,17 +1,10 @@
 import { Footer } from "nrel-branding-react";
 import { Outlet, Link as RouterLink } from "react-router-dom";
-import {
-  Link,
-  Box,
-  AppBar,
-  Container,
-  Toolbar,
-  Typography,
-} from "@mui/material";
+import { Link, Box, AppBar, Container, Toolbar } from "@mui/material";
 import { useState } from "react";
 import Settings from "./Settings";
 import Results from "./Results";
-import FakeResults from "./FakeResults";
+import RightPane from "./RightPane";
 
 function Layout() {
   // const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/';
@@ -92,6 +85,7 @@ function Layout() {
 
         {/* Right Pane: Scrolling Content */}
         <Box
+          className="right-pane"
           sx={{
             width: 420, // Fixed width for the right pane
             bgcolor: "white",
@@ -100,8 +94,8 @@ function Layout() {
           }}
         >
           {/* Example Content */}
-          <Box sx={{ padding: 2 }}>
-            <FakeResults
+          <Box>
+            <RightPane
               openResults={openResults}
               handleClose={handleCloseResults}
               currentPosition={currentPosition}

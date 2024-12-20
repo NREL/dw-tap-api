@@ -13,22 +13,13 @@ import PropTypes from "prop-types";
 import ResultCard from "./ResultCard";
 import { getWindResourceDataByCoordinates } from "../services/api";
 
-const FakeResults = ({ currentPosition, hubHeight, powerCurve }) => {
+const RightPane = ({ currentPosition, hubHeight, powerCurve }) => {
   const { lat, lng } = currentPosition ?? {};
   const {
     isLoading,
     data: resultCardData,
     error,
   } = useSWR({ lat, lng }, getWindResourceDataByCoordinates); // cache key for this lat, lng; see https://swr.vercel.app/docs/arguments#passing-objects
-
-  // console.log(
-  //   "FakeResults: isLoading",
-  //   isLoading,
-  //   "resultCardData",
-  //   resultCardData,
-  //   "error",
-  //   error
-  // );
 
   const settingOptions = [
     {
@@ -53,7 +44,7 @@ const FakeResults = ({ currentPosition, hubHeight, powerCurve }) => {
       sx={{
         bgcolor: "background.paper",
         p: 3,
-        pt: 6,
+        pt: 2,
         "> *": {
           color: "text.primary",
         },
@@ -131,7 +122,7 @@ const FakeResults = ({ currentPosition, hubHeight, powerCurve }) => {
   );
 };
 
-FakeResults.propTypes = {
+RightPane.propTypes = {
   openResults: PropTypes.bool.isRequired,
   handleClose: PropTypes.func.isRequired,
   currentPosition: PropTypes.shape({
@@ -142,4 +133,4 @@ FakeResults.propTypes = {
   powerCurve: PropTypes.number,
 };
 
-export default FakeResults;
+export default RightPane;
