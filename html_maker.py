@@ -372,11 +372,11 @@ def energyproduction_to_html(monthly_df, yearly_df):
         	<tbody>
         		<tr>
         			<td>
-                        <span class="tooltip monthly_table_tooltip"><i class="fas fa-info-circle"></i></span>
+                        <!-- <span class="tooltip monthly_table_tooltip"><i class="fas fa-info-circle"></i></span> -->
                         <span class="production_label">Estimates <u>by month</u>:</span>
                     </td>
                     <td>
-                        <span class="tooltip yearly_table_tooltip"><i class="fas fa-info-circle"></i></span>
+                        <!-- <span class="tooltip yearly_table_tooltip"><i class="fas fa-info-circle"></i></span> -->
                         <span class="production_label">Estimates <u>by year</u>:</span>
                         </td>
         		</tr>
