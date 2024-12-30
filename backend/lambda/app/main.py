@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from mangum import Mangum
-from random_message import random_message as random_message_fn
+import utils.random_message as random_message_fn
 import requests
 
 app = FastAPI()
