@@ -1,3 +1,6 @@
 fastapi[standard]
 mangum
 requests
+boto3
+pandas
+git+https://github.com/NREL/wtk-led-client.git
