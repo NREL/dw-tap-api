@@ -1,5 +1,6 @@
 from typing import List
 from .abstract_data_fetcher import WTKDataFetcher
+from ..app.utils.data_fetcher_utils import generate_key
 
 class DatabaseDataFetcher(WTKDataFetcher):
     """
@@ -28,7 +29,7 @@ class DatabaseDataFetcher(WTKDataFetcher):
         Returns:
             dict: The data associated with the key, or None if the key does not exist.
         """
-        key = self._generate_key(lat, lon, height, yearly)
+        key = self.generate_key(lat, lon, height, yearly)
         data = self.db_manager.get_data(key)
         if data:
             self.store_data(key, data)
@@ -43,20 +44,3 @@ class DatabaseDataFetcher(WTKDataFetcher):
             data (str): The data to be stored.
         """
         self.db_manager.store_data(key, data)
-
-
-    def _generate_key(self, lat: float, lon: float, height: List[int], yearly: bool) -> str:
-        """
-        Generate a unique key for the database based on the parameters.
-
-        Args:
-            lat (float): Latitude of the location
-            lon (float): Longitude of the location
-            height (List[int]): List of heights in integer
-            yearly (bool): Boolean flag to indicate to return yearly averaged data or latest row of data
-
-        Returns:
-            str: A unique key for the database.
-        """
-        height_str = '_'.join(map(str, height))
-        return f"{lat}_{lon}_{height_str}_{'yearly' if yearly else 'latest'}"
