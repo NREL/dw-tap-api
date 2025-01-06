@@ -18,17 +18,17 @@ class DataFetcherRouter:
         """
         self.fetchers[fetcher_name] = fetcher
 
-    def fetch_data(self, source: str, params: dict):
+    def fetch_data(self, params: dict, source: str = "athena"):
         """
         Fetch data using specified data fetcher.
 
         Args:
-            fetcher_name (str): The name of the fetcher to use.
             params (dict): The parameters to pass to the fetcher, including
                 lat (float): Latitude of the location.
                 lng (float): Longitude of the location.
                 height (List[int]): List of heights in meters.
                 yearly (bool): Whether to fetch yearly averaged data.
+            source (str): The name of the fetcher to use.
 
         Returns:
             list: The fetched data as a list of dictionaries.
@@ -36,7 +36,7 @@ class DataFetcherRouter:
         fetcher = self.fetchers.get(source)
         if fetcher:
             return fetcher.fetch_data(**params)
-        return None
+        return []
 
     def fetch_data_routing(self, params: dict):
         """
