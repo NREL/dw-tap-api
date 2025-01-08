@@ -1,36 +1,20 @@
 from aws_cdk import (
-    Duration,
     Stack,
+    DockerImage,
     BundlingOptions,
     CfnOutput,
     aws_lambda as _lambda,
+    aws_apigateway as apigw,
     aws_iam as iam,
+    aws_wafv2 as waf
 )
 from constructs import Construct
 
-from aws_cdk.aws_apigatewayv2 import (
-    HttpMethod,
-    HttpApi,
-    CorsPreflightOptions,
-    CorsHttpMethod
-)
-from aws_cdk.aws_apigatewayv2_integrations import HttpLambdaIntegration
 
 class BackendStack(Stack):
 
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
-
-        # The code that defines your stack goes here
-
-        # iam role for lambda
-        lambda_role = iam.Role(
-            self, 'TapBackendLambdaExecutionRole',
-            assumed_by=iam.ServicePrincipal('lambda.amazonaws.com'),
-            managed_policies=[
-                iam.ManagedPolicy.from_aws_managed_policy_name('service-role/AWSLambdaBasicExecutionRole'),
-            ],
-        )
 
         # lambda function
         tap_backend_lambda = _lambda.Function(
@@ -38,48 +22,38 @@ class BackendStack(Stack):
             code=_lambda.Code.from_asset(
                 './lambda/',
                 bundling=BundlingOptions(
-                    image=_lambda.Runtime.PYTHON_3_8.bundling_image,
+                    image=DockerImage.from_registry('python:3.13'),
                     command=[
                         'bash', '-c',
-                        'pip install -r requirements.txt -t /asset-output && cp -au . /asset-output',
+                        'pip install -r requirements.txt --platform manylinux2014_x86_64 --only-binary=:all: -t /asset-output && cp -au . /asset-output',
                     ],
                 )
             ),
-            runtime=_lambda.Runtime.PYTHON_3_8,
+            runtime=_lambda.Runtime.PYTHON_3_13,
             handler='main.handler', # points to the app export in main.py
-            architecture=_lambda.Architecture.ARM_64,
-            role=lambda_role,
-            memory_size=128,
-            timeout=Duration.seconds(29),
         )
 
         # api gateway
-        http_api = HttpApi(
-            self, 'TapBackendApiGateway',
-            cors_preflight=CorsPreflightOptions(
-                allow_headers=["Authorization", "Content-Type"],
-                allow_origins=['*'],
-                allow_methods=[
-                    CorsHttpMethod.GET,
-                    CorsHttpMethod.OPTIONS,
-                    CorsHttpMethod.HEAD,
-                ],
-                max_age=Duration.days(10),
-            ),
+        api = apigw.LambdaRestApi(
+            self,
+            "TapAPIGateway",
+            handler=tap_backend_lambda,
         )
 
-        # api gateway integration with proxy routes
-        http_api.add_routes(
-            path="/{proxy+}",
-            methods=[HttpMethod.ANY],
-            integration=HttpLambdaIntegration(
-                "TapBackendLambdaIntegration",
-                handler=tap_backend_lambda,
-            ),
+        # Get API ID and Stage name
+        api_id = api.rest_api_id
+        stage_name = api.deployment_stage.stage_name
+
+        # Construct the ARN in the format that WAF expects
+        stage_arn = f"arn:aws:apigateway:{Stack.of(self).region}::/restapis/{api_id}/stages/{stage_name}"
+
+        waf.CfnWebACLAssociation(self, "TapWAFAssociation",
+            resource_arn=stage_arn,
+            web_acl_arn="arn:aws:wafv2:us-west-2:812847476558:regional/webacl/waf-internal-20220921/55ac28c8-d996-4c20-9946-967d42b71601"
         )
 
         # output the api url
-        CfnOutput(self, 'TapBackendApiUrl', value=http_api.url)
+        CfnOutput(self, 'TapBackendApiUrl', value=api.url)
 
 
 

@@ -12,20 +12,20 @@ const MapView = () => {
   const defaultCenter = { lat: 39.7392, lng: -104.9903 };
   const [map, setMap] = useState(null);
   const [marker, setMarker] = useState(null);
-  const [infoWindowPosition, setInfoWindowPosition] = useState(null);
+  // const [infoWindowPosition, setInfoWindowPosition] = useState(null);
 
-  const [savedLocations, setSavedLocations] = useState([
-    {
-      name: "Location 1",
-      lat: 39.74021,
-      lng: -105.162558,
-    },
-    {
-      name: "Location 2",
-      lat: 39.7407,
-      lng: -105.1686,
-    },
-  ]);
+  // const [savedLocations, setSavedLocations] = useState([
+  //   {
+  //     name: "Location 1",
+  //     lat: 39.74021,
+  //     lng: -105.162558,
+  //   },
+  //   {
+  //     name: "Location 2",
+  //     lat: 39.7407,
+  //     lng: -105.1686,
+  //   },
+  // ]);
 
   const [recentSearches, setRecentSearches] = useState([]);
 
@@ -91,11 +91,11 @@ const MapView = () => {
       lng: location.lng,
     });
     setZoom(15);
-    setInfoWindowPosition({
-      lat: location.lat,
-      lng: location.lng,
-    });
-    setInfoWindowVisible(true);
+    // setInfoWindowPosition({
+    //   lat: location.lat,
+    //   lng: location.lng,
+    // });
+    // setInfoWindowVisible(true);
   };
 
   const handleMapClick = () => {
@@ -103,7 +103,7 @@ const MapView = () => {
       marker.setMap(null);
       setMarker(null);
     }
-    setInfoWindowVisible(false);
+    // setInfoWindowVisible(false);
   };
 
   const handleMapRightClick = (e) => {
@@ -113,24 +113,24 @@ const MapView = () => {
     });
   };
 
-  const handleSaveLocation = () => {
-    const formattedLat = infoWindowPosition.lat.toFixed(2);
-    const formattedLng = infoWindowPosition.lng.toFixed(2);
-    const newLocation = {
-      name: `(${formattedLat}, ${formattedLng})`,
-      lat: infoWindowPosition.lat,
-      lng: infoWindowPosition.lng,
-    };
-    setSavedLocations([...savedLocations, newLocation]);
-  };
+  // const handleSaveLocation = () => {
+  //   const formattedLat = infoWindowPosition.lat.toFixed(2);
+  //   const formattedLng = infoWindowPosition.lng.toFixed(2);
+  //   const newLocation = {
+  //     name: `(${formattedLat}, ${formattedLng})`,
+  //     lat: infoWindowPosition.lat,
+  //     lng: infoWindowPosition.lng,
+  //   };
+  //   setSavedLocations([...savedLocations, newLocation]);
+  // };
 
-  const deleteRecentLocation = (idx) => {
-    setRecentSearches(recentSearches.filter((_, i) => i !== idx));
-  };
+  // const deleteRecentLocation = (idx) => {
+  //   setRecentSearches(recentSearches.filter((_, i) => i !== idx));
+  // };
 
-  const deleteSavedLocation = (idx) => {
-    setSavedLocations(savedLocations.filter((_, i) => i !== idx));
-  };
+  // const deleteSavedLocation = (idx) => {
+  //   setSavedLocations(savedLocations.filter((_, i) => i !== idx));
+  // };
 
   const onLoad = useCallback((map) => setMap(map), []);
 
