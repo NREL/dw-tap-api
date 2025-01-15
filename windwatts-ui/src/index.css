@@ -1,0 +1,93 @@
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  --color-light: #f8f9fa;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+/* needed to force the footer to comply with it's allowed space */
+#root {
+  .right-pane {
+    width: 420px;
+  }
+  .nrel-footer-wrapper {
+    height: unset;
+
+    footer {
+      .container {
+        max-width: 420px !important;
+      }
+    }
+
+    .col-md-4.col-lg-5 {
+      -ms-flex: 0 0 33.333333%;
+      flex: 0 0 33.333333%;
+      max-width: 33.333333%;
+    }
+
+    .col-md-8 {
+      -ms-flex: 0 0 66.666667%;
+      flex: 0 0 66.666667%;
+      max-width: 66.666667%;
+    }
+  }
+
+  @media (min-width: 992px) {
+    .right-pane {
+      width: 530px;
+    }
+    .nrel-footer-wrapper footer {
+      .container {
+        max-width: 530px !important;
+      }
+
+      .global div {
+        margin: 1em 0 0 0;
+      }
+
+      .col-md-4.col-lg-5 {
+        -ms-flex: 0 0 33.333333%;
+        flex: 0 0 33.333333%;
+        max-width: 33.333333%;
+      }
+
+      .col-lg-5 {
+        -ms-flex: 0 0 100%;
+        flex: 0 0 100%;
+        max-width: 100%;
+      }
+
+      .col-lg-3 {
+        -ms-flex: 0 0 50%;
+        flex: 0 0 50%;
+        max-width: 50%;
+      }
+
+      .justify-content-lg-start {
+        -ms-flex-pack: start !important;
+        justify-content: flex-start !important;
+      }
+
+      .flex-lg-row {
+        -ms-flex-direction: row !important;
+        flex-direction: column !important;
+      }
+    }
+  }
+}
