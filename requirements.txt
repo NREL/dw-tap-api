@@ -16,3 +16,7 @@ descartes
 joblib
 windrose
 tqdm
+boto3
+s3fs
+xarray
+zarr==2.18.2
