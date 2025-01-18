@@ -20,3 +20,5 @@ templates/on_map3.html
 awscodebuild/.aws/
 awscodebuild/imageDetail.json
 misc/.ipynb_checkpoints/
+data.csv.gz
+location_index.csv

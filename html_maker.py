@@ -392,3 +392,127 @@ def energyproduction_to_html(monthly_df, yearly_df):
         </table>
     """ % (monthly_html, yearly_html)
     return html
+
+def era5_summary_to_html(era5_global_avg, era5_closest_height_column, era5_df_avg_yearly_production):
+
+    # This version is based on:https://codepen.io/mrsahar/pen/yOVGBQ
+    # (one of tabled styles listed at: https://devdevout.com/css/css-tables, authored by: Sahar Ali Raza)
+
+    era5_df_avg_yearly_production = "{:,.0f}".format(era5_df_avg_yearly_production)
+    height = int(era5_closest_height_column.replace("ws", ""))
+
+    html = """
+    <p class="results_text">This analysis is done using hourly <a href="https://www.ecmwf.int/en/forecasts/dataset/ecmwf-reanalysis-v5" target="_blank" rel="noopener noreferrer">ERA5</a> data (2013--2023).
+    </p>
+    <br>
+    <p class="results_text">ERA5 height that is closest to the selected hub height: %d meters.
+    </p>
+    <br>
+    <div id="generic_price_table">
+    <section>
+            <div class="container">
+
+                <!--BLOCK ROW START-->
+                <div class="row">
+                    <div class="col-md-4">
+
+                    	<!--PRICE CONTENT START-->
+                        <div class="generic_content clearfix">
+
+                            <!--HEAD PRICE DETAIL START-->
+                            <div class="generic_head_price clearfix">
+
+                                <!--HEAD CONTENT START-->
+                                <div class="generic_head_content clearfix">
+
+                                	<!--HEAD START-->
+                                    <div class="head_bg"></div>
+                                    <div class="head">
+                                        <span>Average wind speed</span>
+                                    </div>
+                                    <!--//HEAD END-->
+
+                                </div>
+                                <!--//HEAD CONTENT END-->
+
+                                <!--PRICE START-->
+                                <div class="generic_price_tag clearfix">
+                                    <span class="price">
+                                        <span class="currency">%.2f</span>
+                                    </span>
+                                </div>
+                                <!--//PRICE END-->
+
+                            </div>
+                            <!--//HEAD PRICE DETAIL END-->
+
+                            <!--FEATURE LIST START-->
+                            <div class="generic_feature_list">
+                            	<ul>
+                                	<li><span>m/s, </span> meters per second</li>
+                                </ul>
+                            </div>
+                            <!--//FEATURE LIST END-->
+
+                        </div>
+                        <!--//PRICE CONTENT END-->
+
+                    </div>
+
+                    <div class="col-md-4">
+
+                    	<!--PRICE CONTENT START-->
+                        <div class="generic_content clearfix">
+
+                            <!--HEAD PRICE DETAIL START-->
+                            <div class="generic_head_price clearfix">
+
+                                <!--HEAD CONTENT START-->
+                                <div class="generic_head_content clearfix">
+
+                                	<!--HEAD START-->
+                                    <div class="head_bg"></div>
+                                    <div class="head">
+                                        <span>Energy Production</span>
+                                    </div>
+                                    <!--//HEAD END-->
+
+                                </div>
+                                <!--//HEAD CONTENT END-->
+
+                                <!--PRICE START-->
+                                <div class="generic_price_tag clearfix">
+                                    <span class="price">
+                                        <span class="currency">%s</span>
+                                    </span>
+                                </div>
+                                <!--//PRICE END-->
+
+                            </div>
+                            <!--//HEAD PRICE DETAIL END-->
+
+                            <!--FEATURE LIST START-->
+                            <div class="generic_feature_list">
+                            	<ul>
+                                	<li><span>Average kWh/year</span></li>
+                                </ul>
+                            </div>
+                            <!--//FEATURE LIST END-->
+
+                        </div>
+                        <!--//PRICE CONTENT END-->
+
+                    </div>
+                </div>
+                <!--//BLOCK ROW END-->
+
+            </div>
+        </section>
+    </div>
+    <div style="clear:both"></div>
+    <p class="era5_bottom_text"><span>
+    <a href="https://github.com/NREL/dw-tap-api/blob/master/docs/datasets_and_analysis.md#era5" target="_blank" rel="noopener noreferrer">Read more about dataset and analysis</a>.
+    </span></p>
+
+    """ % (height, era5_global_avg, era5_df_avg_yearly_production)
+    return html

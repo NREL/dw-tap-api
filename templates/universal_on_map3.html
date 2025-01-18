@@ -14,7 +14,7 @@
   <!-- Using jquery to gray out the screen when location is selected -->
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+  <!-- <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script> -->
 
   <!-- Attempting to resize results accordiong when window is resized; needs more work
   <script>
@@ -312,6 +312,7 @@
       //console.log("api_key: " + api_key);
       var script = document.createElement('script');
       script.src = 'https://maps.googleapis.com/maps/api/js?key=' + api_key + '&callback=initMap&libraries=places&loading=async';
+      //console.log(script)
       // Append the 'script' element to 'head'
       document.head.appendChild(script);
     </script>
@@ -468,6 +469,41 @@
           }[tag] || tag)
       );
 
+    // function downloadFile(url, filename) {
+    //   // Create a link element
+    //   const link = document.createElement('a');
+    //   link.href = url;
+    //   link.setAttribute('download', filename);
+    //
+    //   // Append to the body
+    //   document.body.appendChild(link);
+    //
+    //   // Simulate a click
+    //   link.click();
+    //
+    //   // Remove the link
+    //   document.body.removeChild(link);
+    // }
+
+    async function downloadFile(url, dest) {
+      //console.log("Inside downloadFile()")
+      // Used for downloading ERA5 hourly files
+      await fetch(url)
+        .then(response => response.blob())
+        .then(blob => {
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.setAttribute('download', dest); // Set the desired filename
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+        });
+      $("#era5_hourly_download").prop("disabled", false);
+      $('#era5_hourly_bottom_text').text("Check your \"Downloads\" folder.");
+      $("#era5_hourly_bottom_text").removeClass("loading-background");
+    }
+
     async function fetch_results() {
       let get;
 
@@ -523,11 +559,88 @@
            $('#results_accordion_wrapper .observations_panel').append( '<div id="contents">' + get["observations"] + '</div>');
           }
 
-          //if ("uncertainty_summary" in get) {
-          //  $('#results_accordion_wrapper').append( '<button class="results_accordion">Uncertainty Summary</button>');
-          //  $('#results_accordion_wrapper').append( '<div class="results_panel uncertainty_summary_panel"></div>' );
-          //  $('#results_accordion_wrapper .uncertainty_summary_panel').append( '<div id="contents">' + get["uncertainty_summary"] + '</div>');
-          //}
+         //  if ("uncertainty_summary" in get) {
+         //   $('#results_accordion_wrapper').append( '<button class="results_accordion">Uncertainty Summary</button>');
+         //   $('#results_accordion_wrapper').append( '<div class="results_panel uncertainty_summary_panel"></div>' );
+         //   $('#results_accordion_wrapper .uncertainty_summary_panel').append( '<div id="contents">' + get["uncertainty_summary"] + '</div>');
+         // }
+
+          if ("era5_summary" in get) {
+           $('#results_accordion_wrapper').append( '<button class="results_accordion">Alternative Model</button>');
+           $('#results_accordion_wrapper').append( '<div class="results_panel era5_summary_panel"></div>' );
+           $('#results_accordion_wrapper .era5_summary_panel').append( '<div id="contents">' + get["era5_summary"] + '</div>');
+
+
+           // Add the button to the page
+            const button = document.createElement('button');
+            // Add a class to the element
+            button.id = 'era5_hourly_download';
+
+            button.textContent = 'Download File';
+            button.addEventListener('click', async () => {
+
+              // Disable the button
+              $("#era5_hourly_download").prop("disabled", true);
+              $('#era5_hourly_bottom_text').text("Loading...");
+              $("#era5_hourly_bottom_text").addClass("loading-background");
+
+              // This dict needs to match exactly the labels in the element of class: ticks; can be implemented better!
+              const hub_heights = {
+                1: 30,
+                2: 40,
+                3: 60,
+                4: 80,
+                5: 100,
+                6: 120,
+                7: 140
+              };
+              let selected_height = hub_heights[document.querySelector('input[class="hub_height"]').value];
+              //console.log(selected_height);
+              //console.log(window.lat);
+              //console.log(window.lon);
+              console.log("Starting to fetch ERA5 hourly file")
+
+              let selected_hourly_format = document.querySelector('input[name="hourly_format"]:checked').value;
+
+
+              //const DEST_NAME = "windwatts-" + window.lat + "-" + window.lon + "-" + selected_height + "." + selected_hourly_format
+              // For dest file: srw -> csv. Even srw files need to have csv extensions to be read in by SAM in the current format
+              const DEST_NAME = "windwatts-" + window.lat + "-" + window.lon + "-" + selected_height + ".csv"
+
+              const FETCH_STR =  "/era5-hourly?lat=" + window.lat + "&lon=" + window.lon + "&height=" + selected_height + "m&download=" + selected_hourly_format;
+              await downloadFile(FETCH_STR, DEST_NAME);
+              //onsole.log("Fetching: " + FETCH_STR);
+              //const res = await fetch(FETCH_STR);
+              //console.log("Done fetching, res: " + res);
+
+
+              // Callback function after download starts
+              //console.log('Download started!');
+
+              // Enable button
+              //$("#era5_hourly_download").prop("disabled", false);
+              //$('#era5_hourly_bottom_text').text("This download usually takes less than 20 seconds.");
+            });
+            //document.body.appendChild(button);
+
+
+           //$('#results_accordion_wrapper .era5_summary_panel #contents').append(button);
+
+           $('#results_accordion_wrapper .era5_summary_panel #contents').append('<div id="era5_hourly_wrapper"></div>');
+           //$('#era5_hourly_wrapper').append("<p id=\"era5_hourly_top_text\">You can download hourly ERA5 data for 2023 as a CSV file.</p>");
+           $('#era5_hourly_wrapper').append("<p id=\"era5_hourly_top_text\">You can download hourly ERA5 data for 2023 as:</p>");
+           $('#era5_hourly_wrapper').append("<fieldset class=\"hourly_fomat_fieldset\">\
+             <input type=\"radio\" id=\"formatChoice1\" name=\"hourly_format\" value=\"csv\" checked=\"checked\" />\
+             <label for=\"formatChoice1\">Standard CSV format</label>\
+             <br>\
+             <input type=\"radio\" id=\"formatChoice2\" name=\"hourly_format\" value=\"srw\" />\
+             <label for=\"formatChoice2\">CSV format for NREL\'s System Advisor Model (SAM) -- betta version</label>\
+           </fieldset>");
+
+           $('#era5_hourly_wrapper').append(button);
+           $('#era5_hourly_wrapper').append("<p id=\"era5_hourly_bottom_text\">This download usually takes less than 20 seconds.</p>");
+          }
+
 
           //if ("uncertainty_data" in get) {
           //  $('#results_accordion_wrapper').append( '<button class="results_accordion">Raw Uncertainty Data (daily, 1 year)</button>');
@@ -537,7 +650,7 @@
         }
         // the rest of rendering is for WTK
         else if ("raw" in get) {
-          console.log("Processing case with raw timeseries sent as output.")
+          console.log("Processing case with raw timeseries sent as output.");
           // Modeling contents of results_accordion_wrapper after this simple exmaple:
           // <button class="results_accordion">Map</button>
           // <div class="results_panel">

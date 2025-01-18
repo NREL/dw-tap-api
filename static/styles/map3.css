@@ -543,3 +543,53 @@ color: gray;
 .bolden {
   font-weight: bold;
 }
+
+#era5_hourly_wrapper {
+  text-align: left;
+  margin-top: 30px;
+  border: 2px solid gray;
+  padding: 20px;
+  border-radius: 5px;
+}
+
+#era5_hourly_top_text {
+  padding-bottom: 10px;
+}
+
+#era5_hourly_bottom_text {
+  /*padding-top: 10px;*/
+}
+
+#era5_hourly_download {
+  margin-top: 15px;
+  margin-bottom: 10px;
+  padding: 10px;
+}
+
+/* Animation for loading... text */
+@keyframes placeHolderShimmer {
+    0% {
+        background-position: 0 0;
+    }
+
+    100% {
+        background-position: 10000px 0;
+    }
+}
+
+.loading-background {
+    animation-duration: 20s;
+    animation-fill-mode: forwards;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+    animation-name: placeHolderShimmer;
+    background: #f6f7f8;
+    background: linear-gradient(to right, #eeeeee 8%, #aacfde 18%, #eeeeee 33%);
+    position: relative;
+}
+
+/* end of Animation for loading... text */
+
+.hourly_fomat_fieldset {
+    border: 0;
+}

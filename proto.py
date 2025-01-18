@@ -18,6 +18,7 @@ import glob
 import calendar
 import matplotlib
 import matplotlib.pyplot as plt
+import boto3
 matplotlib.use('agg')
 
 from dw_tap.data_fetching import getData
@@ -37,6 +38,31 @@ import scipy.interpolate
 import numpy as np
 from html_maker import *
 import flask
+from invalid_usage import InvalidUsage
+from flask import send_file
+
+import xarray as xr
+import s3fs
+
+# ERA5 Hourly setup with zarr file in S3
+era5_hourly_s3_path = "s3://windwatts-era5/hourly/conus-2023-hourly.zarr"
+s3 = s3fs.S3FileSystem()
+store = s3fs.S3Map(root=era5_hourly_s3_path, s3=s3, check=False)
+era5_hourly = xr.open_zarr(store=store, consolidated=True)
+
+def power_law(ws10, ws100, height):
+    # Use default alpha if ws10 and ws100 are opposite directions
+    alpha = np.where(
+        np.isnan(ws10) | np.isnan(ws100) | (ws10 <= 0) | (ws100 <= 0),
+        1/7.0,
+        np.log(ws10/ws100) / np.log(10/100)
+    )
+    ws = ws100 * ((height / 100) ** alpha)
+    return ws
+
+def convert_to_ws(u, v):
+    """ Converts u and v vector to wind speed """
+    return np.sqrt(u**2 + v**2)
 
 # Start of WTK-LED fucntions
 # Code below is copied from the uncertainty notebook by Caleb Phillips
@@ -173,6 +199,137 @@ def get_uncertainty_dataframe(location,height=40):
     return pd.read_csv(base_url+file_path)
 
 # End of WTK-LED fucntions
+
+# ERA5 functions
+
+def get_era5_index():
+    s3 = boto3.resource('s3')
+    my_bucket = s3.Bucket('windwatts-era5')
+    my_bucket.download_file("location_index.csv", "location_index.csv")
+    index = gpd.GeoDataFrame(pd.read_csv("location_index.csv"))
+
+    #base_url = "https://windwatts-era5.s3.us-west-2.amazonaws.com"
+    #file_path = f"/location_index.csv"
+    #index = gpd.GeoDataFrame(pd.read_csv(base_url+file_path))
+
+    index['location'] = gpd.GeoSeries(gpd.points_from_xy(index.longitude, index.latitude))
+    index["index"] = index["index"].apply(lambda x: str(x).zfill(6))
+    return index
+
+era5_index = get_era5_index()
+
+def closest_grid_point_era5(index,lat,lon):
+    p = Point(lon,lat)
+    r = index.iloc[index.location.distance(p).argmin()].copy()
+    r['distance_degrees'] = Point(r['longitude'],r['latitude']).distance(p)
+    return r
+
+def get_era5(idx, year=2021, add_year_col=False, add_avg_row=True):
+    #base_url = "https://wtk-led.s3.us-west-2.amazonaws.com/1224"
+    #file_path = f"/year={year}/varset=all/index={idx}/{idx}_{year}_all.csv.gz"
+    #res = pd.read_csv(base_url + file_path)
+
+    s3 = boto3.resource('s3')
+    my_bucket = s3.Bucket('windwatts-era5')
+    file_path = f"initial_era5_csv_test_files/year={year}/varset=quantiles/index={idx}/{idx}_{year}_quantiles.csv.gz"
+    #print(file_path)
+    my_bucket.download_file(file_path, "data.csv.gz")
+    res = pd.read_csv("data.csv.gz")
+
+    res["quantile"] = res["quantile"].apply(lambda x: "q%.2f" % x)
+    res.rename(columns={"quantile": "measure"}, inplace=True)
+
+    if add_avg_row:
+        new_row = []
+        for c in res.columns:
+            if c == "measure":
+                new_row.append("avg")
+            else:
+                # For each column, add: sum(x*f(x)) where f(x) is estimated density -- easy to calcuate for uniformly spaced quantiles
+                new_row.append(np.sum(res[c] * 0.1))
+        res.loc[len(res)] = new_row
+
+    if add_year_col:
+        res["year"] = year
+    return res
+
+def get_era5_all_yrs(idx, ws_col_for_estimating_power=None, selected_powercurve=None, relevant_columns_only=True):
+
+    df = pd.concat([get_era5(idx, year=yr, add_year_col=True, add_avg_row=True) for yr in range(2013, 2024)])
+    return df
+
+def era5_analysis(df, height, pc):
+    all_heights = [int(el.replace("ws", "")) for el in df.columns if "ws" in el]
+    closest_height_idx = (np.abs(np.array(all_heights) - height)).argmin()
+    closest_height_column = "ws" + str(all_heights[closest_height_idx])
+
+    avgs = df[df["measure"] == "avg"].mean(axis=0, numeric_only=True)
+    #all_heights = [int(el.replace("ws", "")) for el in avgs.index if "ws" in el]
+
+    global_avg = df[closest_height_column].mean()
+
+    df["pwr"] = pc.windspeed_to_kw(df, closest_height_column)
+
+    # Estimate energy using yearly average windspeed converted to power
+    df_yearly_avg = df[df["measure"] == "avg"][["pwr", "year"]]
+    df_yearly_avg["kWh"] = df_yearly_avg["pwr"] * 8760
+
+    # Estimate energy using quantiles turned to power estimates
+    df_quantiles = df[df["measure"] != "avg"][["pwr", "year"]]
+    df_quantiles["kWh"] = df_quantiles["pwr"] * (8760 / 10.0)  # Assume 10 quantiles being used in describing distributions
+    df_yearly_quantiles = df_quantiles.groupby("year").agg(kWh_yearly = ("kWh", "sum"))
+
+    df_avg_yearly_production = df_yearly_quantiles["kWh_yearly"].mean()
+
+    return global_avg, closest_height_column, df_avg_yearly_production
+
+
+# End of ERA5 functions
+
+def pd2srw(df, lat, lon, height, year):
+# $ head /Applications/SAM_2022.11.21/SAM.app/Contents/wind_resource/WY\ Southern-Flat\ Lands.srw
+# loc_id,city??,WY,USA,year??,lat??,lon??,2088,-7,8760
+# Southern WY - flat lands (NREL AWS Truepower representative file)
+# Temperature,Pressure,Direction,Speed,Temperature,Pressure,Direction,Speed,Temperature,Pressure,Direction,Speed,Temperature,Pressure,Direction,Speed
+# C,atm,degrees,m/s,C,atm,degrees,m/s,C,atm,degrees,m/s,C,atm,degrees,m/s
+# 50,50,50,50,80,80,80,80,110,110,110,110,140,140,140,140
+# -4.479,0.756533925,253,9.897,-4.719,0.753473476,254,10.665,-4.919,0.75041204,254,11.333,-5.069,0.747450284,254,11.989
+# -4.279,0.759496669,261,9.659,-4.519,0.756435233,262,10.378,-4.699,0.753374784,264,10.998,-4.869,0.750313348,264,11.53
+# -4.079,0.759990131,278,8.062,-4.319,0.756928695,282,8.766,-4.469,0.753966938,285,9.287,-4.569,0.750905502,285,9.749
+# -3.639,0.761371823,312,8.447,-3.819,0.758310387,316,9.23,-4.019,0.755348631,318,9.883,-4.269,0.752287195,318,10.496
+# -3.679,0.762260054,321,9.84,-3.919,0.759199605,324,10.566,-4.169,0.756039477,325,11.117,-4.369,0.752979028,325,11.626
+
+    # Need to support a single height
+
+    # header = "loc_id,denver,CO,USA,%s,%s,%s,2088,-7,8760\n" % (year,lat, lon) + \
+    #          "Somewhere - ? (NREL WTK sample)\n" + \
+    #          "Temperature,Pressure,Direction,Speed\n" + \
+    #          "C,atm,degrees,m/s\n" + \
+    #          "%d,%d,%d,%d\n" % (height,height,height,height)
+
+    header = """SiteID,SOMEID,Site Timezone,SOMETIMEZONE,Data Timezone,SOMETIMEZONE,Longitude,%f,Latitude,%f
+Year,Month,Day,Hour,Minute,surface air pressure (Pa),air pressure at 100m (Pa),air pressure at 200m (Pa),wind speed at 60m (m/s),wind direction at 60m (deg),air temperature at 60m (C)\n""" % (lon, lat) #, height)
+
+    df['timestamp'] = pd.to_datetime(df['time'])
+    df['year'] = df['timestamp'].dt.year
+    df['month'] = df['timestamp'].dt.month
+    df['day'] = df['timestamp'].dt.day
+    df['hour'] = df['timestamp'].dt.hour
+    df['minute'] = df['timestamp'].dt.minute
+
+    df['surface air pressure (Pa)'] = 101325
+    df['air pressure at 100m (Pa)'] = 100325
+    df['air pressure at 200m (Pa)'] = 98800
+    df['wind speed at 30m (m/s)'] = df["windspeed"]
+    df['wind direction at 30m (deg)'] = 0.0
+    df['air temperature at 30m (C)'] = 15.0
+
+    print(df.head())
+
+    #return header + df[["temp", "pres", "wd", "ws"]].to_csv(index=False, header=False)
+    return header + df[["year", "month" , "day", "hour", "minute",\
+    "surface air pressure (Pa)","air pressure at 100m (Pa)","air pressure at 200m (Pa)",\
+    "wind speed at 30m (m/s)","wind direction at 30m (deg)", "air temperature at 30m (C)"]].to_csv(index=False, header=False)
 
 # Determine feasibility threshold given the height
 def feasibility_thresh_by_height(h):
@@ -432,7 +589,7 @@ def daily_udf_to_summary(udf):
     #return p25, p50, p75, p25_percent_diff_from_p50, p75_percent_diff_from_p50
 
     summary = """
-                    <p class="results_disclaimer_text"><span>OLD CONTENT BELOW. TO BE UPDATED.</span></p><br><br>
+                    <!-- <p class="results_disclaimer_text"><span>OLD CONTENT BELOW. TO BE UPDATED.</span></p><br><br> --!>
                     <table border="0" cellspacing="10" class="yearly_table">
                     	<tbody>
                     		<tr>
@@ -500,8 +657,6 @@ def serve_data_request(data):
         wd_column = ws_column.replace("windspeed", "winddirection")
         kw_column = "windspeed_" + str(int(data["height"])) + "m" + "_kw"
 
-
-
         output_dest = os.path.join(completed_dir, id)
 
         # Fetching WTK-LED
@@ -511,6 +666,9 @@ def serve_data_request(data):
         #print(df_1224_20years.head())
 
         # ToDo: the following code can eventually be replaces with a simple call to new API built around WTK-LED and other datasets
+
+        # WTK-LED
+
         attempt_lim = 5
         error_str = ""
         for attempt in range(attempt_lim):
@@ -536,6 +694,40 @@ def serve_data_request(data):
             print("Saved error info to: %s" % output_dest)
             return
 
+        # ERA5
+
+        attempt_lim = 5
+        error_str = ""
+        for attempt in range(attempt_lim):
+            try:
+                error_str = ""
+                print("Fetching ERA5 data. Attempt: %d of %d" % (attempt, attempt_lim))
+                point_era5 = closest_grid_point_era5(era5_index, data["lat"], data["lon"])
+                era5_df = get_era5_all_yrs(point_era5["index"])
+                era5_global_avg, era5_closest_height_column, era5_df_avg_yearly_production = \
+                    era5_analysis(era5_df, int(data["height"]), selected_powercurve)
+                era5_summary = era5_summary_to_html(era5_global_avg, era5_closest_height_column, era5_df_avg_yearly_production)
+
+            except Exception as e:
+                print("Error in fetching ERA5 data. Will wait a little and try again")
+                print("Exception: %s" % str(e))
+                error_str = "An error occurred during fetching ERA5 data. If it is an intermittent, network issue, may need to try again later! To help with troubleshooting, here is the error message: %s" % str(e)
+                time.sleep(0.5)
+                continue
+            else:
+                print("Fetching ERA5 data was successful")
+                error_str = ""
+                break
+
+        if error_str:
+            with open(output_dest, 'w') as f:
+                json.dump({"error": error_str}, f)
+            print("Saved error info to: %s" % output_dest)
+            return
+
+        print("era5 analysis results:", era5_global_avg, era5_closest_height_column, era5_df_avg_yearly_production)
+
+
         yearly_df = df2yearly_avg(df_1224_20years, ws_column, kw_column)
         kwh_produced_avg_year = yearly_df["kWh produced"].tolist()[1] # Average year comes after the lowest
         monthly_df = df2monthly_avg(df_1224_20years, ws_column, kw_column)
@@ -547,9 +739,10 @@ def serve_data_request(data):
         high_resource_thresh_ms = feasibility_thresh + 1.0
         ws_level = ws_to_level(overall_mean, moderate_resource_thresh_ms, high_resource_thresh_ms)
 
-        #udf = get_uncertainty_dataframe(point['index'])
-        #udf['doy'] = udf.index # assume the day of year is the index, which would be true once all 12 months of data are present
-        #uncertainty_summary = daily_udf_to_summary(udf)
+        # udf = get_uncertainty_dataframe(point['index'])
+        # udf['doy'] = udf.index # assume the day of year is the index, which would be true once all 12 months of data are present
+        # uncertainty_summary = daily_udf_to_summary(udf)
+        uncertainty_summary = ""
 
         #udf['iqr'] = udf['percentile_75'] - df['percentile_25'] # compute inter quartile range
         #udf['uncertainty'] = udf['percentile_95'] - udf['percentile_5'] # compute inter quartile range
@@ -581,13 +774,15 @@ def serve_data_request(data):
         observations = locate_nearest_obs_sites(["./obs/met_tower_obs_summary.geojson", "./obs/vendor_obs_summary.geojson"], \
             float(data["lat"]), float(data["lon"]), float(data["height"]))
 
+        print("before with open, saving results")
         with open(output_dest, 'w') as f:
             json.dump({"wtk_led_summary": summary, "wtk_led_windresource": windresource,
                 "wtk_led_energyproduction": energyproduction,
-                "observations": observations}, #, \
-                #"uncertainty_summary": uncertainty_summary, \
+                "observations": observations,
+                "uncertainty_summary": uncertainty_summary,
+                "era5_summary": era5_summary}, f)
                 #"uncertainty_data": uncertainty_data},\
-            f)
+
         print("Saved output to: %s" % output_dest)
 
     except Exception as e:
@@ -611,6 +806,86 @@ def serve_1224():
         relevant_columns_only=False) # Show all columns/data instead of a subset
     return df_1224_20years.to_csv(index=False)
 
+def get_era5_hourly(lat, lon, height):
+    point = closest_grid_point_era5(era5_index,lat,lon)
+    lat_idx = int(point["index"][:3])
+    lon_idx = int(point["index"][3:])
+
+    tt = era5_hourly.time.values
+    tt = np.datetime_as_string(tt, unit='s')
+
+    u = dict()
+    v = dict()
+    ws = dict()
+    u[10] = era5_hourly.u10[:,lat_idx,lon_idx].values
+    v[10] = era5_hourly.v10[:,lat_idx,lon_idx].values
+    u[100] = era5_hourly.u100[:,lat_idx,lon_idx].values
+    v[100] = era5_hourly.v100[:,lat_idx,lon_idx].values
+    u[height] = power_law(u[10], u[100], height)
+    v[height] = power_law(v[10], v[100], height)
+    ws[height] = convert_to_ws(u[height], v[height])
+
+    #res = pd.DataFrame({"time": tt, "ws%d" % int(height): ws[height]})
+    res = pd.DataFrame({"time": tt, "windspeed": ws[height]})
+    return res
+
+@app.route('/era5-hourly', methods=['GET'])
+def serve_era5_hourly():
+    """ Endpoint serving ERA5 hourly data.
+
+    Access it at using URLs like: <hostname>:<port>/era5-hourly?lat=39.76004&lon=-105.14058&height=30m
+    """
+    #lat, lon = validated_latlon(request)
+    height, lat, lon = validated_params_v2(request)
+    height = int(height)
+
+    try:
+        # Entire request is passed
+        rargs = request.args
+    except:
+        # Request's args are passed
+        rargs = request
+
+    if 'download' in rargs:
+        download_fmt = rargs['download']
+
+        if download_fmt.lower() == "csv":
+            res = get_era5_hourly(lat, lon, height)
+
+            csv_path = os.path.join(completed_dir, "windwatts-%f-%f-%d.csv" % (lat,lon,height))
+            res.to_csv(csv_path, index=False)
+            print("Debug: saved csv with era5 hourly, %s" % csv_path)
+            return send_file(csv_path, as_attachment=True)
+        elif download_fmt.lower() == "srw":
+            res = get_era5_hourly(lat, lon, height)
+
+            # srw_path = os.path.join(completed_dir, "windwatts-%f-%f-%d.srw" % (lat,lon,height))
+            srw_path = os.path.join(completed_dir, "windwatts-%f-%f-%d.csv" % (lat,lon,height))
+
+            srw_contents = pd2srw(res, lat, lon, height, 2023)
+
+            with open(srw_path, "w") as text_file:
+                text_file.write(srw_contents)
+            print("Debug: saved srw with era5 hourly, %s" % srw_path)
+            return send_file(srw_path, as_attachment=True)
+        else:
+            raise InvalidUsage("Unsupported download format. Currently supported: csv, srw")
+    else:
+        res = get_era5_hourly(lat, lon, height)
+        return res.to_html(index=False)
+
+
+@app.route('/era5-avg', methods=['GET'])
+def serve_era5_avg():
+    """ Endpoint serving ERA5 average windspeed.
+
+    Access it at using URLs like: <hostname>:<port>/era5-avg?lat=39.76004&lon=-105.14058&height=30m
+    """
+    #lat, lon = validated_latlon(request)
+    height, lat, lon = validated_params_v2(request)
+    height = int(height)
+    res = get_era5_hourly(lat, lon, height)
+    return "%f" % res["windspeed"].mean()
 
 def serve_windwatts_api_request_windspeed(req):
 
@@ -677,8 +952,6 @@ def error2json(msg, status=1):
     """ Always serve error messages as json with 'message' and (non-zero) 'status' """
     return json.dumps({"message": msg,\
                        "status": status})
-
-
 
 # API endpoint for batch requests -- early version
 @app.route('/batch', methods=['GET'])
@@ -767,7 +1040,8 @@ def status():
     except Exception as e:
         output += "Can't connect to HSDS. Error:<br>" + str(e)
 
-    output += "WTK-LED index: %d columns, %d rows" % (len(wtkled_index.columns), len(wtkled_index))
+    output += "WTK-LED index: %d columns, %d rows" % (len(wtkled_index.columns), len(wtkled_index)) + "<br>"
+    output += "ERA5 index: %d columns, %d rows" % (len(era5_index.columns), len(era5_index))
     return output
 
 # DO NOT DELETE: /info route is needed for checking the health of the service during deployment
