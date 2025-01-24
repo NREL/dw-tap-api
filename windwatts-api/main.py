@@ -1,3 +1,4 @@
+from typing import List
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from mangum import Mangum
@@ -5,7 +6,7 @@ import utils.random_message as random_message_fn
 import requests
 from config_manager import ConfigManager
 from data_fetchers.s3_data_fetcher import S3DataFetcher
-from data_fetchers.athena_data_fetcher import AthenaDataFetcher
+# from data_fetchers.athena_data_fetcher import AthenaDataFetcher
 from data_fetchers.database_data_fetcher import DatabaseDataFetcher
 from data_fetchers.data_fetcher_router import DataFetcherRouter
 from database_manager import DatabaseManager
@@ -24,13 +25,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize ConfigManager
-config_manager = ConfigManager(secret_arn_env_var="ATHENA_CONFIG_SECRET_ARN")
-athena_config = config_manager.get_config()
+# # Initialize ConfigManager
+# config_manager = ConfigManager(secret_arn_env_var="ATHENA_CONFIG_SECRET_ARN")
+# athena_config = config_manager.get_config()
 
 # Initialize DataFetchers
 s3_data_fetcher = S3DataFetcher(bucket='s3-bucket-name')  # Need the actual bucket name
-athena_data_fetcher = AthenaDataFetcher(athena_config=athena_config)
+# athena_data_fetcher = AthenaDataFetcher(athena_config=athena_config)
 db_manager = DatabaseManager()
 db_data_fetcher = DatabaseDataFetcher(db_manager=db_manager)
 
@@ -38,7 +39,7 @@ db_data_fetcher = DatabaseDataFetcher(db_manager=db_manager)
 data_fetcher_router = DataFetcherRouter()
 data_fetcher_router.register_fetcher("database", db_data_fetcher)
 data_fetcher_router.register_fetcher("s3", s3_data_fetcher)
-data_fetcher_router.register_fetcher("athena", athena_data_fetcher)
+# data_fetcher_router.register_fetcher("athena", athena_data_fetcher)
 
 @app.get("/")
 def read_root():

@@ -1,8 +1,9 @@
+from typing import List
 import boto3
 import pandas as pd
 from io import StringIO
 from .abstract_data_fetcher import WTKDataFetcher
-from ..app.utils.data_fetcher_utils import generate_key
+from utils.data_fetcher_utils import generate_key
 
 class S3DataFetcher(WTKDataFetcher):
     def __init__(self, bucket: str):

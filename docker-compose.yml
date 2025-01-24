@@ -1,0 +1,39 @@
+services:
+  windwatts-api:
+    build:
+      context: ./windwatts-api
+    container_name: windwatts-api
+    environment:
+      - APP_HOME=/app
+    expose:
+      - 8000
+    volumes:
+      - ./windwatts-api:/app
+    command: >
+      uvicorn main:app --host 0.0.0.0 --reload
+
+  windwatts-ui:
+    build:
+      context: ./windwatts-ui
+      dockerfile: Dockerfile.dev
+    container_name: windwatts-ui
+    env_file:
+      - ./windwatts-ui/.env.development
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./windwatts-ui:/app
+      - node_modules:/app/node_modules
+
+  nginx:
+    image: nginx:alpine
+    container_name: windwatts-proxy
+    ports:
+      - "8080:80"
+    volumes:
+      - ./windwatts-api/proxy/nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - windwatts-api
+
+volumes:
+  node_modules:

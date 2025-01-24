@@ -1,0 +1,17 @@
+---
+
+services:
+  appfleet-pipeline:
+    image:
+      991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-appfleet-pipeline:${APPFLEET_DEPLOY_VERSION:-0.0.12-1.0.0-alpine-3c676c3}
+    environment:
+      - DOCKER_TAG1=${DOCKER_TAG1}
+      - DOCKER_TAG2=${DOCKER_TAG2:-1.25.3.1}
+      - DEPLOY_ENVIRONMENT=${APPFLEET_RELEASE_NAME:-dev}
+      - WORKER_TAG=${WORKER_TAG}
+      - PROJECT_HANDLE=${PROJECT_HANDLE}
+      - SERVICE_HANDLE=${APP_NAME}
+      - SLEEP_ONLY=${SLEEP_ONLY:-False}
+      - DIFF_ONLY=${DIFF_ONLY:-False}
+    volumes:
+      - ./.aws:/root/.aws:ro

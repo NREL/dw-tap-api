@@ -1,11 +1,14 @@
+import os
 import sqlite3
 
 class DatabaseManager:
-    def __init__(self, db_path='wtk_data.db', timeout=5):
+    def __init__(self, db_path=None, timeout=5):
         """
         Initializes the DatabaseManager with the given database path/name and timeout.
         """
-        self.conn = sqlite3.connect(db_path, timeout=timeout)
+        self.db_path = db_path or os.getenv('DB_PATH', 'db/wtk_data.db')
+        os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
+        self.conn = sqlite3.connect(self.db_path, timeout=timeout)
         self.create_table()
 
     def create_table(self):
@@ -17,6 +20,7 @@ class DatabaseManager:
                 CREATE TABLE IF NOT EXISTS cached_data (
                     key TEXT PRIMARY KEY,
                     data TEXT
+                    )
                 ''')
 
     def get_data(self, key: str) -> str:

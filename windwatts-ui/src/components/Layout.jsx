@@ -25,8 +25,6 @@ function Layout() {
   const [hubHeight, setHubHeight] = useState(30);
   const [powerCurve, setPowerCurve] = useState(100);
 
-  console.log("currentPosition", { currentPosition });
-
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100vh" }}>
       <Box sx={{ flexGrow: 0 }}>

@@ -1,7 +1,7 @@
 from typing import List
 import json
 from .abstract_data_fetcher import WTKDataFetcher
-from ..app.utils.data_fetcher_utils import generate_key
+from utils.data_fetcher_utils import generate_key
 
 class DatabaseDataFetcher(WTKDataFetcher):
     """
