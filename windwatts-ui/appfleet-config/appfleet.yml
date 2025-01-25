@@ -1,0 +1,273 @@
+---
+appfleet_version: 2.1.3
+
+project_handle: appfleet
+app_name: bar
+data_class: baz
+framework_type: bar
+
+git_source:
+  host: github.nrel.gov
+  owner: NREL
+  repo: foo-bar
+  branch: main
+  path: /main
+
+tags:
+  billingId: "000000"
+  org: foo
+  owner: cdracula
+
+releases:
+  - dev
+  - stage
+  - prod
+
+host_name:
+  $release_name:
+    prod:
+      ${self.project_handle}-${self.app_name}-${release_name}.stratus.nrel.gov
+    stage:
+      ${self.project_handle}-${self.app_name}-${release_name}.stratus.nrel.gov
+    dev:
+      ${self.project_handle}-${self.app_name}-${release_name}.stratus.nrel.gov
+
+target_groups:
+  - name: ${self.project_handle}-${self.app_name}-${release_name}
+    load_balancer:
+      $release_name:
+        dev: alb-int-baz05-dev
+        stage: alb-int-baz05-stage
+        prod: alb-ext-baz05-prod
+    container_name: nginx
+    container_port: 80
+    port: 80
+    protocol: HTTP
+    protocol_version: HTTP1
+    sticky: true
+    sticky_duration: 86400
+    target_type: instance
+    healthcheck:
+      path: /
+      port: traffic-port
+      protocol: HTTP
+      interval: 10
+      timeout: 5
+      threshold_healthy: 2
+      threshold_unhealthy: 3
+      http_healthy_status: "200,400"
+
+ecs_service:
+  name: ${self.project_handle}-${self.app_name}-${release_name}
+  task_role:
+    ${self.project_handle}-${self.app_name}-ecstask-iam-role
+  grace_period: 300
+  task_execution_role: nrel-ops-ecs-generic-task-execution-role
+  launch_type: EC2
+  circuit_breaker:
+    enable: true
+    rollback: true
+  cluster:
+    $release_name:
+      dev: ecs-baz01-dev
+      stage: ecs-baz01-stage
+      prod: ecs-baz
+  replicas:
+    $release_name:
+      dev: 1
+      stage: 2
+      prod: 2
+
+volumes:
+  - name: &host-static
+      baz-subnets-efs-${self.project_handle}-${self.app_name}-${release_name}-static
+    host_path: /${self.project_handle}-${self.app_name}-${release_name}/static/
+  - name: &host-media
+      baz-subnets-efs-${self.project_handle}-${self.app_name}-${release_name}-media
+    host_path: /${self.project_handle}-${self.app_name}-${release_name}/media/
+
+containers:
+  - name: nginx
+    image:
+      $release_name:
+        dev: 991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-split-nginx-dev
+        stage:
+          991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-split-nginx-test
+        prod: 991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-split-nginx-test
+    framework_default: bar.nginx
+    healthcheck:
+      command:
+        - "CMD-SHELL"
+        - "curl -f http://localhost/ || exit 1"
+      interval: 30
+      retries: 3
+      timeout: 5
+      grace_period: 10
+    cpu:
+      $release_name:
+        dev: 64
+        stage: 64
+        prod: 128
+    memory:
+      $release_name:
+        dev: 32
+        stage: 32
+        prod: 64
+    links:
+      - main
+      - flower
+    port_map:
+      - "80:80"
+    volume_mounts:
+      - volume_name: *host-static
+        container_path: /home/appfleet-config/web/staticfiles
+      - volume_name: *host-media
+        container_path: /home/appfleet-config/web/mediafiles
+    ssm_parameters:
+      - /nrel/${self.project_handle}-${self.app_name}/${release_name}/
+
+  - name: main
+    image:
+      $release_name:
+        dev:
+          991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-${self.project_handle}-${self.app_name}
+        stage:
+          991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-${self.project_handle}-${self.app_name}
+        prod:
+          991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-${self.project_handle}-${self.app_name}
+    framework_default: bar.nginx
+    healthcheck:
+      command:
+        - "CMD-SHELL"
+        - "curl -f http://localhost:8000/ || exit 1"
+      interval: 30
+      retries: 3
+      timeout: 5
+      grace_period: 10
+    ssm_parameters:
+      - /nrel/${self.project_handle}-${self.app_name}/${release_name}/
+    cpu:
+      $release_name:
+        dev: 128
+        stage: 128
+        prod: 256
+    memory:
+      $release_name:
+        dev: 64
+        stage: 64
+        prod: 128
+    port_map:
+      - "8000:8000"
+    volume_mounts:
+      - volume_name: *host-static
+        container_path: /home/appfleet-config/web/staticfiles
+      - volume_name: *host-media
+        container_path: /home/appfleet-config/web/mediafiles
+    secrets:
+      - name:
+          /nrel/rds/split/postgres/${self.data_class}/${release_name}/appfleet_bar
+        map:
+          SQL_HOST: host
+          SQL_PORT: port
+          SQL_DATABASE: database
+          SQL_USER: username
+          SQL_PASSWORD: password
+    command: gunicorn hello_bar.wsgi:application --bind 0.0.0.0:8000
+    environment:
+      DATABASE: postgres
+    depends_on:
+      - worker
+      - flower
+
+  - name: worker
+    image:
+      $release_name:
+        dev:
+          991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-${self.project_handle}-${self.app_name}-worker
+        stage:
+          991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-${self.project_handle}-${self.app_name}-worker
+        prod:
+          991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-${self.project_handle}-${self.app_name}-worker
+    healthcheck:
+      command:
+        - "CMD-SHELL"
+        - "/usr/local/bin/celery -A hello_bar inspect ping || exit 1"
+      interval: 30
+      retries: 3
+      timeout: 5
+      grace_period: 10
+    volume_mounts:
+      - volume_name: *host-static
+        container_path: /home/appfleet-config/web/staticfiles
+      - volume_name: *host-media
+        container_path: /home/appfleet-config/web/mediafiles
+    ssm_parameters:
+      - /nrel/${self.project_handle}-${self.app_name}/${release_name}/
+    cpu:
+      $release_name:
+        dev: 128
+        stage: 128
+        prod: 256
+    memory:
+      $release_name:
+        dev: 64
+        stage: 64
+        prod: 128
+    port_map: []
+    secrets:
+      - name:
+          /nrel/rds/split/postgres/${self.data_class}/${release_name}/appfleet_bar
+        map:
+          SQL_HOST: host
+          SQL_PORT: port
+          SQL_DATABASE: database
+          SQL_USER: username
+          SQL_PASSWORD: password
+
+  - name: flower
+    image:
+      $release_name:
+        dev:
+          991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-${self.project_handle}-${self.app_name}-flower
+        stage:
+          991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-${self.project_handle}-${self.app_name}-flower
+        prod:
+          991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-${self.project_handle}-${self.app_name}-flower
+    healthcheck:
+      command:
+        - "CMD-SHELL"
+        - "/usr/local/bin/celery -A hello_bar inspect ping || exit 1"
+      interval: 30
+      retries: 3
+      timeout: 5
+      grace_period: 10
+    volume_mounts:
+      - volume_name: *host-static
+        container_path: /home/appfleet-config/web/staticfiles
+      - volume_name: *host-media
+        container_path: /home/appfleet-config/web/mediafiles
+    ssm_parameters:
+      - /nrel/${self.project_handle}-${self.app_name}/${release_name}/
+    cpu:
+      $release_name:
+        dev: 128
+        stage: 128
+        prod: 256
+    memory:
+      $release_name:
+        dev: 64
+        stage: 64
+        prod: 128
+    port_map:
+      - "5555:5555"
+    depends_on:
+      - worker
+    secrets:
+      - name:
+          /nrel/rds/split/postgres/${self.data_class}/${release_name}/appfleet_bar
+        map:
+          SQL_HOST: host
+          SQL_PORT: port
+          SQL_DATABASE: database
+          SQL_USER: username
+          SQL_PASSWORD: password

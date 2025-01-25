@@ -28,6 +28,7 @@ COPY . .
 
 RUN yarn build
 
+# TODO use split NGINX
 FROM nginx:alpine
 
 RUN apk add --no-cache ca-certificates
