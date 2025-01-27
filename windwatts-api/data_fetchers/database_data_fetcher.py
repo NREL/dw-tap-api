@@ -17,33 +17,31 @@ class DatabaseDataFetcher(WTKDataFetcher):
         """
         self.db_manager = db_manager
 
-    def fetch_data(self, lat: float, lng: float, height: List[int], yearly: bool = False):
+    def fetch_data(self, lat: float, lng: float, height: int):
         """
         Fetch data from the database.
 
         Args:
             lat (float): Latitude of the location
             lng (float): Longitude of the location
-            height (List[int]): List of heights in integer
-            yearly (bool): Boolean flag to indicate to return yearly averaged data or latest row of data
+            height (int): Heights in meters
 
         Returns:
-            list: The fetched data as a list of dictionaries.
+            dict: The fetched data
         """
-        key = generate_key(lat, lng, height, yearly)
+        key = generate_key(lat, lng, height)
         data = self.db_manager.get_data(key)
         return json.loads(data) if data else []
 
-    def store_data(self, lat: float, lng: float, height: List[int], yearly: bool, data: str):
+    def store_data(self, lat: float, lng: float, height: int, data: str):
         """
         Store data in the database.
         
         Args:
             lat (float): Latitude of the location
             lng (float): Longitude of the location
-            height (List[int]): List of heights in integer
-            yearly (bool): Boolean flag to indicate to return yearly averaged data or latest row of data
-            data (str): The data to be stored.
+            height (int): Heights in meters
+            data (str): The data to be stored
         """
-        key = generate_key(lat, lng, height, yearly)
+        key = generate_key(lat, lng, height)
         self.db_manager.store_data(key, data)

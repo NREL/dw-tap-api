@@ -12,14 +12,16 @@ class WTKDataFetcher(ABC):
         pass
 
     @abstractmethod
-    def fetch_data(self, lat: float, lon: float, height: List[int], yearly: bool = False):
+    def fetch_data(self, lat: float, lon: float, height: int):
         """
         Data fetching method specifications:
         
         Args:
             lat (float): Latitude of the location
             lon (float): Longitude of the location
-            height (List[int]): List of heights in integer
-            yearly (bool): Boolean flag to indicate to return yearly averaged data or latest row of data
+            height (int): Height in integer
+
+        Returns:
+            dict: A dictionary containing the fetched data
         """
         pass

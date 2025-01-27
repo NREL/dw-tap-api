@@ -24,19 +24,18 @@ class DataFetcherRouter:
 
         Args:
             params (dict): The parameters to pass to the fetcher, including
-                lat (float): Latitude of the location.
-                lng (float): Longitude of the location.
-                height (List[int]): List of heights in meters.
-                yearly (bool): Whether to fetch yearly averaged data.
-            source (str): The name of the fetcher to use.
+                lat (float): Latitude of the location
+                lng (float): Longitude of the location
+                height (int): Heights in meters
+            source (str): The name of the fetcher to use
 
         Returns:
-            list: The fetched data as a list of dictionaries.
+            dict: The fetched data as a dictionary.
         """
         fetcher = self.fetchers.get(source)
         if fetcher:
             return fetcher.fetch_data(**params)
-        return []
+        return {}
 
     def fetch_data_routing(self, params: dict):
         """
@@ -44,15 +43,14 @@ class DataFetcherRouter:
 
         Args:
             params (dict): The parameters to pass to the fetcher, including
-                lat (float): Latitude of the location.
-                lng (float): Longitude of the location.
-                height (List[int]): List of heights in meters.
-                yearly (bool): Whether to fetch yearly averaged data.
+                lat (float): Latitude of the location
+                lng (float): Longitude of the location
+                height (int): Heights in meters
 
         Returns:
-            list: The fetched data as a list of dictionaries.
+            dict: The fetched data as a dictionary.
         """
-        data = []
+        data = {}
         
         db_fetcher_available = True if "database" in self.data_fetchers else False
         s3_fetcher_available = True if "s3" in self.data_fetchers else False
@@ -60,20 +58,20 @@ class DataFetcherRouter:
 
         if db_fetcher_available:
             # 1. Fetch cached data from the database
-            cached_data = self.db_fetcher.fetch_data(**params)
+            cached_data = self.fetchers["database"].fetch_data(**params)
             if cached_data:
                 return cached_data
 
         if athena_fetcher_available and self.is_complex_query(params):
             # 2. Fetch data from Athena
-            data = self.athena_fetcher.fetch_data(**params)
+            data = self.fetchers["athena"].fetch_data(**params)
         elif s3_fetcher_available:
             # 3. Fetch data from S3
-            data = self.s3_fetcher.fetch_data(**params)
+            data = self.fetchers["s3"].fetch_data(**params)
 
         if db_fetcher_available and not cached_data and data:
             # Store the fetched data in the database
-            self.db_fetcher.store_data(**params, data=json.dumps(data))
+            self.fetchers["database"].store_data(**params, data=json.dumps(data))
         return data
 
     @staticmethod

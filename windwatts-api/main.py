@@ -32,7 +32,7 @@ config_manager = ConfigManager(
 athena_config = config_manager.get_config()
 
 # Initialize DataFetchers
-s3_data_fetcher = S3DataFetcher(bucket='s3-bucket-name')  # Need the actual bucket name
+s3_data_fetcher = S3DataFetcher("WINDWATTS_S3_BUCKET_NAME")
 athena_data_fetcher = AthenaDataFetcher(athena_config=athena_config)
 db_manager = DatabaseManager()
 db_data_fetcher = DatabaseDataFetcher(db_manager=db_manager)
@@ -41,7 +41,7 @@ db_data_fetcher = DatabaseDataFetcher(db_manager=db_manager)
 data_fetcher_router = DataFetcherRouter()
 data_fetcher_router.register_fetcher("database", db_data_fetcher)
 data_fetcher_router.register_fetcher("s3", s3_data_fetcher)
-# data_fetcher_router.register_fetcher("athena", athena_data_fetcher)
+data_fetcher_router.register_fetcher("athena", athena_data_fetcher)
 
 @app.get("/")
 def read_root():
@@ -101,13 +101,12 @@ def get_windspeed(lat: float, lng: float):
     }
 
 @app.get("/wtk-data")
-def get_wtk_data(lat: float, lng: float, height: List[int], yearly: bool = False, source: str = "athena"):
+def get_wtk_data(lat: float, lng: float, height: int, source: str = "athena"):
     try:
         params = {
             "lat": lat,
             "lng": lng,
             "height": height,
-            "yearly": yearly
         }
         data = data_fetcher_router.fetch_data(params, source=source)
         if data is None:

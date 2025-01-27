@@ -21,7 +21,7 @@ class AthenaDataFetcher(WTKDataFetcher):
             height (int): Height in meters.
 
         Returns:
-            list: The fetched data as a list of dictionaries.
+            dict: A dictionary containing the fetched data.
         """
         filtered_data = self.wtk_client.fetch_windwatts_data(lat=lat, lng=lng, height=height)
-        return filtered_data.to_dict(orient="records")
+        return filtered_data
