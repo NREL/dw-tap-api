@@ -7,16 +7,16 @@ data_class: low
 framework_type: ui
 
 git_source:
-  host: github.nrel.gov
+  host: github.com
   owner: NREL
-  repo: foo-ui
-  branch: main
-  path: /main
+  repo: dw-tap-api
+  branch: dev/frontend-appfleet
+  path: /dev/frontend-appfleet
 
 tags:
-  billingId: "000000"
-  org: foo
-  owner: cdracula
+  billingId: "210125"
+  org: windwatts
+  owner: dwhitesi
 
 releases:
   - dev
@@ -78,23 +78,15 @@ ecs_service:
       stage: 2
       prod: 2
 
-volumes:
-  - name: &host-static
-      low-subnets-efs-${self.project_handle}-${self.app_name}-${release_name}-static
-    host_path: /${self.project_handle}-${self.app_name}-${release_name}/static/
-  - name: &host-media
-      low-subnets-efs-${self.project_handle}-${self.app_name}-${release_name}-media
-    host_path: /${self.project_handle}-${self.app_name}-${release_name}/media/
+volumes: []
 
 containers:
-  - name: nginx
+  - name: main
     image:
       $release_name:
-        dev: 991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-split-nginx-dev
-        stage:
-          991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-split-nginx-test
-        prod: 991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-split-nginx-test
-    framework_default: ui.nginx
+        dev: 991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-${self.project_handle}-${self.app_name}-dev
+        stage: 991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-${self.project_handle}-${self.app_name}-stage
+        prod: 991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-${self.project_handle}-${self.app_name}-prod
     healthcheck:
       command:
         - "CMD-SHELL"
@@ -103,6 +95,8 @@ containers:
       retries: 3
       timeout: 5
       grace_period: 10
+    ssm_parameters:
+      - /nrel/${self.project_handle}-${self.app_name}/${release_name}/
     cpu:
       $release_name:
         dev: 64
@@ -113,161 +107,5 @@ containers:
         dev: 32
         stage: 32
         prod: 64
-    links:
-      - main
-      - flower
     port_map:
       - "80:80"
-    volume_mounts:
-      - volume_name: *host-static
-        container_path: /home/windwatts-config/web/staticfiles
-      - volume_name: *host-media
-        container_path: /home/windwatts-config/web/mediafiles
-    ssm_parameters:
-      - /nrel/${self.project_handle}-${self.app_name}/${release_name}/
-
-  - name: main
-    image:
-      $release_name:
-        dev:
-          991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-${self.project_handle}-${self.app_name}
-        stage:
-          991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-${self.project_handle}-${self.app_name}
-        prod:
-          991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-${self.project_handle}-${self.app_name}
-    framework_default: ui.nginx
-    healthcheck:
-      command:
-        - "CMD-SHELL"
-        - "curl -f http://localhost:8000/ || exit 1"
-      interval: 30
-      retries: 3
-      timeout: 5
-      grace_period: 10
-    ssm_parameters:
-      - /nrel/${self.project_handle}-${self.app_name}/${release_name}/
-    cpu:
-      $release_name:
-        dev: 128
-        stage: 128
-        prod: 256
-    memory:
-      $release_name:
-        dev: 64
-        stage: 64
-        prod: 128
-    port_map:
-      - "8000:8000"
-    volume_mounts:
-      - volume_name: *host-static
-        container_path: /home/windwatts-config/web/staticfiles
-      - volume_name: *host-media
-        container_path: /home/windwatts-config/web/mediafiles
-    secrets:
-      - name:
-          /nrel/rds/split/postgres/${self.data_class}/${release_name}/windwatts_ui
-        map:
-          SQL_HOST: host
-          SQL_PORT: port
-          SQL_DATABASE: database
-          SQL_USER: username
-          SQL_PASSWORD: password
-    command: gunicorn hello_ui.wsgi:application --bind 0.0.0.0:8000
-    environment:
-      DATABASE: postgres
-    depends_on:
-      - worker
-      - flower
-
-  - name: worker
-    image:
-      $release_name:
-        dev:
-          991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-${self.project_handle}-${self.app_name}-worker
-        stage:
-          991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-${self.project_handle}-${self.app_name}-worker
-        prod:
-          991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-${self.project_handle}-${self.app_name}-worker
-    healthcheck:
-      command:
-        - "CMD-SHELL"
-        - "/usr/local/bin/celery -A hello_ui inspect ping || exit 1"
-      interval: 30
-      retries: 3
-      timeout: 5
-      grace_period: 10
-    volume_mounts:
-      - volume_name: *host-static
-        container_path: /home/windwatts-config/web/staticfiles
-      - volume_name: *host-media
-        container_path: /home/windwatts-config/web/mediafiles
-    ssm_parameters:
-      - /nrel/${self.project_handle}-${self.app_name}/${release_name}/
-    cpu:
-      $release_name:
-        dev: 128
-        stage: 128
-        prod: 256
-    memory:
-      $release_name:
-        dev: 64
-        stage: 64
-        prod: 128
-    port_map: []
-    secrets:
-      - name:
-          /nrel/rds/split/postgres/${self.data_class}/${release_name}/windwatts_ui
-        map:
-          SQL_HOST: host
-          SQL_PORT: port
-          SQL_DATABASE: database
-          SQL_USER: username
-          SQL_PASSWORD: password
-
-  - name: flower
-    image:
-      $release_name:
-        dev:
-          991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-${self.project_handle}-${self.app_name}-flower
-        stage:
-          991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-${self.project_handle}-${self.app_name}-flower
-        prod:
-          991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-${self.project_handle}-${self.app_name}-flower
-    healthcheck:
-      command:
-        - "CMD-SHELL"
-        - "/usr/local/bin/celery -A hello_ui inspect ping || exit 1"
-      interval: 30
-      retries: 3
-      timeout: 5
-      grace_period: 10
-    volume_mounts:
-      - volume_name: *host-static
-        container_path: /home/windwatts-config/web/staticfiles
-      - volume_name: *host-media
-        container_path: /home/windwatts-config/web/mediafiles
-    ssm_parameters:
-      - /nrel/${self.project_handle}-${self.app_name}/${release_name}/
-    cpu:
-      $release_name:
-        dev: 128
-        stage: 128
-        prod: 256
-    memory:
-      $release_name:
-        dev: 64
-        stage: 64
-        prod: 128
-    port_map:
-      - "5555:5555"
-    depends_on:
-      - worker
-    secrets:
-      - name:
-          /nrel/rds/split/postgres/${self.data_class}/${release_name}/windwatts_ui
-        map:
-          SQL_HOST: host
-          SQL_PORT: port
-          SQL_DATABASE: database
-          SQL_USER: username
-          SQL_PASSWORD: password
