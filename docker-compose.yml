@@ -2,9 +2,12 @@ services:
   windwatts-api:
     build:
       context: ./windwatts-api
+      args:
+        WINDWATTS_DATA_URL: ${WINDWATTS_DATA_URL}
     container_name: windwatts-api
     environment:
       - APP_HOME=/app
+      - WINDWATTS_DATA_CONFIG_SECRET_ARN=${WINDWATTS_DATA_CONFIG_SECRETS_ARN}
     expose:
       - 8000
     volumes:

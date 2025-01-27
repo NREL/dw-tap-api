@@ -6,7 +6,7 @@ import utils.random_message as random_message_fn
 import requests
 from config_manager import ConfigManager
 from data_fetchers.s3_data_fetcher import S3DataFetcher
-# from data_fetchers.athena_data_fetcher import AthenaDataFetcher
+from data_fetchers.athena_data_fetcher import AthenaDataFetcher
 from data_fetchers.database_data_fetcher import DatabaseDataFetcher
 from data_fetchers.data_fetcher_router import DataFetcherRouter
 from database_manager import DatabaseManager
@@ -26,12 +26,14 @@ app.add_middleware(
 )
 
 # # Initialize ConfigManager
-# config_manager = ConfigManager(secret_arn_env_var="ATHENA_CONFIG_SECRET_ARN")
-# athena_config = config_manager.get_config()
+config_manager = ConfigManager(
+    secret_arn_env_var="WINDWATTS_DATA_CONFIG_SECRET_ARN",
+    local_config_path="./config/windwatts_data_config.json")
+athena_config = config_manager.get_config()
 
 # Initialize DataFetchers
 s3_data_fetcher = S3DataFetcher(bucket='s3-bucket-name')  # Need the actual bucket name
-# athena_data_fetcher = AthenaDataFetcher(athena_config=athena_config)
+athena_data_fetcher = AthenaDataFetcher(athena_config=athena_config)
 db_manager = DatabaseManager()
 db_data_fetcher = DatabaseDataFetcher(db_manager=db_manager)
 
