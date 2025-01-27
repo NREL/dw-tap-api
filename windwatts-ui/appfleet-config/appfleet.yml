@@ -39,7 +39,7 @@ target_groups:
         dev: alb-int-low05-dev
         stage: alb-int-low05-stage
         prod: alb-ext-low05-prod
-    container_name: nginx
+    container_name: main
     container_port: 80
     port: 80
     protocol: HTTP

@@ -14,7 +14,7 @@ make -f "$MAKEFILE_PATH" V=1 buildx
 #make -f "$MAKEFILE_PATH" V=1 build push
 # Run the generate_appfleet_tag_overrides.sh script
 echo "Running generate_appfleet_tag_overrides.sh to populate APPFLEET_TAG_OVERRIDES..."
-#APPFLEET_TAG_OVERRIDES=$(./appfleet-config/generate_appfleet_tag_overrides.sh)
+APPFLEET_TAG_OVERRIDES=$(./appfleet-config/generate_appfleet_tag_overrides.sh)
 # Output the populated APPFLEET_TAG_OVERRIDES
-#echo "APPFLEET_TAG_OVERRIDES: $APPFLEET_TAG_OVERRIDES"
-#make -f "$MAKEFILE_PATH" V=1 APPFLEET_TAG_OVERRIDES="$APPFLEET_TAG_OVERRIDES" deploy
+echo "APPFLEET_TAG_OVERRIDES: $APPFLEET_TAG_OVERRIDES"
+make -f "$MAKEFILE_PATH" V=1 APPFLEET_TAG_OVERRIDES="$APPFLEET_TAG_OVERRIDES" deploy
