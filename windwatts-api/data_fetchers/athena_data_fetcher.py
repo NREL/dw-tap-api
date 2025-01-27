@@ -23,5 +23,5 @@ class AthenaDataFetcher(WTKDataFetcher):
         Returns:
             dict: A dictionary containing the fetched data.
         """
-        filtered_data = self.wtk_client.fetch_windwatts_data(lat=lat, lng=lng, height=height)
+        filtered_data = self.wtk_client.fetch_windwatts_data(lat=lat, long=lng, height=height)
         return filtered_data

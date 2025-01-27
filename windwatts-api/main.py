@@ -82,7 +82,7 @@ def get_windspeed(lat: float, lng: float):
             {
                 "title": "Average Wind Speed",
                 "subheader": "The measured average wind speed at the location",
-                "data": "4.9 m/s",
+                "data": f"{get_wtk_data(lat=lat, lng=lng, height=10)['global_avg']} m/s",
                 "details": ["Detail 1", "Detail 2", "Detail 3"],
             },
             {
