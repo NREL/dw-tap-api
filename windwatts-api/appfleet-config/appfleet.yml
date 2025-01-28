@@ -87,7 +87,7 @@ containers:
         dev: 991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-split-nginx-dev
         stage: 991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-split-nginx-test
         prod: 991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-split-nginx-prod
-    framework_default: nginx
+    framework_default: html-proxy
     healthcheck:
       command:
         - "CMD-SHELL"
@@ -123,7 +123,7 @@ containers:
           991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-${self.project_handle}-${self.app_name}
         prod:
           991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-${self.project_handle}-${self.app_name}
-    framework_default: nginx
+    framework_default: python
     healthcheck:
       command:
         - "CMD-SHELL"
@@ -147,15 +147,7 @@ containers:
     port_map:
       - "8000:8000"
     volume_mounts: []
-    secrets:
-      - name:
-          /nrel/rds/split/postgres/${self.data_class}/${release_name}/windwatts_api
-        map:
-          SQL_HOST: host
-          SQL_PORT: port
-          SQL_DATABASE: database
-          SQL_USER: username
-          SQL_PASSWORD: password
+    secrets: []
     command: gunicorn hello_api.wsgi:application --bind 0.0.0.0:8000
     environment: {}
     depends_on: []
