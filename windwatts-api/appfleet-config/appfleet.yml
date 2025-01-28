@@ -86,7 +86,7 @@ containers:
       $release_name:
         dev: 991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-split-nginx-dev
         stage: 991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-split-nginx-test
-        prod: 991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-split-nginx-prod
+        prod: 991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-split-nginx-test
     framework_default: html-proxy
     healthcheck:
       command:
