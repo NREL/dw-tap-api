@@ -1,7 +1,7 @@
 export PROJECT_HANDLE=windwatts
 export APP_NAME=api
 export MAKEFILE_PATH=./appfleet-config/Makefile
-export APPFLEET_RELEASE_NAME=stage
+export APPFLEET_RELEASE_NAME=dev
 # export APPFLEET_DEPLOY_VERSION=2.1.1-alpine-e1f2893
 export APPFLEET_DEPLOY_VERSION=2.1.3-alpine-e1f2893
 export BASE_IMAGE_TAG=3.11.4-slim-buster
