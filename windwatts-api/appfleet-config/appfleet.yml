@@ -86,8 +86,8 @@ containers:
       $release_name:
         dev: 991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-split-nginx-dev
         stage: 991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-split-nginx-test
-        prod: 991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-split-nginx-test
-    framework_default: api.nginx
+        prod: 991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-split-nginx-prod
+    framework_default: nginx
     healthcheck:
       command:
         - "CMD-SHELL"
@@ -123,7 +123,7 @@ containers:
           991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-${self.project_handle}-${self.app_name}
         prod:
           991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-${self.project_handle}-${self.app_name}
-    framework_default: api.nginx
+    framework_default: nginx
     healthcheck:
       command:
         - "CMD-SHELL"
@@ -157,6 +157,5 @@ containers:
           SQL_USER: username
           SQL_PASSWORD: password
     command: gunicorn hello_api.wsgi:application --bind 0.0.0.0:8000
-    environment:
-      DATABASE: postgres
+    environment: {}
     depends_on: []
