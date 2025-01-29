@@ -574,11 +574,11 @@
            $('#results_accordion_wrapper .observations_panel').append( '<div id="contents">' + get["observations"] + '</div>');
           }
 
-         //  if ("uncertainty_summary" in get) {
-         //   $('#results_accordion_wrapper').append( '<button class="results_accordion">Uncertainty Summary</button>');
-         //   $('#results_accordion_wrapper').append( '<div class="results_panel uncertainty_summary_panel"></div>' );
-         //   $('#results_accordion_wrapper .uncertainty_summary_panel').append( '<div id="contents">' + get["uncertainty_summary"] + '</div>');
-         // }
+          if ("uncertainty_summary" in get) {
+           $('#results_accordion_wrapper').append( '<button class="results_accordion">Uncertainty Summary</button>');
+           $('#results_accordion_wrapper').append( '<div class="results_panel uncertainty_summary_panel"></div>' );
+           $('#results_accordion_wrapper .uncertainty_summary_panel').append( '<div id="contents">' + get["uncertainty_summary"] + '</div>');
+         }
 
           if ("era5_summary" in get) {
            $('#results_accordion_wrapper').append( '<button class="results_accordion">Alternative Model</button>');

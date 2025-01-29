@@ -739,10 +739,10 @@ def serve_data_request(data):
         high_resource_thresh_ms = feasibility_thresh + 1.0
         ws_level = ws_to_level(overall_mean, moderate_resource_thresh_ms, high_resource_thresh_ms)
 
-        # udf = get_uncertainty_dataframe(point['index'])
-        # udf['doy'] = udf.index # assume the day of year is the index, which would be true once all 12 months of data are present
-        # uncertainty_summary = daily_udf_to_summary(udf)
-        uncertainty_summary = ""
+        # uncertainty_summary = ""
+        udf = get_uncertainty_dataframe(point['index'])
+        udf['doy'] = udf.index # assume the day of year is the index, which would be true once all 12 months of data are present
+        uncertainty_summary = daily_udf_to_summary(udf)
 
         #udf['iqr'] = udf['percentile_75'] - df['percentile_25'] # compute inter quartile range
         #udf['uncertainty'] = udf['percentile_95'] - udf['percentile_5'] # compute inter quartile range
