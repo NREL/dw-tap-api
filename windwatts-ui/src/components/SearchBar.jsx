@@ -58,7 +58,7 @@ function SearchBar({ onPlaceSelected }) {
 }
 SearchBar.propTypes = {
   onPlaceSelected: PropTypes.func.isRequired,
-  toggleDrawer: PropTypes.func.isRequired,
+  // toggleDrawer: PropTypes.func.isRequired,
 };
 
 export default SearchBar;
