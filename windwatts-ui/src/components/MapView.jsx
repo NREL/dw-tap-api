@@ -98,19 +98,20 @@ const MapView = () => {
     // setInfoWindowVisible(true);
   };
 
-  const handleMapClick = () => {
+  const handleMapClick = (e) => {
     if (marker) {
       marker.setMap(null);
       setMarker(null);
     }
-    // setInfoWindowVisible(false);
-  };
-
-  const handleMapRightClick = (e) => {
     handleSetLocation({
       lat: e.latLng.lat(),
       lng: e.latLng.lng(),
     });
+    // setInfoWindowVisible(false);
+  };
+
+  const handleMapRightClick = (e) => {
+    // Placeholder for future functionality
   };
 
   // const handleSaveLocation = () => {
@@ -169,6 +170,8 @@ const MapView = () => {
           options={{
             mapId: import.meta.env.VITE_MAP_ID,
             gestureHandling: "greedy",
+            draggableCursor: "default",
+            draggingCursor: "grab",
           }}
         ></GoogleMap>
       )}
