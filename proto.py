@@ -829,11 +829,12 @@ def get_era5_hourly(lat, lon, height):
     res = pd.DataFrame({"time": tt, "windspeed": ws[height]})
     return res
 
-@app.route('/era5-hourly', methods=['GET'])
+#@app.route('/era5-hourly', methods=['GET'])
+@app.route('/windspeed-hourly', methods=['GET'])
 def serve_era5_hourly():
     """ Endpoint serving ERA5 hourly data.
 
-    Access it at using URLs like: <hostname>:<port>/era5-hourly?lat=39.76004&lon=-105.14058&height=30m
+    Access it at using URLs like: <hostname>:<port>/windspeed-hourly?lat=39.76004&lon=-105.14058&height=30m
     """
     #lat, lon = validated_latlon(request)
     height, lat, lon = validated_params_v2(request)
@@ -875,11 +876,12 @@ def serve_era5_hourly():
         return res.to_html(index=False)
 
 
-@app.route('/era5-avg', methods=['GET'])
+#@app.route('/era5-avg', methods=['GET'])
+@app.route('/windspeed-avg', methods=['GET'])
 def serve_era5_avg():
     """ Endpoint serving ERA5 average windspeed.
 
-    Access it at using URLs like: <hostname>:<port>/era5-avg?lat=39.76004&lon=-105.14058&height=30m
+    Access it at using URLs like: <hostname>:<port>/windspeed-avg?lat=39.76004&lon=-105.14058&height=30m
     """
     #lat, lon = validated_latlon(request)
     height, lat, lon = validated_params_v2(request)
