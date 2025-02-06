@@ -40,9 +40,13 @@ phases:
         fi
       - echo "Caching Docker images..."
       - if [ -d /root/.cache/docker ]; then echo "Docker cache exists"; else echo "Docker cache does not exist"; fi
+      - echo " Changing to windwatts-ui directory..."
+      - cd windwatts-ui
+      - pwd
 
   pre_build:
     commands:
+      - 'echo "Current working directory: $(pwd)"'
       - CODEBUILD_SOURCE_VERSION_SHORT=$(echo $CODEBUILD_SOURCE_VERSION | head -c 7)
       - echo "Setting up Docker Buildx..."
       - docker buildx create --name mybuilder --driver docker-container --use
