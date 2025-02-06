@@ -308,7 +308,7 @@ def pd2srw(df, lat, lon, height, year):
     #          "%d,%d,%d,%d\n" % (height,height,height,height)
 
     header = """SiteID,SOMEID,Site Timezone,SOMETIMEZONE,Data Timezone,SOMETIMEZONE,Longitude,%f,Latitude,%f
-Year,Month,Day,Hour,Minute,surface air pressure (Pa),air pressure at 100m (Pa),air pressure at 200m (Pa),wind speed at 60m (m/s),wind direction at 60m (deg),air temperature at 60m (C)\n""" % (lon, lat) #, height)
+Year,Month,Day,Hour,Minute,surface air pressure (Pa),air pressure at 100m (Pa),air pressure at 200m (Pa),wind speed at %dm (m/s),wind direction at %dm (deg),air temperature at %dm (C)\n""" % (lon, lat, int(height), int(height), int(height)) #, height)
 
     df['timestamp'] = pd.to_datetime(df['time'])
     df['year'] = df['timestamp'].dt.year
