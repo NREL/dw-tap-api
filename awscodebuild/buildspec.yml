@@ -3,8 +3,11 @@ version: 0.2
 env:
   parameter-store:
     NGINX_VER: /nrel/split/split_nginx_version_stable
+    DOCKER_TAG2: /nrel/split/split_nginx_version_stable
     APPFLEET_DEPLOY_VERSION: /nrel/split/appfleet_docker_version_legacy
   exported-variables:
+    - NGINX_VER
+    - DOCKER_TAG2
     - CODEBUILD_SOURCE_VERSION
     - CODEBUILD_BUILD_ID
     - CODEBUILD_SOURCE_VERSION_SHORT
