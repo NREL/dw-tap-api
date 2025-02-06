@@ -628,7 +628,9 @@
               // For dest file: srw -> csv. Even srw files need to have csv extensions to be read in by SAM in the current format
               const DEST_NAME = "windwatts-" + window.lat + "-" + window.lon + "-" + selected_height + ".csv"
 
-              const FETCH_STR =  "/era5-hourly?lat=" + window.lat + "&lon=" + window.lon + "&height=" + selected_height + "m&download=" + selected_hourly_format;
+              //const FETCH_STR =  "/era5-hourly?lat=" + window.lat + "&lon=" + window.lon + "&height=" + selected_height + "m&download=" + selected_hourly_format;
+              const FETCH_STR =  "/windspeed-hourly?lat=" + window.lat + "&lon=" + window.lon + "&height=" + selected_height + "m&download=" + selected_hourly_format;
+
               await downloadFile(FETCH_STR, DEST_NAME);
               //onsole.log("Fetching: " + FETCH_STR);
               //const res = await fetch(FETCH_STR);
