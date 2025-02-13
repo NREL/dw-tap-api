@@ -3,7 +3,7 @@ export APP_NAME=ui
 export MAKEFILE_PATH=./appfleet-config/Makefile
 export APPFLEET_RELEASE_NAME=dev
 # export APPFLEET_DEPLOY_VERSION=2.1.1-alpine-e1f2893
-export APPFLEET_DEPLOY_VERSION=2.1.3-alpine-e1f2893
+export APPFLEET_DEPLOY_VERSION=2.2.0-alpine-e1f2893
 export BASE_IMAGE_TAG=3.11.4-slim-buster
 export CONFIG_FILE_URL=https://github.nrel.gov/nrel-cloud-computing/appfleet-ui/raw/main/appfleet-config/appfleet.yml
 # Properly format the JSON for APPFLEET_BUILD_ARGS

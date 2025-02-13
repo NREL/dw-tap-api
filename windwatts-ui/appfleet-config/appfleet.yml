@@ -1,5 +1,5 @@
 ---
-windwatts_version: 2.1.3
+appfleet_version: 2.2.0
 
 project_handle: windwatts
 app_name: ui
@@ -64,14 +64,25 @@ ecs_service:
   grace_period: 300
   task_execution_role: nrel-ops-ecs-generic-task-execution-role
   launch_type: EC2
-  circuit_breaker:
-    enable: true
-    rollback: true
   cluster:
     $release_name:
       dev: ecs-low01-dev
       stage: ecs-low01-stage
       prod: ecs-low
+  deployment_config:
+    circuit_breaker:
+      enable: true
+      rollback: true
+    maximum_percent:
+      $release_name:
+        prod: 200
+        stage: 100
+        dev: 100
+    minimum_healthy_percent:
+      $release_name:
+        prod: 50
+        stage: 0
+        dev: 0
   replicas:
     $release_name:
       dev: 1
