@@ -24,6 +24,8 @@ env:
     - SYNTH_ONLY
     - APPFLEET_BUILD_ARGS
     - CACHE_S3_BUCKET
+    - VITE_MAP_API_KEY
+    - VITE_MAP_ID
 
 phases:
   install:
