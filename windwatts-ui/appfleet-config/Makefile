@@ -1,7 +1,7 @@
 -include env_make
 
 # Required environment variables check
-REQUIRED_VARS := APPFLEET_BUILD_ARGS PROJECT_HANDLE APP_NAME MAKEFILE_PATH APPFLEET_RELEASE_NAME APPFLEET_DEPLOY_VERSION BASE_IMAGE_TAG CACHE_S3_BUCKET
+REQUIRED_VARS := APPFLEET_BUILD_ARGS PROJECT_HANDLE APP_NAME MAKEFILE_PATH APPFLEET_RELEASE_NAME APPFLEET_DEPLOY_VERSION BASE_IMAGE_TAG CACHE_S3_BUCKET VITE_MAP_API_KEY VITE_MAP_ID
 $(foreach var,$(REQUIRED_VARS),$(if $(value $(var)),,$(error Environment variable $(var) is not set)))
 
 # Environment variables (can be overridden by command-line arguments)
@@ -110,6 +110,8 @@ define buildx_image
 	docker buildx build \
 		--platform linux/amd64 \
 		--build-arg BASE_IMAGE_TAG=$(BASE_IMAGE_TAG) \
+		--build-arg VITE_MAP_API_KEY=$(VITE_MAP_API_KEY) \
+		--build-arg VITE_MAP_ID=$(VITE_MAP_ID) \
 		$(if $(strip $(3)),--target $(3)) \
 		-f $(4) \
 		$(WORKDIR) \

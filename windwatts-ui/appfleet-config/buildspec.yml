@@ -4,6 +4,8 @@ env:
   parameter-store:
     APPFLEET_DEPLOY_VERSION: /nrel/split/appfleet_docker_version_stable
     NGINX_VER: /nrel/split/split_nginx_version_stable
+    VITE_MAP_API_KEY: /nrel/windwatts-ui/prod/VITE_MAP_API_KEY
+    VITE_MAP_ID: /nrel/windwatts-ui/prod/VITE_MAP_ID
   exported-variables:
     - CODEBUILD_SOURCE_VERSION
     - CODEBUILD_BUILD_ID

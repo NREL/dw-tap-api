@@ -14,9 +14,13 @@ COPY --from=certificates /usr/share/ca-certificates /usr/share/ca-certificates
 COPY --from=certificates /usr/local/share/ca-certificates /usr/local/share/ca-certificates
 
 ARG VITE_API_BASE_URL
+ARG VITE_MAP_API_KEY
+ARG VITE_MAP_ID
 
 ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt \
-  VITE_API_BASE_URL=${VITE_API_BASE_URL}
+  VITE_API_BASE_URL=${VITE_API_BASE_URL} \
+  VITE_MAP_API_KEY=${VITE_MAP_ID} \
+  VITE_MAP_ID=${VITE_MAP_ID}
 
 WORKDIR /app
 
