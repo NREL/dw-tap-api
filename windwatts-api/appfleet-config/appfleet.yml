@@ -96,8 +96,8 @@ containers:
     image:
       $release_name:
         dev: 991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-split-nginx-dev
-        stage: 991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-split-nginx-test
-        prod: 991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-split-nginx-test
+        stage: 991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-split-nginx-dev
+        prod: 991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-split-nginx-dev
     framework_default: python.nginx
     healthcheck:
       command:
