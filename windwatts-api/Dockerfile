@@ -26,7 +26,6 @@ RUN curl -o /tmp/windwatts_data-${WINDWATTS_DATA_VERSION}-py3-none-any.whl ${WIN
     pip install --no-cache-dir /tmp/${WINDWATTS_DATA_FILE} && \
     rm /tmp/${WINDWATTS_DATA_FILE}
 
-
 # Copy the FastAPI application
 COPY . .
 
@@ -34,4 +33,4 @@ COPY . .
 EXPOSE 8000
 
 # Run the app with Gunicorn
-CMD ["gunicorn", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000", "main:app"]
+CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000", "main:app"]
