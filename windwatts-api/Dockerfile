@@ -12,6 +12,9 @@ WORKDIR $APP_HOME
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Install curl for appfleet health checks
+RUN apk add curl
+
 # Copy the FastAPI application
 COPY . .
 
