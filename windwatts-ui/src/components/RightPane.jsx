@@ -15,11 +15,16 @@ import { getWindResourceDataByCoordinates } from "../services/api";
 
 const RightPane = ({ currentPosition, hubHeight, powerCurve }) => {
   const { lat, lng } = currentPosition ?? {};
+  const shouldFetch = lat && lng;
+  
   const {
     isLoading,
     data: resultCardData,
     error,
-  } = useSWR({ lat, lng }, getWindResourceDataByCoordinates); // cache key for this lat, lng; see https://swr.vercel.app/docs/arguments#passing-objects
+  } = useSWR(
+    shouldFetch? { lat, lng } : null,
+    getWindResourceDataByCoordinates
+  ); // cache key for this lat, lng; see https://swr.vercel.app/docs/arguments#passing-objects
 
   const settingOptions = [
     {
@@ -68,7 +73,7 @@ const RightPane = ({ currentPosition, hubHeight, powerCurve }) => {
           </Link>
           &nbsp;using the following options:
         </Typography>
-        <Stack container spacing={2}>
+        <Stack container="true" spacing={2}>
           {settingOptions.map((option, index) => (
             <Grid2 key={"setting_option_" + index}>
               <ListItem
@@ -84,7 +89,7 @@ const RightPane = ({ currentPosition, hubHeight, powerCurve }) => {
           ))}
         </Stack>
 
-        <Stack container spacing={2}>
+        <Stack container="true" spacing={2}>
           {error && (
             <Box>
               <Typography

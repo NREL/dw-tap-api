@@ -17,5 +17,6 @@ templates/monthly_index.html
 static/plots/*
 static/completed/*
 templates/on_map3.html
-
-.vscode/*
+.vscode/
+.env
+.env.*

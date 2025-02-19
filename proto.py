@@ -578,7 +578,7 @@ def serve_data_request(data):
         #uncertainty_data = udf.to_html(classes="detailed_yearly_table")
 
         # new addition: summary of observational data
-        observations = locate_nearest_obs_sites("./obs/met_tower_obs_summary.geojson", \
+        observations = locate_nearest_obs_sites(["./obs/met_tower_obs_summary.geojson", "./obs/vendor_obs_summary.geojson"], \
             float(data["lat"]), float(data["lon"]), float(data["height"])).to_html(index=False)
 
         with open(output_dest, 'w') as f:
@@ -628,6 +628,17 @@ def serve_windwatts_api_request_windspeed(req):
         height = req["height"]
     else:
         return error2json("'height', which is a required field of windwatts-api-request-windspeed, is missing.")
+    try:
+        height = float(height)
+    except ValueError:
+        return error2json("Expecting a numeric value provided for 'height'.")
+
+    height_supported_wtkled = [10, 30, 40, 60, 80, 100, 120, 140, 160, 180, 200]
+    if height in height_supported_wtkled:
+        # May need to support floats better (10.00, 30.00), etc.; right now only ints will work with this if
+        pass
+    else:
+        return error2json("'height' should match exactly one of WTK-LED heights: %s." % str(height_supported_wtkled))
 
     # ToDo: tweak the fetching code to use height
 
@@ -638,9 +649,11 @@ def serve_windwatts_api_request_windspeed(req):
             selected_powercurve=None, # No power estimation
             relevant_columns_only=False) # Show all columns/data instead of a subset
 
-        return json.dumps({"data": str(df_1224_20years.columns)})
-        #return json.dumps({"data": df_1224_20years.to_csv(index=False),\
-        #                   "status": 0})
+        # Debug:
+        #return json.dumps({"data": str(df_1224_20years.columns)})
+        return json.dumps({"data": df_1224_20years.to_csv(index=False),\
+                           "status": 0})
+
     except Exception as e:
         return error2json("Error in fetching wind data (WTK-LED 12x24). Error: " + str(e))
 

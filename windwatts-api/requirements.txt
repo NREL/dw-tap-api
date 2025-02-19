@@ -1,4 +1,6 @@
 fastapi[standard]
 mangum
 requests
+boto3
+pandas
 gunicorn

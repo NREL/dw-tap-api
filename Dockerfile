@@ -58,5 +58,4 @@ EXPOSE 80
 #CMD ["python", "proto.py", "--production"]
 
 # Version that allows following a file with out and err messages
-CMD ["/bin/bash", "-c", "python proto.py --production >> proto.out 2>&1"]
-
+CMD ["/bin/bash", "-c", "python proto.py --production 2>&1"]
