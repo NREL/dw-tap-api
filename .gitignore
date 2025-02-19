@@ -18,7 +18,5 @@ static/plots/*
 static/completed/*
 templates/on_map3.html
 .vscode/
-awscodebuild/.aws/
-awscodebuild/imageDetail.json
 .env
 .env.*
