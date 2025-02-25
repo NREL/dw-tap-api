@@ -1,9 +1,9 @@
+import requests
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from mangum import Mangum
 from app.controllers.random_controller import router as random_router
 from app.controllers.wind_data_controller import router as wind_data_router
-import requests
 
 app = FastAPI()
 
@@ -22,9 +22,9 @@ app.add_middleware(
 app.include_router(wind_data_router, tags=["winddata"])
 app.include_router(random_router, prefix="/random", tags=["random"])
 
-@app.get("/")
+@app.get("/healthcheck")
 def read_root():
-    return {"Hello": "World"}
+    return {"status": "up"}
 
 @app.get("/weather/{lat}/{lng}")
 def get_weather(lat: float, lng: float):
