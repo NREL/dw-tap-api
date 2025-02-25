@@ -4,4 +4,4 @@ setup:
 	. .venv/bin/activate; pip install -r requirements.txt
 
 run:
-	. .venv/bin/activate; gunicorn -w 4 -k uvicorn.workers.UvicornWorker main:app
+	. .venv/bin/activate; gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app
