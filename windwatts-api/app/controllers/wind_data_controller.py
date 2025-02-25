@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 
-# commented out the data functions until I can local athena_config working
+# commented out the data functions until I can get local athena_config working
 '''
 from app.config_manager import ConfigManager
 from app.data_fetchers.s3_data_fetcher import S3DataFetcher
@@ -9,7 +9,6 @@ from app.data_fetchers.database_data_fetcher import DatabaseDataFetcher
 from app.data_fetchers.data_fetcher_router import DataFetcherRouter
 from app.database_manager import DatabaseManager
 '''
-
 
 router = APIRouter()
 
@@ -36,6 +35,7 @@ data_fetcher_router.register_fetcher("athena", athena_data_fetcher)
 @router.get("/windspeed", summary="Retrieve wind speed data")
 def get_windspeed(lat: float, lng: float):
     try:
+        # data = data_fetcher_router.fetch_windspeeddata(params, source=source)
         return {
             "winddataexample": [
                 {
