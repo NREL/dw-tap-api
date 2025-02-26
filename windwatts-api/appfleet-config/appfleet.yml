@@ -25,12 +25,9 @@ releases:
 
 host_name:
   $release_name:
-    prod:
-      ${self.project_handle}-${self.app_name}-${release_name}.stratus.nrel.gov
-    stage:
-      ${self.project_handle}-${self.app_name}-${release_name}.stratus.nrel.gov
-    dev:
-      ${self.project_handle}-${self.app_name}-${release_name}.stratus.nrel.gov
+    prod: ${self.project_handle}-${self.app_name}-${release_name}.stratus.nrel.gov
+    stage: ${self.project_handle}-${self.app_name}-${release_name}.stratus.nrel.gov
+    dev: ${self.project_handle}-${self.app_name}-${release_name}.stratus.nrel.gov
 
 target_groups:
   - name: ${self.project_handle}-${self.app_name}-${release_name}
@@ -48,7 +45,7 @@ target_groups:
     sticky_duration: 86400
     target_type: instance
     healthcheck:
-      path: /
+      path: /healthcheck
       port: traffic-port
       protocol: HTTP
       interval: 10
@@ -59,8 +56,7 @@ target_groups:
 
 ecs_service:
   name: ${self.project_handle}-${self.app_name}-${release_name}
-  task_role:
-    ${self.project_handle}-${self.app_name}-ecstask-iam-role
+  task_role: ${self.project_handle}-${self.app_name}-ecstask-iam-role
   grace_period: 300
   task_execution_role: nrel-ops-ecs-generic-task-execution-role
   launch_type: EC2
@@ -128,17 +124,14 @@ containers:
   - name: main
     image:
       $release_name:
-        dev:
-          991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-${self.project_handle}-${self.app_name}-dev
-        stage:
-          991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-${self.project_handle}-${self.app_name}-stage
-        prod:
-          991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-${self.project_handle}-${self.app_name}-prod
+        dev: 991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-${self.project_handle}-${self.app_name}-dev
+        stage: 991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-${self.project_handle}-${self.app_name}-stage
+        prod: 991404956194.dkr.ecr.us-west-2.amazonaws.com/nrel-${self.project_handle}-${self.app_name}-prod
     framework_default: python.nginx
     healthcheck:
       command:
         - "CMD-SHELL"
-        - "curl -f http://localhost:8000/ || exit 1"
+        - "curl -f http://localhost:8000/healthcheck || exit 1"
       interval: 30
       retries: 3
       timeout: 5
@@ -159,6 +152,6 @@ containers:
       - "8000:8000"
     volume_mounts: []
     secrets: []
-    command: "gunicorn -w 1 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 main:app"
+    command: "gunicorn -w 1 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 app.main:app"
     environment: {}
     depends_on: []

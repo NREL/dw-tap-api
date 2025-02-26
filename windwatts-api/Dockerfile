@@ -13,7 +13,7 @@ WORKDIR $APP_HOME
 RUN apt-get update && apt-get install -y \
     gdal-bin libgdal-dev libproj-dev libgeos-dev \
     gcc python3-dev libffi-dev curl
-    
+
 # Install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
@@ -33,4 +33,4 @@ COPY . .
 EXPOSE 8000
 
 # Run the app with Gunicorn
-CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000", "main:app"]
+CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000", "app.main:app"]

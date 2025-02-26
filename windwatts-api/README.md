@@ -39,6 +39,6 @@ $ pip install -r requirements.txt
 
 ## Useful commands
 
-- `uvicorn main:app --reload` runs the webservice layer locally for testing
+- `uvicorn app.main:app --reload` runs the webservice layer locally for testing
 
 Enjoy!

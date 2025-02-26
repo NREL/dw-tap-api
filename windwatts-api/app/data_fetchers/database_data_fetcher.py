@@ -1,7 +1,7 @@
 from typing import List
 import json
 from .abstract_data_fetcher import WTKDataFetcher
-from utils.data_fetcher_utils import generate_key
+from app.utils.data_fetcher_utils import generate_key
 
 class DatabaseDataFetcher(WTKDataFetcher):
     """
@@ -11,7 +11,7 @@ class DatabaseDataFetcher(WTKDataFetcher):
     def __init__(self, db_manager):
         """
         Initializes the DatabaseDataFetcher with the given DatabaseManager.
-        
+
         Args:
             db_manager (DatabaseManager): The DatabaseManager to use for fetching data.
         """
@@ -36,7 +36,7 @@ class DatabaseDataFetcher(WTKDataFetcher):
     def store_data(self, lat: float, lng: float, height: int, data: str):
         """
         Store data in the database.
-        
+
         Args:
             lat (float): Latitude of the location
             lng (float): Longitude of the location
