@@ -13,7 +13,7 @@ router = APIRouter()
 # Initialize ConfigManager
 config_manager = ConfigManager(
     secret_arn_env_var="WINDWATTS_DATA_CONFIG_SECRET_ARN",
-    local_config_path="./config/windwatts_data_config.json")
+    local_config_path="../config/windwatts_data_config.json") # replace with YOUR local config path
 athena_config = config_manager.get_config()
 
 # Initialize DataFetchers
