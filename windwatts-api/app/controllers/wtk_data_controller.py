@@ -28,45 +28,31 @@ data_fetcher_router.register_fetcher("database", db_data_fetcher)
 data_fetcher_router.register_fetcher("s3", s3_data_fetcher)
 data_fetcher_router.register_fetcher("athena", athena_data_fetcher)
 
+# Multiple average types for wind speed
+wind_speed_avg_types = ["global", "monthly", "monthly"]
 
-@router.get("/windspeed", summary="Retrieve wind speed data")
-def get_windspeed(lat: float, lng: float):
-    try:
-        # data = data_fetcher_router.fetch_windspeeddata(params, source=source)
-        return {
-            "winddataexample": [
-                {
-                    "title": "Average Wind Speed",
-                    "subheader": "The measured average wind speed at the location",
-                    "data": f"{get_wtk_data(lat=lat, lng=lng, height=10)['global_avg']} m/s",
-                    "details": ["Detail 1", "Detail 2", "Detail 3"],
-                },
-                {
-                    "title": "Wind Resource",
-                    "subheader": "Estimated wind resource level",
-                    "data": "Moderate",
-                    "details": ["Detail 1", "Detail 2", "Detail 3"],
-                },
-                {
-                    "title": "Production",
-                    "subheader": "Estimated production potential",
-                    "data": "96,000 kWh/year",
-                    "details": ["Detail 1", "Detail 2", "Detail 3"],
-                },
-            ],
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/wtk-data/windspeed", summary="Retrieve WTK data")
-def get_wtk_data(lat: float, lng: float, height: int, source: str = "athena"):
+@router.get("/windspeed/{avg_type}", summary="Retrieve wind speed - wtk data")
+def get_windspeed(lat: float, lng: float, height: int, avg_type: str = 'global', source: str = "athena"):
+    '''
+    Retrieve wind speed data from the WTK database.
+    Args:
+        lat (float): Latitude of the location.
+        lng (float): Longitude of the location.
+        height (int): Height in meters.
+        avg_type (str): Type of average to retrieve. Must be one of: global (default), monthly, yearly.
+        source (str): Source of the data. Must be one of: athena, s3, database.
+    '''
+    if avg_type not in wind_speed_avg_types:
+        raise ValueError(f"avg_type must be one of: {wind_speed_avg_types}")
     try:
         params = {
             "lat": lat,
             "lng": lng,
             "height": height,
+            "avg_type": avg_type
         }
-        data = params
+
         data = data_fetcher_router.fetch_data(params, source=source)
         if data is None:
             raise HTTPException(status_code=404, detail="Data not found")
