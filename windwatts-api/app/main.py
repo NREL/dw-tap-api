@@ -18,7 +18,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(wind_data_router, tags=["winddata"])
+app.include_router(wind_data_router, prefix="/wtk-data", tags=["wtk-database"])
 app.include_router(random_router, prefix="/random", tags=["random"])
 
 @app.get("/healthcheck")

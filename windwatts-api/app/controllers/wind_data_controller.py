@@ -1,18 +1,15 @@
 from fastapi import APIRouter, HTTPException
 
 # commented out the data functions until I can get local athena_config working
-'''
 from app.config_manager import ConfigManager
 from app.data_fetchers.s3_data_fetcher import S3DataFetcher
 from app.data_fetchers.athena_data_fetcher import AthenaDataFetcher
 from app.data_fetchers.database_data_fetcher import DatabaseDataFetcher
 from app.data_fetchers.data_fetcher_router import DataFetcherRouter
 from app.database_manager import DatabaseManager
-'''
 
 router = APIRouter()
 
-'''
 # Initialize ConfigManager
 config_manager = ConfigManager(
     secret_arn_env_var="WINDWATTS_DATA_CONFIG_SECRET_ARN",
@@ -30,7 +27,7 @@ data_fetcher_router = DataFetcherRouter()
 data_fetcher_router.register_fetcher("database", db_data_fetcher)
 data_fetcher_router.register_fetcher("s3", s3_data_fetcher)
 data_fetcher_router.register_fetcher("athena", athena_data_fetcher)
-'''
+
 
 @router.get("/windspeed", summary="Retrieve wind speed data")
 def get_windspeed(lat: float, lng: float):
@@ -61,7 +58,7 @@ def get_windspeed(lat: float, lng: float):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/wtk-data", summary="Retrieve WTK data")
+@router.get("/wtk-data/windspeed", summary="Retrieve WTK data")
 def get_wtk_data(lat: float, lng: float, height: int, source: str = "athena"):
     try:
         params = {
@@ -70,7 +67,7 @@ def get_wtk_data(lat: float, lng: float, height: int, source: str = "athena"):
             "height": height,
         }
         data = params
-        # data = data_fetcher_router.fetch_data(params, source=source)
+        data = data_fetcher_router.fetch_data(params, source=source)
         if data is None:
             raise HTTPException(status_code=404, detail="Data not found")
         return data
