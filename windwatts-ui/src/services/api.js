@@ -44,10 +44,10 @@ export const getWindResourceData = async (windResource) => {
   };
 };
 
-export const getWindResourceDataByCoordinates = async ({ lat, lng }) => {
-  console.log("getWindResourceDataByCoordinates for " + lat + ", " + lng);
+export const getWindResourceDataByCoordinates = async ({ lat, lng, height }) => {
+  console.log("getWindResourceDataByCoordinates for " + lat + ", " + lng + ", " + height);
   // example implementation that works locally when the backend fastapi server is running
-  const url = `/api/windspeed?lat=${lat}&lng=${lng}`;
+  const url = `/api/wtk-data/windspeed?lat=${lat}&lng=${lng}&height=${height}`;
   const options = {
     method: "GET",
     headers: {
