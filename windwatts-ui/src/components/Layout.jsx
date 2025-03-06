@@ -97,7 +97,7 @@ function Layout() {
               openResults={openResults}
               handleClose={handleCloseResults}
               currentPosition={currentPosition}
-              hubHeight={hubHeight}
+              height={hubHeight}
               powerCurve={powerCurve}
             />
           </Box>
