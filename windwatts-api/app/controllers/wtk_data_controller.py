@@ -32,7 +32,8 @@ data_fetcher_router.register_fetcher("athena", athena_data_fetcher)
 wind_speed_avg_types = ["global", "monthly", "monthly"]
 
 
-@router.get("/windspeed/{avg_type}", summary="Retrieve wind speed - wtk data")
+@router.get("/windspeed/{avg_type}", summary="Retrieve wind speed with avg type - wtk data")
+@router.get("/windspeed", summary="Retrieve wind speed with default global avg - wtk data")
 def get_windspeed(lat: float, lng: float, height: int, avg_type: str = 'global', source: str = "athena"):
     '''
     Retrieve wind speed data from the WTK database.

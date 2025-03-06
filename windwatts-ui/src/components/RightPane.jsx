@@ -110,7 +110,7 @@ const RightPane = ({ currentPosition, height, powerCurve }) => {
             </Box>
           ) : resultCardData ? (
             <Grid2 key={"result_card_"}>
-              <ResultCard windspeed={resultCardData.windspeed} />
+              <ResultCard windspeed={resultCardData.global_avg} />
             </Grid2>
           ) : null
           }
