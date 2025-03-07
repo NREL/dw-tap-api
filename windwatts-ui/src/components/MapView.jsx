@@ -49,7 +49,9 @@ const MapView = () => {
         },
         (error) => {
           console.error("Geolocation error:", error);
-        }
+          setCurrentPosition(defaultCenter);
+        },
+        { maximumAge: 60000, timeout: 5000, enableHighAccuracy: true }
       );
     }
   }, []);
