@@ -56,3 +56,31 @@ export const getWindResourceDataByCoordinates = async ({ lat, lng, height }) => 
   };
   return fetchWrapper(url, options);
 };
+
+export const getEnergyProduction = async ({ lat, lng, height, powerCurve }) => {
+  // console.log("getWindResourceDataByCoordinates for " + lat + ", " + lng + ", " + height);
+  // example implementation that works locally when the backend fastapi server is running
+  const url = `/api/wtk-data/energy_production?lat=${lat}&lng=${lng}&height=${height}&selected_powercurve=${powerCurve}`;
+  const options = {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  return fetchWrapper(url, options);
+};
+
+export const getAvailablePowerCurves = async () => {
+  // console.log("getWindResourceDataByCoordinates for " + lat + ", " + lng + ", " + height);
+  // example implementation that works locally when the backend fastapi server is running
+  const url = `/api/wtk-data/available_powercurves`;
+  const options = {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  return fetchWrapper(url, options);
+};
+
+

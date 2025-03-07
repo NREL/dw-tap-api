@@ -8,6 +8,8 @@ from app.data_fetchers.database_data_fetcher import DatabaseDataFetcher
 from app.data_fetchers.data_fetcher_router import DataFetcherRouter
 from app.database_manager import DatabaseManager
 
+from app.power_curve.power_curve_manager import PowerCurveManager
+
 router = APIRouter()
 
 # Initialize ConfigManager
@@ -28,11 +30,14 @@ data_fetcher_router.register_fetcher("database", db_data_fetcher)
 data_fetcher_router.register_fetcher("s3", s3_data_fetcher)
 data_fetcher_router.register_fetcher("athena", athena_data_fetcher)
 
+# Load power curves
+power_curve_manager = PowerCurveManager("./app/power_curve/powercurves")
+
 # Multiple average types for wind speed
 wind_speed_avg_types = ["global", "monthly", "monthly"]
 
 
-@router.get("/windspeed/{avg_type}", summary="Retrieve wind speed with avg type - wtk data")
+# @router.get("/windspeed/{avg_type}", summary="Retrieve wind speed with avg type - wtk data")
 @router.get("/windspeed", summary="Retrieve wind speed with default global avg - wtk data")
 def get_windspeed(lat: float, lng: float, height: int, avg_type: str = 'global', source: str = "athena"):
     '''
@@ -62,3 +67,34 @@ def get_windspeed(lat: float, lng: float, height: int, avg_type: str = 'global',
         raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+    
+
+@router.get("/available_powercurves", summary="Fetch all available power curves")
+def fetch_available_powercurves():
+    "returns available power curves"
+    return {'available_power_curves': list(power_curve_manager.power_curves.keys())}
+    
+
+@router.get("/energy_production", summary="Get energy production for a location at a height with a selected power curve")
+def energy_production(lat: float, lng: float, height: int, 
+                               selected_powercurve: str, 
+                               source: str = "athena"):
+    params = {
+            "lat": lat,
+            "lng": lng,
+            "height": None,
+            "avg_type" : None,
+            "get_df": True
+            }
+    # Retrieves full dataframe for a specific location from s3
+    df = data_fetcher_router.fetch_data(params,source=source)
+    '''
+    energy production df contains these columns [year  mohr  month  hour windspeed_{height}m  windspeed_{height}m_kw  winddirection_{height}m] for given height.
+    '''
+    energy_production_df = power_curve_manager.fetch_energy_production_df(df, height, selected_powercurve)
+    print(f"nrel-reference-{selected_powercurve}-kW")
+
+    yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(energy_production_df,height)
+    
+    return {"energy_production": yearly_avg_energy_production.loc['Average year','kWh produced']}
+

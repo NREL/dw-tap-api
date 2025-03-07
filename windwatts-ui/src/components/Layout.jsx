@@ -23,7 +23,7 @@ function Layout() {
   // Settings modal states
   const [currentPosition, setCurrentPosition] = useState(null);
   const [hubHeight, setHubHeight] = useState(30);
-  const [powerCurve, setPowerCurve] = useState(100);
+  const [powerCurve, setPowerCurve] = useState("nrel-reference-100kW");
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100vh" }}>

@@ -11,7 +11,7 @@ class AthenaDataFetcher(WTKDataFetcher):
         """
         self.wtk_client = WindwattsWTKClient(config_path=athena_config)
 
-    def fetch_data(self, lat: float, lng: float, height: int, avg_type: str = 'global'):
+    def fetch_data(self, lat: float, lng: float, height: int, avg_type: str = 'global', get_df: bool = False):
         """
         Fetch data from Athena using the WTKLedClient.
 
@@ -20,6 +20,7 @@ class AthenaDataFetcher(WTKDataFetcher):
             lng (float): Longitude of the location.
             height (int): Height in meters.
             avg_type (str): Type of average to fetch. Can be 'global', 'yearly' or 'monthly'. Defaults to 'global'.
+            get_df (bool): fetched complete dataframe(columns of all heights) for a location.
 
         Returns:
             dict: A dictionary containing the fetched data.
@@ -31,5 +32,8 @@ class AthenaDataFetcher(WTKDataFetcher):
             filtered_data = self.wtk_client.fetch_yearly_avg_at_height(lat=lat, long=lng, height=height)
         elif avg_type == 'monthly':
             filtered_data = self.wtk_client.fetch_monthly_avg_at_height(lat=lat, long=lng, height=height)
-        
+        elif get_df:
+            self.wtk_client.fetch_data(lat=lat, long=lng)
+            filtered_data = self.wtk_client.df
+
         return filtered_data
