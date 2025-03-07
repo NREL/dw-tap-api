@@ -16,7 +16,7 @@ services:
     volumes:
       - ./windwatts-api:/app
     command: >
-      uvicorn main:app --host 0.0.0.0 --reload
+      uvicorn app.main:app --host 0.0.0.0 --reload
 
   windwatts-ui:
     build:

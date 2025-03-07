@@ -13,16 +13,16 @@ import PropTypes from "prop-types";
 import ResultCard from "./ResultCard";
 import { getWindResourceDataByCoordinates } from "../services/api";
 
-const RightPane = ({ currentPosition, hubHeight, powerCurve }) => {
+const RightPane = ({ currentPosition, height, powerCurve }) => {
   const { lat, lng } = currentPosition ?? {};
-  const shouldFetch = lat && lng;
+  const shouldFetch = lat && lng & height;
   
   const {
     isLoading,
     data: resultCardData,
     error,
   } = useSWR(
-    shouldFetch? { lat, lng } : null,
+    shouldFetch? { lat, lng, height } : null,
     getWindResourceDataByCoordinates
   ); // cache key for this lat, lng; see https://swr.vercel.app/docs/arguments#passing-objects
 
@@ -36,7 +36,7 @@ const RightPane = ({ currentPosition, hubHeight, powerCurve }) => {
     },
     {
       title: "Selected hub height",
-      data: hubHeight ? `${hubHeight} meters` : "Not selected",
+      data: height ? `${height} meters` : "Not selected",
     },
     {
       title: "Selected power curve",
@@ -109,12 +109,11 @@ const RightPane = ({ currentPosition, hubHeight, powerCurve }) => {
               <Skeleton sx={{ marginTop: 5 }} variant="rounded" height={190} />
             </Box>
           ) : resultCardData ? (
-            resultCardData.winddataexample.map((data, index) => (
-              <Grid2 key={"result_card_" + index}>
-                <ResultCard data={data} />
-              </Grid2>
-            ))
-          ) : null}
+            <Grid2 key={"result_card_"}>
+              <ResultCard windspeed={resultCardData.global_avg} />
+            </Grid2>
+          ) : null
+          }
         </Stack>
         <Typography variant="body2" color="textSecondary" marginTop={2}>
           Disclaimer: This summary represents a PRELIMINARY analysis. Research
@@ -134,7 +133,7 @@ RightPane.propTypes = {
     lat: PropTypes.number,
     lng: PropTypes.number,
   }),
-  hubHeight: PropTypes.number,
+  height: PropTypes.number,
   powerCurve: PropTypes.number,
 };
 
