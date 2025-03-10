@@ -37,7 +37,7 @@ power_curve_manager = PowerCurveManager("./app/power_curve/powercurves")
 wind_speed_avg_types = ["global", "monthly", "monthly"]
 
 
-# @router.get("/windspeed/{avg_type}", summary="Retrieve wind speed with avg type - wtk data")
+@router.get("/windspeed/{avg_type}", summary="Retrieve wind speed with avg type - wtk data")
 @router.get("/windspeed", summary="Retrieve wind speed with default global avg - wtk data")
 def get_windspeed(lat: float, lng: float, height: int, avg_type: str = 'global', source: str = "athena"):
     '''
@@ -83,8 +83,7 @@ def energy_production(lat: float, lng: float, height: int,
             "lat": lat,
             "lng": lng,
             "height": None,
-            "avg_type" : None,
-            "get_df": True
+            "avg_type" : "none"
             }
     # Retrieves full dataframe for a specific location from s3
     df = data_fetcher_router.fetch_data(params,source=source)
@@ -92,7 +91,6 @@ def energy_production(lat: float, lng: float, height: int,
     energy production df contains these columns [year  mohr  month  hour windspeed_{height}m  windspeed_{height}m_kw  winddirection_{height}m] for given height.
     '''
     energy_production_df = power_curve_manager.fetch_energy_production_df(df, height, selected_powercurve)
-    print(f"nrel-reference-{selected_powercurve}-kW")
 
     yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(energy_production_df,height)
     

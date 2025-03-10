@@ -11,29 +11,41 @@ class AthenaDataFetcher(WTKDataFetcher):
         """
         self.wtk_client = WindwattsWTKClient(config_path=athena_config)
 
-    def fetch_data(self, lat: float, lng: float, height: int, avg_type: str = 'global', get_df: bool = False):
+    def fetch_data(self, lat: float, lng: float, height: int, avg_type: str = 'global'):
         """
-        Fetch data from Athena using the WTKLedClient.
+        Fetch wind data from Athena using the WTK client.
 
         Args:
             lat (float): Latitude of the location.
             lng (float): Longitude of the location.
             height (int): Height in meters.
-            avg_type (str): Type of average to fetch. Can be 'global', 'yearly' or 'monthly'. Defaults to 'global'.
-            get_df (bool): fetched complete dataframe(columns of all heights) for a location.
+            avg_type (str): The type of average to fetch. 
+                            Accepted values are:
+                            - 'global': Retrieves global average data.
+                            - 'yearly': Retrieves yearly average data.
+                            - 'monthly': Retrieves monthly average data.
+                            - 'none': Retrieves the complete dataset (all heights).
+                            Defaults to 'global'.
 
         Returns:
-            dict: A dictionary containing the fetched data.
+            dict: A dictionary containing the requested wind data.
+
+        Raises:
+            ValueError: If an invalid `avg_type` is provided.
         """
+
         filtered_data = None
-        if avg_type == 'global':
+            
+        if avg_type == "none":
+            self.wtk_client.fetch_data(lat=lat, long=lng)
+            filtered_data = self.wtk_client.df
+        elif avg_type == 'global':
             filtered_data = self.wtk_client.fetch_global_avg_at_height(lat=lat, long=lng, height=height)
         elif avg_type == 'yearly':
             filtered_data = self.wtk_client.fetch_yearly_avg_at_height(lat=lat, long=lng, height=height)
         elif avg_type == 'monthly':
             filtered_data = self.wtk_client.fetch_monthly_avg_at_height(lat=lat, long=lng, height=height)
-        elif get_df:
-            self.wtk_client.fetch_data(lat=lat, long=lng)
-            filtered_data = self.wtk_client.df
-
+        else:
+            raise ValueError(f"Invalid avg_type: {avg_type}")
+        
         return filtered_data

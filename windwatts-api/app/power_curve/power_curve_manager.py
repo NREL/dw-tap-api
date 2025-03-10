@@ -23,7 +23,6 @@ class PowerCurveManager:
         for file in os.listdir(directory):
             if file.endswith(".csv") or file.endswith(".xlsx"):
                 curve_name = os.path.splitext(file)[0]
-                print(curve_name)
                 self.power_curves[curve_name] = PowerCurve(os.path.join(directory, file))
 
     def get_curve(self, curve_name: str) -> PowerCurve:
