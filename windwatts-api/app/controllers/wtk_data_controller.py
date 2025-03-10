@@ -71,7 +71,9 @@ def get_windspeed(lat: float, lng: float, height: int, avg_type: str = 'global',
 
 @router.get("/available_powercurves", summary="Fetch all available power curves")
 def fetch_available_powercurves():
-    "returns available power curves"
+    '''
+    returns available power curves
+    '''
     return {'available_power_curves': list(power_curve_manager.power_curves.keys())}
     
 
@@ -79,20 +81,26 @@ def fetch_available_powercurves():
 def energy_production(lat: float, lng: float, height: int, 
                                selected_powercurve: str, 
                                source: str = "athena"):
-    params = {
-            "lat": lat,
-            "lng": lng,
-            "height": None,
-            "avg_type" : "none"
-            }
-    # Retrieves full dataframe for a specific location from s3
-    df = data_fetcher_router.fetch_data(params,source=source)
-    '''
-    energy production df contains these columns [year  mohr  month  hour windspeed_{height}m  windspeed_{height}m_kw  winddirection_{height}m] for given height.
-    '''
-    energy_production_df = power_curve_manager.fetch_energy_production_df(df, height, selected_powercurve)
+    """
+    Fetches the energy production for a given location, height, and power curve.
+    """
+    try:
+        params = {
+                "lat": lat,
+                "lng": lng,
+                "height": None,
+                "avg_type" : "none"
+                }
+        # Retrieves full dataframe for a specific location from s3
+        df = data_fetcher_router.fetch_data(params,source=source)
+        if df is None:
+            raise HTTPException(status_code=404, detail="Data not found")
 
-    yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(energy_production_df,height)
-    
-    return {"energy_production": yearly_avg_energy_production.loc['Average year','kWh produced']}
+        yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(df,height,selected_powercurve)
+        
+        return {"energy_production": yearly_avg_energy_production.loc['Average year','kWh produced']}
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
