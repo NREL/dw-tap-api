@@ -135,8 +135,6 @@ const Settings = ({
 };
 
 Settings.propTypes = {
-  units: PropTypes.string.isRequired,
-  setUnits: PropTypes.func.isRequired,
   settingsOpen: PropTypes.bool.isRequired,
   toggleSettings: PropTypes.func.isRequired,
   hubHeight: PropTypes.number.isRequired,
