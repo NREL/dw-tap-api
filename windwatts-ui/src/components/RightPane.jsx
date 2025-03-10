@@ -12,6 +12,8 @@ import {
 import PropTypes from "prop-types";
 import ResultCard from "./ResultCard";
 import { getWindResourceDataByCoordinates } from "../services/api";
+import { getEnergyProduction } from "../services/api";
+import { getAvailablePowerCurves } from "../services/api";
 
 const RightPane = ({ currentPosition, height, powerCurve }) => {
   const { lat, lng } = currentPosition ?? {};
@@ -25,6 +27,23 @@ const RightPane = ({ currentPosition, height, powerCurve }) => {
     shouldFetch? { lat, lng, height } : null,
     getWindResourceDataByCoordinates
   ); // cache key for this lat, lng; see https://swr.vercel.app/docs/arguments#passing-objects
+
+  const {
+    data: energyProduction,
+    error: energyProductionError,
+  } = useSWR(
+    shouldFetch? { lat, lng, height, powerCurve} : null,
+    getEnergyProduction
+  );
+
+  const {
+    data: availablePowerCurves,
+    error: availablePowerCurvesError,
+  } = useSWR(
+    shouldFetch? {} : null,
+    getAvailablePowerCurves
+  );
+
 
   const settingOptions = [
     {
@@ -40,8 +59,18 @@ const RightPane = ({ currentPosition, height, powerCurve }) => {
     },
     {
       title: "Selected power curve",
-      data: powerCurve ? `nrel-reference-${powerCurve}kW` : "Not selected",
+      data: powerCurve ? `${powerCurve}` : "Not selected",
     },
+    {
+      title: "Energy Production",
+      data: energyProduction ? energyProduction.energy_production: "Loading...",
+    },
+    // {
+    //   title: "Available Power Curves",
+    //   data: availablePowerCurves
+    //   ? availablePowerCurves.available_power_curves.map((pc) => pc).join(", ")
+    //   : "Loading...",
+    // },
   ];
 
   return (
