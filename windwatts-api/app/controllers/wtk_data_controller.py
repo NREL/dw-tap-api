@@ -98,7 +98,7 @@ def energy_production(lat: float, lng: float, height: int,
 
         yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(df,height,selected_powercurve)
         
-        return {"energy_production": yearly_avg_energy_production.loc['Average year','kWh produced']}
+        return {"energy_production": yearly_avg_energy_production['Average year']['kWh produced']}
     except ValueError as ve:
         raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:

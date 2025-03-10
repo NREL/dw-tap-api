@@ -73,6 +73,16 @@ class PowerCurveManager:
 
         Returns:
             pd.DataFrame: Dataframe summarizing yearly energy production.
+        
+        Example:
+            {'Lowest year': 
+            {'year': 2015, 'Average wind speed, m/s': '3.48', 'kWh produced': '54,395'}, 
+            'Average year': 
+            {'year': None, 'Average wind speed, m/s': '3.79', 'kWh produced': '72,214'}, 
+            'Highest year': 
+            {'year': 2014, 'Average wind speed, m/s': '4.00', 'kWh produced': '86,536'}}
+
+            Note: for "Average year" the "year" is "None" as it's the global average production.
         """
         prod_df = self.fetch_energy_production_df(df, height, selected_power_curve)
         prod_df = prod_df.drop(columns=["mohr", "month", "hour"] + [col for col in prod_df.columns if "winddirection" in col])
@@ -80,36 +90,43 @@ class PowerCurveManager:
         kw_column = f'windspeed_{height}m_kw'
 
         res = prod_df.groupby("year").agg(avg_ws=(ws_column, "mean"), kwh_total=(kw_column, "sum"))
+        res.reset_index(inplace=True)
         res["kwh_total"] *= 30  # Approximate estimation for 30 days per month
 
         res.rename(columns={"avg_ws": "Average wind speed (m/s)", "kwh_total": "kWh produced"}, inplace=True)
         res.sort_values("Average wind speed (m/s)", inplace=True)
 
-        res_avg = pd.DataFrame(res.mean()).T
+        res_avg = pd.DataFrame(res.drop(columns=['year']).mean()).T
         res_avg.index = ["Average year"]
 
         res_summary = pd.concat([res.iloc[[0]], res_avg, res.iloc[[-1]]])
+        res_summary["year"] = res_summary["year"].astype("Int64")
         res_summary["kWh produced"] = res_summary["kWh produced"].astype(float).map('{:,.0f}'.format)
         res_summary["Average wind speed (m/s)"] = res_summary["Average wind speed (m/s)"].astype(float).map('{:,.2f}'.format)
 
         res_summary.index = [
-            f"Lowest year ({res_summary.index[0]})",
+            f"Lowest year",
             res_summary.index[1],
-            f"Highest year ({res_summary.index[2]})"
+            f"Highest year"
         ]
 
-        return res_summary
+        return res_summary.to_dict(orient="index")
 
     def fetch_monthly_avg_energy_production(self, df: pd.DataFrame, height: int, selected_power_curve: str) -> pd.DataFrame:
         """
         Computes monthly average energy production.
 
         Args:
-            df (pd.DataFrame): Dataframe containing wind speed and power data.
-            height (int): Height in meters.
+            df (pd.DataFrame): Dataframe containing data at all heights for a location.
+            height (int): Height in meters.po
 
         Returns:
             pd.DataFrame: Dataframe summarizing monthly energy production.
+
+        Example:
+        {'Jan': {'Average wind speed, m/s': '3.80', 'kWh produced': '5,934'}, 
+        'Feb': {'Average wind speed, m/s': '3.92', 'kWh produced': '6,357'}, 
+        'Mar': {'Average wind speed, m/s': '4.17', 'kWh produced': '7,689'}....}
         """
         prod_df = self.fetch_energy_production_df(df, height, selected_power_curve)
         prod_df = prod_df.drop(columns=["mohr", "year", "hour"] + [col for col in prod_df.columns if "winddirection" in col])
@@ -125,4 +142,4 @@ class PowerCurveManager:
         res["kWh produced"] = res["kWh produced"].astype(float).map('{:,.0f}'.format)
         res["Average wind speed (m/s)"] = res["Average wind speed (m/s)"].astype(float).map('{:,.2f}'.format)
 
-        return res
+        return res.to_dict(orient="index")
