@@ -105,7 +105,7 @@ RightPane.propTypes = {
     lng: PropTypes.number,
   }),
   height: PropTypes.number,
-  powerCurve: PropTypes.number,
+  powerCurve: PropTypes.string,
 };
 
 export default RightPane;
