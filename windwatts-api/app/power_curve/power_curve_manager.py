@@ -63,7 +63,7 @@ class PowerCurveManager:
         
         return df
     
-    def fetch_yearly_avg_energy_production(self, df: pd.DataFrame, height: int, selected_power_curve: str) -> pd.DataFrame:
+    def fetch_yearly_avg_energy_production(self, df: pd.DataFrame, height: int, selected_power_curve: str) -> dict:
         """
         Computes yearly average energy production.
 
@@ -101,7 +101,7 @@ class PowerCurveManager:
 
         res_summary = pd.concat([res.iloc[[0]], res_avg, res.iloc[[-1]]])
         res_summary["year"] = res_summary["year"].astype("Int64")
-        res_summary["kWh produced"] = res_summary["kWh produced"].astype(float).map('{:,.0f}'.format)
+        res_summary["kWh produced"] = round(res_summary["kWh produced"].astype(float))
         res_summary["Average wind speed (m/s)"] = res_summary["Average wind speed (m/s)"].astype(float).map('{:,.2f}'.format)
 
         res_summary.index = [
@@ -112,7 +112,7 @@ class PowerCurveManager:
 
         return res_summary.to_dict(orient="index")
 
-    def fetch_monthly_avg_energy_production(self, df: pd.DataFrame, height: int, selected_power_curve: str) -> pd.DataFrame:
+    def fetch_monthly_avg_energy_production(self, df: pd.DataFrame, height: int, selected_power_curve: str) -> dict:
         """
         Computes monthly average energy production.
 
@@ -139,7 +139,7 @@ class PowerCurveManager:
         res.rename(columns={"avg_ws": "Average wind speed (m/s)", "kwh_total": "kWh produced"}, inplace=True)
         res.index = pd.Series(res.index).apply(lambda x: calendar.month_abbr[x])
 
-        res["kWh produced"] = res["kWh produced"].astype(float).map('{:,.0f}'.format)
+        res["kWh produced"] = round(res["kWh produced"].astype(float))
         res["Average wind speed (m/s)"] = res["Average wind speed (m/s)"].astype(float).map('{:,.2f}'.format)
 
         return res.to_dict(orient="index")
