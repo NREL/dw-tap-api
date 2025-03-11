@@ -27,7 +27,7 @@ const RightPane = ({ currentPosition, height, powerCurve }) => {
     },
     {
       title: "Power curve",
-      data: powerCurve ? `nrel-reference-${powerCurve}kW` : "Not selected",
+      data: powerCurve ? `${powerCurve}` : "Not selected",
     },
   ];
 
@@ -81,7 +81,7 @@ const RightPane = ({ currentPosition, height, powerCurve }) => {
           ))}
         </Grid2>
 
-        <WindspeedCards lat={lat} lng={lng} height={height} />
+        <WindspeedCards lat={lat} lng={lng} height={height} powerCurve={powerCurve} />
 
         <Typography variant="body2" color="textSecondary" marginTop={2}>
           Disclaimer: This summary represents a PRELIMINARY analysis. Research

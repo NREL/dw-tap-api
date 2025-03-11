@@ -12,8 +12,15 @@ import {
 import PropTypes from "prop-types";
 import { Close } from "@mui/icons-material";
 import { UnitsSettings } from "./UnitsSettings";
+import { getPowerCurvesOptions } from "../../services/api";
+import useSWR from "swr";
 
-const powerCurveOptions = [2.5, 100, 250, 2000];
+const NRELPowerCurveOptions = [
+  'nrel-reference-100kW',
+  'nrel-reference-2.5kW',
+  'nrel-reference-250kW',
+  'nrel-reference-2000kW'
+];
 
 const hubHeightMarks = [40, 60, 80, 100, 120, 140].map((value) => ({
   value: value,
@@ -28,6 +35,14 @@ const Settings = ({
   powerCurve,
   setPowerCurve,
 }) => {
+
+  // try fetch power curve options from API
+  const { data } = useSWR(
+    '/api/wtk/powercurveoptions',
+    getPowerCurvesOptions,
+    { fallbackData: { available_power_curves: NRELPowerCurveOptions } }
+  );
+
   const handleHubHeightChange = (_, newValue) => {
     setHubHeight(newValue);
   };
@@ -105,7 +120,7 @@ const Settings = ({
               value={powerCurve}
               onChange={handlePowerCurveChange}
             >
-              {powerCurveOptions.map((option, idx) => (
+              {data.available_power_curves.map((option, idx) => (
                 <FormControlLabel
                   key={"power_curve_option_" + idx}
                   value={option}
@@ -114,7 +129,7 @@ const Settings = ({
                   }
                   label={
                     <Typography variant="body2">
-                      {`NREL's reference power curve for ${option}kW`}
+                      {option}
                     </Typography>
                   }
                 />

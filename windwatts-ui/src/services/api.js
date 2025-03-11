@@ -44,3 +44,27 @@ export const getWindspeedByLatLong = async ({ lat, lng, height }) => {
   };
   return fetchWrapper(url, options);
 };
+
+export const getEnergyProduction = async ({ lat, lng, height, powerCurve }) => {
+  const url = `/api/wtk/energy_production?lat=${lat}&lng=${lng}&height=${height}&selected_powercurve=${powerCurve}`;
+  const options = {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  return fetchWrapper(url, options);
+};
+
+export const getPowerCurvesOptions = async () => {
+  const url = `/api/wtk/powercurveoptions`;
+  const options = {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  return fetchWrapper(url, options);
+};
+
+

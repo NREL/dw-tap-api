@@ -22,7 +22,7 @@ export default function useMainLayoutLogic() {
   // main app inputs
   const [currentPosition, setCurrentPosition] = useState(null);
   const [hubHeight, setHubHeight] = useState(30);
-  const [powerCurve, setPowerCurve] = useState(100);
+  const [powerCurve, setPowerCurve] = useState("nrel-reference-100kW");
 
   return {
     units,
