@@ -11,16 +11,9 @@ import {
 } from "@mui/material";
 import PropTypes from "prop-types";
 import { Close } from "@mui/icons-material";
-import { UnitsSettings } from "./UnitsSettings";
-import { getPowerCurvesOptions } from "../../services/api";
 import useSWR from "swr";
-
-const NRELPowerCurveOptions = [
-  'nrel-reference-100kW',
-  'nrel-reference-2.5kW',
-  'nrel-reference-250kW',
-  'nrel-reference-2000kW'
-];
+import { UnitsSettings } from "./UnitsSettings";
+import { getAvailablePowerCurves } from "../../services/api";
 
 const hubHeightMarks = [40, 60, 80, 100, 120, 140].map((value) => ({
   value: value,
@@ -35,13 +28,11 @@ const Settings = ({
   powerCurve,
   setPowerCurve,
 }) => {
+  const { data: availablePowerCurves, error: availablePowerCurvesError } =
+    useSWR(settingsOpen ? {} : null, getAvailablePowerCurves);
 
-  // try fetch power curve options from API
-  const { data } = useSWR(
-    '/api/wtk/powercurveoptions',
-    getPowerCurvesOptions,
-    { fallbackData: { available_power_curves: NRELPowerCurveOptions } }
-  );
+  // Use availablePowerCurves if available, otherwise fallback to an empty array
+  const powerCurveOptions = availablePowerCurves?.available_power_curves || [];
 
   const handleHubHeightChange = (_, newValue) => {
     setHubHeight(newValue);
@@ -120,20 +111,22 @@ const Settings = ({
               value={powerCurve}
               onChange={handlePowerCurveChange}
             >
-              {data.available_power_curves.map((option, idx) => (
-                <FormControlLabel
-                  key={"power_curve_option_" + idx}
-                  value={option}
-                  control={
-                    <Radio sx={{ "& .MuiSvgIcon-root": { fontSize: 20 } }} />
-                  }
-                  label={
-                    <Typography variant="body2">
-                      {option}
-                    </Typography>
-                  }
-                />
-              ))}
+              {powerCurveOptions.length > 0 ? (
+                powerCurveOptions.map((option, idx) => (
+                  <FormControlLabel
+                    key={"power_curve_option_" + idx}
+                    value={option}
+                    control={
+                      <Radio sx={{ "& .MuiSvgIcon-root": { fontSize: 20 } }} />
+                    }
+                    label={<Typography variant="body2">{option}</Typography>}
+                  />
+                ))
+              ) : (
+                <Typography variant="body2">
+                  Loading power curve options...
+                </Typography>
+              )}
             </RadioGroup>
 
             <Typography variant="body2" marginTop={2} gutterBottom>
@@ -150,6 +143,8 @@ const Settings = ({
 };
 
 Settings.propTypes = {
+  units: PropTypes.string.isRequired,
+  setUnits: PropTypes.func.isRequired,
   settingsOpen: PropTypes.bool.isRequired,
   toggleSettings: PropTypes.func.isRequired,
   hubHeight: PropTypes.number.isRequired,
