@@ -12,8 +12,8 @@ import {
 import PropTypes from "prop-types";
 import { Close } from "@mui/icons-material";
 import useSWR from "swr";
-import { getAvailablePowerCurves } from "../../api";
 import { UnitsSettings } from "./UnitsSettings";
+import { getAvailablePowerCurves } from "../../services/api";
 
 const hubHeightMarks = [40, 60, 80, 100, 120, 140].map((value) => ({
   value: value,

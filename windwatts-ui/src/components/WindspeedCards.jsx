@@ -49,7 +49,7 @@ export default function WindspeedCards({ lat, lng, height, powerCurve }) {
     {
       title: "Production",
       subheader: "Estimated annual production potential",
-      data: convertOutput(data.energy_production, units.output),
+      data: convertOutput(data?.energy_production, units.output),
       details: [],
     },
   ];
