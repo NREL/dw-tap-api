@@ -5,6 +5,7 @@ import { convertOutput, convertWindspeed, getWindResource } from "../utils";
 import { Typography, Grid2, Stack, Skeleton } from "@mui/material";
 import { useContext } from "react";
 import { UnitsContext } from "../providers/UnitsContext";
+import PropTypes from 'prop-types';
 
 export default function WindspeedCards({ lat, lng, height, powerCurve }) {
   const { units } = useContext(UnitsContext);
@@ -88,3 +89,10 @@ export default function WindspeedCards({ lat, lng, height, powerCurve }) {
     </Stack>
   );
 }
+
+WindspeedCards.propTypes = {
+  lat: PropTypes.number,
+  lng: PropTypes.number,
+  height: PropTypes.number,
+  powerCurve: PropTypes.string,
+};

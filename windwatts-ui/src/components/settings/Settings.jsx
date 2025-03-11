@@ -154,7 +154,7 @@ Settings.propTypes = {
   toggleSettings: PropTypes.func.isRequired,
   hubHeight: PropTypes.number.isRequired,
   setHubHeight: PropTypes.func.isRequired,
-  powerCurve: PropTypes.number.isRequired,
+  powerCurve: PropTypes.string.isRequired,
   setPowerCurve: PropTypes.func.isRequired,
 };
 
