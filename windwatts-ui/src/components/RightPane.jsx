@@ -1,76 +1,34 @@
-import useSWR from "swr";
-import {
-  Box,
-  Typography,
-  Link,
-  ListItem,
-  ListItemText,
-  Grid2,
-  Stack,
-  Skeleton,
-} from "@mui/material";
+import { Box, Typography, Link, Paper, Grid2 } from "@mui/material";
+import { styled } from "@mui/material/styles";
 import PropTypes from "prop-types";
-import ResultCard from "./ResultCard";
-import { getWindResourceDataByCoordinates } from "../services/api";
-import { getEnergyProduction } from "../services/api";
-import { getAvailablePowerCurves } from "../services/api";
+import WindspeedCards from "./WindspeedCards";
+
+const Item = styled(Paper)(({ theme }) => ({
+  ...theme.typography.body2,
+  padding: theme.spacing(1),
+  textAlign: "center",
+  color: theme.palette.text.secondary,
+}));
 
 const RightPane = ({ currentPosition, height, powerCurve }) => {
   const { lat, lng } = currentPosition ?? {};
-  const shouldFetch = lat && lng & height;
-  
-  const {
-    isLoading,
-    data: resultCardData,
-    error,
-  } = useSWR(
-    shouldFetch? { lat, lng, height } : null,
-    getWindResourceDataByCoordinates
-  ); // cache key for this lat, lng; see https://swr.vercel.app/docs/arguments#passing-objects
-
-  const {
-    data: energyProduction,
-    error: energyProductionError,
-  } = useSWR(
-    shouldFetch? { lat, lng, height, powerCurve} : null,
-    getEnergyProduction
-  );
-
-  const {
-    data: availablePowerCurves,
-    error: availablePowerCurvesError,
-  } = useSWR(
-    shouldFetch? {} : null,
-    getAvailablePowerCurves
-  );
-
 
   const settingOptions = [
     {
-      title: "Selected location (lat, lng)",
+      title: "Location",
       data:
         currentPosition && lat && lng
           ? `${lat.toFixed(3)}, ${lng.toFixed(3)}`
           : "Not selected",
     },
     {
-      title: "Selected hub height",
+      title: "Hub height",
       data: height ? `${height} meters` : "Not selected",
     },
     {
-      title: "Selected power curve",
+      title: "Power curve",
       data: powerCurve ? `${powerCurve}` : "Not selected",
     },
-    {
-      title: "Energy Production",
-      data: energyProduction ? energyProduction.energy_production: "Loading...",
-    },
-    // {
-    //   title: "Available Power Curves",
-    //   data: availablePowerCurves
-    //   ? availablePowerCurves.available_power_curves.map((pc) => pc).join(", ")
-    //   : "Loading...",
-    // },
   ];
 
   return (
@@ -102,48 +60,29 @@ const RightPane = ({ currentPosition, height, powerCurve }) => {
           </Link>
           &nbsp;using the following options:
         </Typography>
-        <Stack container="true" spacing={2}>
+        <Grid2
+          container
+          direction="row"
+          spacing={1}
+          sx={{
+            justifyContent: "space-between",
+            alignItems: "stretch",
+          }}
+        >
           {settingOptions.map((option, index) => (
-            <Grid2 key={"setting_option_" + index}>
-              <ListItem
-                sx={{
-                  borderRadius: 1,
-                  boxShadow: 3,
-                  minWidth: 200,
-                }}
-              >
-                <ListItemText primary={option.title} secondary={option.data} />
-              </ListItem>
-            </Grid2>
-          ))}
-        </Stack>
-
-        <Stack container="true" spacing={2}>
-          {error && (
-            <Box>
-              <Typography
-                marginTop={2}
-                variant="body1"
-                color="error"
-                gutterBottom
-              >
-                There was an error loading data: {error.message}
+            <Item key={"setting_option_" + index} sx={{ flexGrow: 1 }}>
+              <Typography variant="h6" sx={{ fontSize: "1rem" }}>
+                {option.title}
               </Typography>
-            </Box>
-          )}
-          {isLoading ? (
-            <Box>
-              <Skeleton sx={{ marginTop: 5 }} variant="rounded" height={190} />
-              <Skeleton sx={{ marginTop: 5 }} variant="rounded" height={190} />
-              <Skeleton sx={{ marginTop: 5 }} variant="rounded" height={190} />
-            </Box>
-          ) : resultCardData ? (
-            <Grid2 key={"result_card_"}>
-              <ResultCard windspeed={resultCardData.global_avg} />
-            </Grid2>
-          ) : null
-          }
-        </Stack>
+              <Typography variant="body2" sx={{ fontSize: "1rem" }}>
+                {option.data}
+              </Typography>
+            </Item>
+          ))}
+        </Grid2>
+
+        <WindspeedCards lat={lat} lng={lng} height={height} powerCurve={powerCurve} />
+
         <Typography variant="body2" color="textSecondary" marginTop={2}>
           Disclaimer: This summary represents a PRELIMINARY analysis. Research
           conducted at national laboratories suggests that multiple models
@@ -156,8 +95,6 @@ const RightPane = ({ currentPosition, height, powerCurve }) => {
 };
 
 RightPane.propTypes = {
-  openResults: PropTypes.bool.isRequired,
-  handleClose: PropTypes.func.isRequired,
   currentPosition: PropTypes.shape({
     lat: PropTypes.number,
     lng: PropTypes.number,

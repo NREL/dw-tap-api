@@ -9,16 +9,6 @@ export const fetchWrapper = async (url, options) => {
 };
 
 export const getWindResourceData = async (windResource) => {
-  // example implementation
-  // const url = `api/wind-resource/${windResource}`;
-  // const options = {
-  //   method: "GET",
-  //   headers: {
-  //     "Content-Type": "application/json",
-  //   },
-  // };
-  // return fetchWrapper(url, options);
-  console.log("getWindResourceData for " + windResource);
   await delay(1000);
   return {
     winddataexample: [
@@ -44,10 +34,8 @@ export const getWindResourceData = async (windResource) => {
   };
 };
 
-export const getWindResourceDataByCoordinates = async ({ lat, lng, height }) => {
-  console.log("getWindResourceDataByCoordinates for " + lat + ", " + lng + ", " + height);
-  // example implementation that works locally when the backend fastapi server is running
-  const url = `/api/wtk-data/windspeed?lat=${lat}&lng=${lng}&height=${height}`;
+export const getWindspeedByLatLong = async ({ lat, lng, height }) => {
+  const url = `/api/wtk/windspeed?lat=${lat}&lng=${lng}&height=${height}`;
   const options = {
     method: "GET",
     headers: {
@@ -58,9 +46,7 @@ export const getWindResourceDataByCoordinates = async ({ lat, lng, height }) => 
 };
 
 export const getEnergyProduction = async ({ lat, lng, height, powerCurve }) => {
-  // console.log("getWindResourceDataByCoordinates for " + lat + ", " + lng + ", " + height);
-  // example implementation that works locally when the backend fastapi server is running
-  const url = `/api/wtk-data/energy_production?lat=${lat}&lng=${lng}&height=${height}&selected_powercurve=${powerCurve}`;
+  const url = `/api/wtk/energy_production?lat=${lat}&lng=${lng}&height=${height}&selected_powercurve=${powerCurve}`;
   const options = {
     method: "GET",
     headers: {
@@ -70,10 +56,8 @@ export const getEnergyProduction = async ({ lat, lng, height, powerCurve }) => {
   return fetchWrapper(url, options);
 };
 
-export const getAvailablePowerCurves = async () => {
-  // console.log("getWindResourceDataByCoordinates for " + lat + ", " + lng + ", " + height);
-  // example implementation that works locally when the backend fastapi server is running
-  const url = `/api/wtk-data/available_powercurves`;
+export const getPowerCurvesOptions = async () => {
+  const url = `/api/wtk/powercurveoptions`;
   const options = {
     method: "GET",
     headers: {

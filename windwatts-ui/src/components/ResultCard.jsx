@@ -10,50 +10,23 @@ import {
 } from "@mui/material";
 import PropTypes from "prop-types";
 
-const ResultCard = ({
-  windspeed,
-  energy,
-}) => {
+const ResultCard = ({ data = {} }) => {
   const [expanded, setExpanded] = useState(false);
-
-  const windspeedData = {
-    title: "Wind Resource",
-    subheader: "Details about wind resources",
-    data: `we found average ${windspeed} m/s resources.`,
-    details: [
-      "Additional details about wind resources:",
-      "Low wind resource refers to wind speeds below 3.00 m/s.",
-      "Moderate wind resource refers to wind speeds between 3.00 m/s and 5.00 m/s.",
-      "High wind resource refers to wind speeds above 5.00 m/s.",
-    ],
-  }
-  
-  const windresourceData = {
-    title: "Wind Resource",
-    subheader: "Details about wind resources",
-    data: "This section provides information about wind resources.",
-    details: [
-      "Additional details about wind resources:",
-      "Low wind resource refers to wind speeds below 3.00 m/s.",
-      "Moderate wind resource refers to wind speeds between 3.00 m/s and 5.00 m/s.",
-      "High wind resource refers to wind speeds above 5.00 m/s.",
-    ],
-  }
 
   const handleExpandClick = () => {
     setExpanded(!expanded);
   };
 
   return (
-    <Card sx={{ margin: "auto", mt: 5 }}>
+    <Card>
       <CardHeader
-        title={windspeedData.title}
-        subheader={windspeedData.subheader}
+        title={data.title}
+        subheader={data.subheader}
         sx={{ bgcolor: "var(--color-light)" }}
       />
       <CardContent>
         <Typography variant="body2" color="text.secondary">
-          {windspeedData.data}
+          {data.data}
         </Typography>
       </CardContent>
       <CardActions>
@@ -67,8 +40,10 @@ const ResultCard = ({
       </CardActions>
       <Collapse in={expanded} timeout="auto" unmountOnExit>
         <CardContent>
-          {windspeedData.details.map((detail, index) => (
-            <Typography key={"result_detail" + index}>{detail}</Typography>
+          {data.details.map((detail, index) => (
+            <Typography key={"result_detail" + index} variant="body2">
+              {detail}
+            </Typography>
           ))}
         </CardContent>
       </Collapse>
@@ -80,7 +55,7 @@ ResultCard.propTypes = {
   data: PropTypes.shape({
     title: PropTypes.string.isRequired,
     subheader: PropTypes.string.isRequired,
-    data: PropTypes.string.isRequired,
+    data: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     details: PropTypes.arrayOf(PropTypes.string).isRequired,
   }),
 };

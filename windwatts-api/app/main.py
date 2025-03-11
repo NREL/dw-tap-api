@@ -19,8 +19,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(wtk_data_router, prefix="/wtk-data", tags=["wtk-database"])
-app.include_router(era5_data_router, prefix="/era5-data", tags=["era5-database"])
+app.include_router(wtk_data_router, prefix="/wtk", tags=["wtk-data"])
+app.include_router(era5_data_router, prefix="/era5", tags=["era5-data"])
 app.include_router(random_router, prefix="/random", tags=["random"])
 
 @app.get("/healthcheck")

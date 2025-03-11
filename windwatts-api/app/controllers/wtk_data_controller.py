@@ -69,7 +69,7 @@ def get_windspeed(lat: float, lng: float, height: int, avg_type: str = 'global',
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
     
 
-@router.get("/available_powercurves", summary="Fetch all available power curves")
+@router.get("/powercurveoptions", summary="Fetch all available power curves")
 def fetch_available_powercurves():
     '''
     returns available power curves

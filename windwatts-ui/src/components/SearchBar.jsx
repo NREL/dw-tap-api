@@ -7,7 +7,7 @@ import { useOutletContext } from "react-router-dom";
 
 function SearchBar({ onPlaceSelected }) {
   const [autocomplete, setAutocomplete] = useState(null);
-  const { handleOpenSettings } = useOutletContext();
+  const { toggleSettingsOpen } = useOutletContext();
 
   const onLoad = (instance) => {
     setAutocomplete(instance);
@@ -39,7 +39,7 @@ function SearchBar({ onPlaceSelected }) {
         zIndex: 10,
       }}
     >
-      <IconButton onClick={handleOpenSettings}>
+      <IconButton onClick={toggleSettingsOpen}>
         <Settings />
       </IconButton>
       <Box sx={{ flexGrow: 1 }}>
