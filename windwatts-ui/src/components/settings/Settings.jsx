@@ -15,6 +15,13 @@ import useSWR from "swr";
 import { UnitsSettings } from "./UnitsSettings";
 import { getAvailablePowerCurves } from "../../services/api";
 
+const NRELPowerCurveOptions = [
+  'nrel-reference-100kW',
+  'nrel-reference-2.5kW',
+  'nrel-reference-250kW',
+  'nrel-reference-2000kW'
+];
+
 const hubHeightMarks = [40, 60, 80, 100, 120, 140].map((value) => ({
   value: value,
   label: `${value}m`,
@@ -28,8 +35,13 @@ const Settings = ({
   powerCurve,
   setPowerCurve,
 }) => {
+  // Fetch available power curve options or use default NREL Power Curves
   const { data: availablePowerCurves, error: availablePowerCurvesError } =
-    useSWR(settingsOpen ? {} : null, getAvailablePowerCurves);
+    useSWR(
+      settingsOpen ? '/api/wtk/available-powercurves' : null, 
+      getAvailablePowerCurves,
+      { fallbackData: { available_power_curves: NRELPowerCurveOptions } }
+    );
 
   // Use availablePowerCurves if available, otherwise fallback to an empty array
   const powerCurveOptions = availablePowerCurves?.available_power_curves || [];
@@ -143,8 +155,6 @@ const Settings = ({
 };
 
 Settings.propTypes = {
-  units: PropTypes.string.isRequired,
-  setUnits: PropTypes.func.isRequired,
   settingsOpen: PropTypes.bool.isRequired,
   toggleSettings: PropTypes.func.isRequired,
   hubHeight: PropTypes.number.isRequired,
