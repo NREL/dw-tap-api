@@ -29,24 +29,28 @@ const ResultCard = ({ data = {} }) => {
           {data.data}
         </Typography>
       </CardContent>
-      <CardActions>
-        <Button
-          onClick={handleExpandClick}
-          aria-expanded={expanded}
-          aria-label="show more"
-        >
-          {expanded ? "Hide Details" : "Show Details"}
-        </Button>
-      </CardActions>
-      <Collapse in={expanded} timeout="auto" unmountOnExit>
-        <CardContent>
-          {data.details.map((detail, index) => (
-            <Typography key={"result_detail" + index} variant="body2">
-              {detail}
-            </Typography>
-          ))}
-        </CardContent>
-      </Collapse>
+      {data.details.length > 0 ? (
+        <>
+          <CardActions>
+            <Button
+              onClick={handleExpandClick}
+              aria-expanded={expanded}
+              aria-label="show more"
+            >
+              {expanded ? "Hide Details" : "Show Details"}
+            </Button>
+          </CardActions>
+          <Collapse in={expanded} timeout="auto" unmountOnExit>
+            <CardContent>
+              {data.details.map((detail, index) => (
+                <Typography key={"result_detail" + index} variant="body2">
+                  {detail}
+                </Typography>
+              ))}
+            </CardContent>
+          </Collapse>
+        </>
+      ) : null}
     </Card>
   );
 };

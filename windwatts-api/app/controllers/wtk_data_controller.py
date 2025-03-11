@@ -67,19 +67,19 @@ def get_windspeed(lat: float, lng: float, height: int, avg_type: str = 'global',
         raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
-    
 
-@router.get("/powercurveoptions", summary="Fetch all available power curves")
+
+@router.get("/available-powercurves", summary="Fetch all available power curves")
 def fetch_available_powercurves():
     '''
     returns available power curves
     '''
     return {'available_power_curves': list(power_curve_manager.power_curves.keys())}
-    
 
-@router.get("/energy_production", summary="Get energy production for a location at a height with a selected power curve")
-def energy_production(lat: float, lng: float, height: int, 
-                               selected_powercurve: str, 
+
+@router.get("/energy-production", summary="Get energy production for a location at a height with a selected power curve")
+def energy_production(lat: float, lng: float, height: int,
+                               selected_powercurve: str,
                                source: str = "athena"):
     """
     Fetches the energy production for a given location, height, and power curve.
@@ -97,7 +97,7 @@ def energy_production(lat: float, lng: float, height: int,
             raise HTTPException(status_code=404, detail="Data not found")
 
         yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(df,height,selected_powercurve)
-        
+
         return {"energy_production": yearly_avg_energy_production['Average year']['kWh produced']}
     except ValueError as ve:
         raise HTTPException(status_code=400, detail=str(ve))

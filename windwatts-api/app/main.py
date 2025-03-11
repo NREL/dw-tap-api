@@ -1,11 +1,18 @@
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from mangum import Mangum
 from app.controllers.random_controller import router as random_router
 from app.controllers.wtk_data_controller import router as wtk_data_router
 from app.controllers.era5_data_controller import router as era5_data_router
+from app.middleware import log_requests
+from app.exception_handlers import log_unhandled_exceptions, log_validation_errors
 
 app = FastAPI()
+
+app.middleware("http")(log_requests)
+app.add_exception_handler(Exception, log_unhandled_exceptions)
+app.add_exception_handler(RequestValidationError, log_validation_errors)
 
 origins = [
     "http://localhost",

@@ -46,7 +46,7 @@ export const getWindspeedByLatLong = async ({ lat, lng, height }) => {
 };
 
 export const getEnergyProduction = async ({ lat, lng, height, powerCurve }) => {
-  const url = `/api/wtk/energy_production?lat=${lat}&lng=${lng}&height=${height}&selected_powercurve=${powerCurve}`;
+  const url = `/api/wtk/energy-production?lat=${lat}&lng=${lng}&height=${height}&selected_powercurve=${powerCurve}`;
   const options = {
     method: "GET",
     headers: {
@@ -56,8 +56,8 @@ export const getEnergyProduction = async ({ lat, lng, height, powerCurve }) => {
   return fetchWrapper(url, options);
 };
 
-export const getPowerCurvesOptions = async () => {
-  const url = `/api/wtk/powercurveoptions`;
+export const getAvailablePowerCurves = async () => {
+  const url = `/api/wtk/available-powercurves`;
   const options = {
     method: "GET",
     headers: {
@@ -66,5 +66,3 @@ export const getPowerCurvesOptions = async () => {
   };
   return fetchWrapper(url, options);
 };
-
-
