@@ -5,18 +5,21 @@ import { convertOutput, convertWindspeed, getWindResource } from "../utils";
 import { Typography, Grid2, Stack, Skeleton } from "@mui/material";
 import { useContext } from "react";
 import { UnitsContext } from "../providers/UnitsContext";
-import PropTypes from 'prop-types';
+import { SettingsContext } from "../providers/SettingsContext";
 
-export default function WindspeedCards({ lat, lng, height, powerCurve }) {
+export default function WindspeedCards() {
+  const { currentPosition, hubHeight, powerCurve } =
+    useContext(SettingsContext);
   const { units } = useContext(UnitsContext);
-  const shouldFetch = lat && lng && height;
+  const { lat, lng } = currentPosition || {};
+  const shouldFetch = lat && lng && hubHeight;
 
   const {
     isLoading: energyIsLoading,
     data: energy,
     error: energyError,
   } = useSWR(
-    shouldFetch && powerCurve ? { lat, lng, height, powerCurve } : null,
+    shouldFetch && powerCurve ? { lat, lng, hubHeight, powerCurve } : null,
     getEnergyProduction
   );
 
@@ -24,7 +27,10 @@ export default function WindspeedCards({ lat, lng, height, powerCurve }) {
     isLoading: windspeedIsLoading,
     data: windspeed,
     error: windspeedError,
-  } = useSWR(shouldFetch ? { lat, lng, height } : null, getWindspeedByLatLong);
+  } = useSWR(
+    shouldFetch ? { lat, lng, hubHeight } : null,
+    getWindspeedByLatLong
+  );
 
   const isLoading = energyIsLoading || windspeedIsLoading;
   const error = energyError || windspeedError;
@@ -83,17 +89,10 @@ export default function WindspeedCards({ lat, lng, height, powerCurve }) {
       ) : data ? (
         dataCards.map((data, index) => (
           <Grid2 key={"result_card_" + index}>
-            <ResultCard data={data} isLoading={isLoading} />
+            <ResultCard data={data} />
           </Grid2>
         ))
       ) : null}
     </Stack>
   );
 }
-
-WindspeedCards.propTypes = {
-  lat: PropTypes.number,
-  lng: PropTypes.number,
-  height: PropTypes.number,
-  powerCurve: PropTypes.string,
-};

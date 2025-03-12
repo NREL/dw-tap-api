@@ -1,22 +1,21 @@
 import { Box, IconButton, TextField } from "@mui/material";
 import { Autocomplete } from "@react-google-maps/api";
 import { Settings } from "@mui/icons-material";
-import { useState } from "react";
-import PropTypes from "prop-types";
-import { useOutletContext } from "react-router-dom";
+import { useContext, useState } from "react";
+import { SettingsContext } from "../providers/SettingsContext";
 
-function SearchBar({ onPlaceSelected }) {
-  const [autocomplete, setAutocomplete] = useState(null);
-  const { toggleSettingsOpen } = useOutletContext();
+function SearchBar({ onPlaceSelected }: { onPlaceSelected: Function }) {
+  const { toggleSettings } = useContext(SettingsContext);
+  const [autocomplete, setAutocomplete] =
+    useState<google.maps.places.Autocomplete | null>(null);
 
-  const onLoad = (instance) => {
+  const onLoad = (instance: google.maps.places.Autocomplete) => {
     setAutocomplete(instance);
   };
 
   const onPlaceChanged = () => {
     if (autocomplete !== null) {
       const place = autocomplete.getPlace();
-      onPlaceSelected;
       onPlaceSelected(place);
     } else {
       console.error("Autocomplete is not loaded yet!");
@@ -39,7 +38,7 @@ function SearchBar({ onPlaceSelected }) {
         zIndex: 10,
       }}
     >
-      <IconButton onClick={toggleSettingsOpen}>
+      <IconButton onClick={toggleSettings}>
         <Settings />
       </IconButton>
       <Box sx={{ flexGrow: 1 }}>
@@ -56,9 +55,5 @@ function SearchBar({ onPlaceSelected }) {
     </Box>
   );
 }
-SearchBar.propTypes = {
-  onPlaceSelected: PropTypes.func.isRequired,
-  // toggleDrawer: PropTypes.func.isRequired,
-};
 
 export default SearchBar;

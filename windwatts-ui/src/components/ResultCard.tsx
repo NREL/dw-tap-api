@@ -8,9 +8,17 @@ import {
   Collapse,
   Typography,
 } from "@mui/material";
-import PropTypes from "prop-types";
 
-const ResultCard = ({ data = {} }) => {
+const ResultCard = ({
+  data,
+}: {
+  data: {
+    title: string;
+    subheader: string;
+    data: string | number;
+    details: string[];
+  };
+}) => {
   const [expanded, setExpanded] = useState(false);
 
   const handleExpandClick = () => {
@@ -55,12 +63,4 @@ const ResultCard = ({ data = {} }) => {
   );
 };
 
-ResultCard.propTypes = {
-  data: PropTypes.shape({
-    title: PropTypes.string.isRequired,
-    subheader: PropTypes.string.isRequired,
-    data: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-    details: PropTypes.arrayOf(PropTypes.string).isRequired,
-  }),
-};
 export default ResultCard;

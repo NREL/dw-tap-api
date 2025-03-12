@@ -6,13 +6,19 @@ import UnitsToggleButtonGroup from "./UnitsToggleButtonGroup";
 export function UnitsSettings() {
   const { units, updateUnit } = useContext(UnitsContext);
 
-  const handleWindspeedChange = (_, newWindspeedUnit) => {
+  const handleWindspeedChange = (
+    _: React.MouseEvent<HTMLElement>,
+    newWindspeedUnit: string
+  ) => {
     if (newWindspeedUnit !== null) {
       updateUnit("windspeed", newWindspeedUnit);
     }
   };
 
-  const handleOutputChange = (_, newOutputUnit) => {
+  const handleOutputChange = (
+    _: React.MouseEvent<HTMLElement>,
+    newOutputUnit: string
+  ) => {
     if (newOutputUnit !== null) {
       updateUnit("output", newOutputUnit);
     }
