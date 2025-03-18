@@ -9,17 +9,18 @@ import {
   FormControl,
   IconButton,
 } from "@mui/material";
-import PropTypes from "prop-types";
 import { Close } from "@mui/icons-material";
 import useSWR from "swr";
 import { UnitsSettings } from "./UnitsSettings";
 import { getAvailablePowerCurves } from "../../services/api";
+import { useContext } from "react";
+import { SettingsContext } from "../../providers/SettingsContext";
 
 const NRELPowerCurveOptions = [
-  'nrel-reference-100kW',
-  'nrel-reference-2.5kW',
-  'nrel-reference-250kW',
-  'nrel-reference-2000kW'
+  "nrel-reference-100kW",
+  "nrel-reference-2.5kW",
+  "nrel-reference-250kW",
+  "nrel-reference-2000kW",
 ];
 
 const hubHeightMarks = [40, 60, 80, 100, 120, 140].map((value) => ({
@@ -27,30 +28,34 @@ const hubHeightMarks = [40, 60, 80, 100, 120, 140].map((value) => ({
   label: `${value}m`,
 }));
 
-const Settings = ({
-  settingsOpen,
-  toggleSettings,
-  hubHeight,
-  setHubHeight,
-  powerCurve,
-  setPowerCurve,
-}) => {
+const Settings = () => {
+  const {
+    settingsOpen,
+    toggleSettings,
+    hubHeight,
+    setHubHeight,
+    powerCurve,
+    setPowerCurve,
+  } = useContext(SettingsContext);
+
   // Fetch available power curve options or use default NREL Power Curves
-  const { data: availablePowerCurves, error: availablePowerCurvesError } =
-    useSWR(
-      settingsOpen ? '/api/wtk/available-powercurves' : null, 
-      getAvailablePowerCurves,
-      { fallbackData: { available_power_curves: NRELPowerCurveOptions } }
-    );
+  const { data: availablePowerCurves } = useSWR(
+    settingsOpen ? "/api/wtk/available-powercurves" : null,
+    getAvailablePowerCurves,
+    { fallbackData: { available_power_curves: NRELPowerCurveOptions } }
+  );
 
   // Use availablePowerCurves if available, otherwise fallback to an empty array
-  const powerCurveOptions = availablePowerCurves?.available_power_curves || [];
+  const powerCurveOptions: string[] =
+    availablePowerCurves?.available_power_curves || [];
 
-  const handleHubHeightChange = (_, newValue) => {
-    setHubHeight(newValue);
+  const handleHubHeightChange = (_: Event, newValue: number | number[]) => {
+    setHubHeight(newValue as number);
   };
 
-  const handlePowerCurveChange = (event) => {
+  const handlePowerCurveChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setPowerCurve(event.target.value);
   };
 
@@ -152,15 +157,6 @@ const Settings = ({
       </Box>
     </Modal>
   );
-};
-
-Settings.propTypes = {
-  settingsOpen: PropTypes.bool.isRequired,
-  toggleSettings: PropTypes.func.isRequired,
-  hubHeight: PropTypes.number.isRequired,
-  setHubHeight: PropTypes.func.isRequired,
-  powerCurve: PropTypes.string.isRequired,
-  setPowerCurve: PropTypes.func.isRequired,
 };
 
 export default Settings;

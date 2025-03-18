@@ -1,7 +1,8 @@
 import { Box, Typography, Link, Paper, Grid2 } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import PropTypes from "prop-types";
 import WindspeedCards from "./WindspeedCards";
+import { useContext } from "react";
+import { SettingsContext } from "../providers/SettingsContext";
 
 const Item = styled(Paper)(({ theme }) => ({
   ...theme.typography.body2,
@@ -10,7 +11,9 @@ const Item = styled(Paper)(({ theme }) => ({
   color: theme.palette.text.secondary,
 }));
 
-const RightPane = ({ currentPosition, height, powerCurve }) => {
+const RightPane = () => {
+  const { currentPosition, hubHeight, powerCurve } =
+    useContext(SettingsContext);
   const { lat, lng } = currentPosition ?? {};
 
   const settingOptions = [
@@ -23,7 +26,7 @@ const RightPane = ({ currentPosition, height, powerCurve }) => {
     },
     {
       title: "Hub height",
-      data: height ? `${height} meters` : "Not selected",
+      data: hubHeight ? `${hubHeight} meters` : "Not selected",
     },
     {
       title: "Power curve",
@@ -81,12 +84,7 @@ const RightPane = ({ currentPosition, height, powerCurve }) => {
           ))}
         </Grid2>
 
-        <WindspeedCards
-          lat={lat}
-          lng={lng}
-          height={height}
-          powerCurve={powerCurve}
-        />
+        <WindspeedCards />
 
         <Typography variant="body2" color="textSecondary" marginTop={2}>
           Disclaimer: This summary represents a PRELIMINARY analysis. Research
@@ -97,15 +95,6 @@ const RightPane = ({ currentPosition, height, powerCurve }) => {
       </Box>
     </Box>
   );
-};
-
-RightPane.propTypes = {
-  currentPosition: PropTypes.shape({
-    lat: PropTypes.number,
-    lng: PropTypes.number,
-  }),
-  height: PropTypes.number,
-  powerCurve: PropTypes.string,
 };
 
 export default RightPane;

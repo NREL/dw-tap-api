@@ -3,23 +3,9 @@ import { Outlet, Link as RouterLink } from "react-router-dom";
 import { Link, Box, AppBar, Toolbar } from "@mui/material";
 import Settings from "./settings";
 import RightPane from "./RightPane";
-import useMainLayoutLogic from "../hooks/useMainLayoutLogic";
 
 function Layout() {
   const APP_TITLE = import.meta.env.VITE_APP_TITLE || "Wind Watts";
-
-  const {
-    settingsOpen,
-    currentPosition,
-    hubHeight,
-    powerCurve,
-    toggleResultsOpen,
-    toggleSettingsOpen,
-    handleUnitsChange,
-    setCurrentPosition,
-    setHubHeight,
-    setPowerCurve,
-  } = useMainLayoutLogic();
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100vh" }}>
@@ -61,14 +47,7 @@ function Layout() {
             overflow: "hidden",
           }}
         >
-          <Outlet
-            context={{
-              toggleResultsOpen,
-              toggleSettingsOpen,
-              currentPosition,
-              setCurrentPosition,
-            }}
-          />
+          <Outlet />
         </Box>
 
         <Box
@@ -81,24 +60,12 @@ function Layout() {
           }}
         >
           <Box>
-            <RightPane
-              currentPosition={currentPosition}
-              height={hubHeight}
-              powerCurve={powerCurve}
-            />
+            <RightPane />
           </Box>
           <Footer />
         </Box>
       </Box>
-      <Settings
-        setUnits={handleUnitsChange}
-        settingsOpen={settingsOpen}
-        toggleSettings={toggleSettingsOpen}
-        hubHeight={hubHeight}
-        setHubHeight={setHubHeight}
-        powerCurve={powerCurve}
-        setPowerCurve={setPowerCurve}
-      />
+      <Settings />
     </Box>
   );
 }
