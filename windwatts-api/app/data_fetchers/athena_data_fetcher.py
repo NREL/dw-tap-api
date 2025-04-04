@@ -45,6 +45,8 @@ class AthenaDataFetcher(WTKDataFetcher):
             filtered_data = self.wtk_client.fetch_yearly_avg_at_height(lat=lat, long=lng, height=height)
         elif avg_type == 'monthly':
             filtered_data = self.wtk_client.fetch_monthly_avg_at_height(lat=lat, long=lng, height=height)
+        elif avg_type == 'hourly':
+            filtered_data = self.wtk_client.fetch_hourly_avg_at_height(lat=lat, long=lng, height=height)
         else:
             raise ValueError(f"Invalid avg_type: {avg_type}")
         
