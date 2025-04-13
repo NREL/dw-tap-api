@@ -37,8 +37,7 @@ class AthenaDataFetcher(WTKDataFetcher):
         filtered_data = None
             
         if avg_type == "none":
-            self.wtk_client.fetch_data(lat=lat, long=lng)
-            filtered_data = self.wtk_client.df
+            filtered_data = self.wtk_client.fetch_df(lat=lat, long=lng, height=height)
         elif avg_type == 'global':
             filtered_data = self.wtk_client.fetch_global_avg_at_height(lat=lat, long=lng, height=height)
         elif avg_type == 'yearly':
