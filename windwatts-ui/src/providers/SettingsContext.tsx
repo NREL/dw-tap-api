@@ -45,7 +45,11 @@ export const SettingsContext = createContext<Settings>({
 
 function getStoredSettings(): StoredSettings {
   const storedSettings = localStorage.getItem("settings");
-  return storedSettings ? JSON.parse(storedSettings) : defaultValues;
+  const retrievedSettings = storedSettings ? JSON.parse(storedSettings) : {};
+  return {
+    ...defaultValues, // default values
+    ...retrievedSettings, // override with stored values
+  }
 }
 
 export default function SettingsProvider({
