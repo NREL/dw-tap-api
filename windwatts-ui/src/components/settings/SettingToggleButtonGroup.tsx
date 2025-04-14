@@ -1,7 +1,7 @@
 import { styled } from "@mui/material/styles";
 import { ToggleButtonGroup } from "@mui/material";
 
-const UnitsToggleButtonGroup = styled(ToggleButtonGroup)(() => ({
+const SettingToggleButtonGroup = styled(ToggleButtonGroup)(() => ({
   backgroundColor: "#efefef",
   borderRadius: "5rem",
   "& .MuiToggleButton-root": {
@@ -26,4 +26,4 @@ const UnitsToggleButtonGroup = styled(ToggleButtonGroup)(() => ({
   },
 }));
 
-export default UnitsToggleButtonGroup;
+export default SettingToggleButtonGroup;
