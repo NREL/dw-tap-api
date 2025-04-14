@@ -13,13 +13,13 @@ from app.power_curve.power_curve_manager import PowerCurveManager
 
 router = APIRouter()
 
-# # Initialize ConfigManager
+# Initialize ConfigManager
 config_manager = ConfigManager(
     secret_arn_env_var="WINDWATTS_DATA_CONFIG_SECRET_ARN",
     local_config_path="./app/config/windwatts_data_config.json") # replace with YOUR local config path
 athena_config = config_manager.get_config()
 
-# # Initialize DataFetchers
+# Initialize DataFetchers
 s3_data_fetcher = S3DataFetcher("WINDWATTS_S3_BUCKET_NAME")
 athena_data_fetcher = AthenaDataFetcher(athena_config=athena_config)
 db_manager = DatabaseManager()
@@ -112,12 +112,12 @@ def energy_production(lat: float, lng: float, height: int,
         if time_period:
             if time_period not in ["yearly", "monthly"]:
                 raise ValueError(f"time_period must be one of: yearly, monthly")
-        if time_period == 'yearly':
-            yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(df,height,selected_powercurve)
-            return {'yearly_avg_energy_production' : yearly_avg_energy_production}
-        elif time_period == 'monthly':
-            monthly_avg_energy_production = power_curve_manager.fetch_monthly_avg_energy_production(df,height,selected_powercurve)
-            return {'monthly_avg_energy_production' : monthly_avg_energy_production}
+            if time_period == 'yearly':
+                yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(df,height,selected_powercurve)
+                return {'yearly_avg_energy_production' : yearly_avg_energy_production}
+            elif time_period == 'monthly':
+                monthly_avg_energy_production = power_curve_manager.fetch_monthly_avg_energy_production(df,height,selected_powercurve)
+                return {'monthly_avg_energy_production' : monthly_avg_energy_production}
         else:
             yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(df,height,selected_powercurve)
             return {"energy_production" : yearly_avg_energy_production['Average year']['kWh produced']}
