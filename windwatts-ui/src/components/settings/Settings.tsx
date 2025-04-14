@@ -15,6 +15,7 @@ import { UnitsSettings } from "./UnitsSettings";
 import { getAvailablePowerCurves } from "../../services/api";
 import { useContext } from "react";
 import { SettingsContext } from "../../providers/SettingsContext";
+import { ModelSettings } from "./ModelSettings";
 
 const NRELPowerCurveOptions = [
   "nrel-reference-100kW",
@@ -154,6 +155,8 @@ const Settings = () => {
         </Box>
 
         <UnitsSettings />
+
+        <ModelSettings />
       </Box>
     </Modal>
   );

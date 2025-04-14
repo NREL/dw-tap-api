@@ -12,6 +12,7 @@ export interface StoredSettings {
   currentPosition: CurrentPosition | null;
   hubHeight: number;
   powerCurve: string;
+  preferredModel: string;
 }
 
 export interface Settings extends StoredSettings {
@@ -20,6 +21,7 @@ export interface Settings extends StoredSettings {
   setCurrentPosition: (position: CurrentPosition) => void;
   setHubHeight: (hubHeight: number) => void;
   setPowerCurve: (curve: string) => void;
+  setPreferredModel: (preferredModel: string) => void;
 }
 
 const defaultValues: StoredSettings = {
@@ -28,6 +30,7 @@ const defaultValues: StoredSettings = {
   currentPosition: null,
   hubHeight: 30,
   powerCurve: "nrel-reference-100kW",
+  preferredModel: "WTK",
 };
 
 export const SettingsContext = createContext<Settings>({
@@ -37,6 +40,7 @@ export const SettingsContext = createContext<Settings>({
   setCurrentPosition: () => {},
   setHubHeight: () => {},
   setPowerCurve: () => {},
+  setPreferredModel: () => {},
 });
 
 function getStoredSettings(): StoredSettings {
@@ -62,6 +66,7 @@ export default function SettingsProvider({
     useState<CurrentPosition | null>(storedSettings.currentPosition);
   const [hubHeight, setHubHeight] = useState(storedSettings.hubHeight);
   const [powerCurve, setPowerCurve] = useState(storedSettings.powerCurve);
+  const [preferredModel, setPreferredModel] = useState(storedSettings.preferredModel);
 
   useEffect(() => {
     const settings = {
@@ -70,9 +75,10 @@ export default function SettingsProvider({
       currentPosition,
       hubHeight,
       powerCurve,
+      preferredModel,
     };
     localStorage.setItem("settings", JSON.stringify(settings));
-  }, [settingsOpen, resultsOpen, currentPosition, hubHeight, powerCurve]);
+  }, [settingsOpen, resultsOpen, currentPosition, hubHeight, powerCurve, preferredModel]);
 
   return (
     <SettingsContext.Provider
@@ -87,6 +93,8 @@ export default function SettingsProvider({
         setHubHeight,
         powerCurve,
         setPowerCurve,
+        preferredModel,
+        setPreferredModel,
       }}
     >
       {children}
