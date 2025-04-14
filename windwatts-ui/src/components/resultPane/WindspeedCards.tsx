@@ -1,11 +1,11 @@
 import useSWR from "swr";
 import ResultCard from "./ResultCard";
-import { getEnergyProduction, getWindspeedByLatLong } from "../services/api";
-import { convertOutput, convertWindspeed, getWindResource } from "../utils";
+import { getEnergyProduction, getWindspeedByLatLong } from "../../services/api";
+import { convertOutput, convertWindspeed, getWindResource } from "../../utils";
 import { Typography, Grid2, Stack, Skeleton } from "@mui/material";
 import { useContext } from "react";
-import { UnitsContext } from "../providers/UnitsContext";
-import { SettingsContext } from "../providers/SettingsContext";
+import { UnitsContext } from "../../providers/UnitsContext";
+import { SettingsContext } from "../../providers/SettingsContext";
 
 export default function WindspeedCards() {
   const { currentPosition, hubHeight, powerCurve } =
