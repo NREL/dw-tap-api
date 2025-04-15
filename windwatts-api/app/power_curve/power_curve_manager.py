@@ -58,8 +58,7 @@ class PowerCurveManager:
         df[f"{ws_col}_kw"] = power_curve.windspeed_to_kw(df, ws_col)
 
         if relevant_columns_only:
-            wd_col = ws_col.replace("speed", "direction")
-            return df[["year", "mohr", "month", "hour", ws_col, f"{ws_col}_kw", wd_col]]
+            return df[["year", "mohr", "month", "hour", ws_col, f"{ws_col}_kw"]]
         
         return df
     
