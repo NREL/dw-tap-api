@@ -29,57 +29,70 @@ http://localhost:8080/status
 
 ## How To Use
 
-**UPDATE configurations for new Windwatts app**
-### Local Deployment as Docker Containers (Docker required)
+### Local Deployment of New Windwatts App using Docker (Docker required)
 
-fetch code repo
-```shell
-git clone https://github.com/NREL/dw-tap-api.git
-cd dw-tap-api/
-```
+#### Prerequisites
+1. **Install and Start Docker**: Ensure Docker is installed and running on your machine.
+2. **AWS Credentials**: Obtain AWS credentials with access to the Windwatts Data package.
+3. **Google Maps API Key**: Create an API key and map ID by following the [Google Maps API Documentation](https://developers.google.com/maps/documentation/javascript).
 
-configure environment files
-- under root directory `dw-tap-api/`
-  - Create or update `.env` file
-    - Configure the Windwatts Data package URL, `WINDWATTS_DATA_URL`
-    - Configure AWS Credentials (associated with the role that has access to the resources with Windwatts Data package), `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_SESSION_TOKEN`
-    **example configuration**
-    ```
-    WINDWATTS_DATA_URL=https://windwatts-era5.s3.us-west-2.amazonaws.com/
-    AWS_ACCESS_KEY_ID="YOUR_AWS_ACCESS_KEY_ID"
-    AWS_SECRET_ACCESS_KEY="YOUR_AWS_SECRET_ACCESS_KEY"
-    AWS_SESSION_TOKEN="YOUR_AWS_SESSION_TOKEN"
-    ```
-- under frontend directory `windwatts-ui/`
-  - Create or update `.env.development` file
-    - Configure the Windwatts API base URL, `VITE_API_BASE_URL`
-    - Configure Google Map API key and map ID, `VITE_MAP_API_KEY` and `VITE_MAP_ID`. To create API key and map ID, refer to [Google Map API Documentation](https://developers.google.com/maps/documentation/javascript).
-      **example configuration**
-      ```
-      VITE_API_BASE_URL=http://windwatts-proxy:80
-      VITE_MAP_API_KEY=YOUR_MAP_API_KEY
-      VITE_MAP_ID=YOUR_MAP_ID
-      ```
-- under the backend directory, `windwatts-api/`
-  - create or update `windwatts_data_config.json` file under `config/`
-    **sample config**
-    ```json
-    {
-      "region_name": "us-east-1",
-      "bucket_name": "sample-bucket",
-      "database": "sample_database",
-      "output_location": "s3://sample-output-location/",
-      "output_bucket": "sample-output-bucket",
-      "athena_table_name": "sample_table",
-      "alt_athena_table_name": "sample_alt_table",
-      "athena_workgroup": "sample_workgroup"
-    }
-    ```
-deploy app locally on docker containers (ensure Docker app is started)
-```shell
-docker compose up --build
-```
-then open the port in browser on `http://localhost:5173/`
+#### Steps to Deploy Locally
+1. **Clone the repository**: The new Windwatts app is hosted on the development branch
+   ```shell
+   git clone https://github.com/NREL/dw-tap-api.git
+   cd dw-tap-api/
+   git checkout development # Switch to the development branch where the new app resides
+   ```
+
+2. **Configure environment files**:
+   - **Root directory (`dw-tap-api/`)**:
+     - Create or update a `.env` file with the following variables:
+       ```plaintext
+       WINDWATTS_DATA_URL=https://windwatts-era5.s3.us-west-2.amazonaws.com/
+       AWS_ACCESS_KEY_ID="YOUR_AWS_ACCESS_KEY_ID"
+       AWS_SECRET_ACCESS_KEY="YOUR_AWS_SECRET_ACCESS_KEY"
+       AWS_SESSION_TOKEN="YOUR_AWS_SESSION_TOKEN"
+       ```
+       - `WINDWATTS_DATA_URL`: URL for the Windwatts Data package.
+       - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN`: AWS credentials for accessing resources.
+
+   - **Frontend directory (windwatts-ui)**:
+     - Create or update a `.env.development` file:
+       ```plaintext
+       VITE_API_BASE_URL=http://windwatts-proxy:80
+       VITE_MAP_API_KEY=YOUR_MAP_API_KEY
+       VITE_MAP_ID=YOUR_MAP_ID
+       ```
+       - `VITE_API_BASE_URL`: Base URL for the Windwatts API.
+       - `VITE_MAP_API_KEY`, `VITE_MAP_ID`: Google Maps API key and map ID.
+
+   - **Backend directory (windwatts-api)**:
+     - Create or update `windwatts_data_config.json` under `config/`:
+       ```json
+       {
+         "region_name": "us-east-1",
+         "bucket_name": "sample-bucket",
+         "database": "sample_database",
+         "output_location": "s3://sample-output-location/",
+         "output_bucket": "sample-output-bucket",
+         "athena_table_name": "sample_table",
+         "alt_athena_table_name": "sample_alt_table",
+         "athena_workgroup": "sample_workgroup"
+       }
+       ```
+
+3. **Deploy the app**:
+   - Start Docker containers:
+     ```shell
+     docker compose up --build
+     ```
+   - If needed, clean up previous containers and volumes:
+     ```shell
+     docker compose down --volumes --remove-orphans
+     ```
+
+4. **Access the app**:
+   - Open your browser and navigate to: `http://localhost:5173/`.
 
 ### Deploy as a Container (requires Docker on the host)
 
