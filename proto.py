@@ -40,6 +40,8 @@ from html_maker import *
 import flask
 from invalid_usage import InvalidUsage
 from flask import send_file
+import zarr
+import fsspec
 
 import xarray as xr
 import s3fs
@@ -48,7 +50,15 @@ import s3fs
 era5_hourly_s3_path = "s3://windwatts-era5/hourly/conus-2023-hourly.zarr"
 s3 = s3fs.S3FileSystem()
 store = s3fs.S3Map(root=era5_hourly_s3_path, s3=s3, check=False)
-era5_hourly = xr.open_zarr(store=store, consolidated=True)
+#era5_hourly = xr.open_zarr(store=store, consolidated=True)
+# This should include the fix for Zarr3
+#era5_hourly = xr.open_zarr(store=store, consolidated=True, engine="zarr")
+
+era5_hourly = xr.open_zarr(
+    "s3://windwatts-era5/hourly/conus-2023-hourly.zarr/",
+    consolidated=True#,
+    #storage_options={"anon": True},
+)
 
 def power_law(ws10, ws100, height):
     # Use default alpha if ws10 and ws100 are opposite directions

@@ -1,5 +1,5 @@
 # Update base image for KEV CVE-2024-36971  
-FROM python:3.11.10
+FROM python:3.11.12
 
 LABEL MAINTAINER="Dmitry Duplyakin <dmitry.duplyakin@nrel.gov>"
 
@@ -7,6 +7,7 @@ LABEL MAINTAINER="Dmitry Duplyakin <dmitry.duplyakin@nrel.gov>"
 RUN apt-get update && \
     apt-get install -y build-essential  && \
     apt-get install -y wget && \
+    apt-get install -y vim && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 

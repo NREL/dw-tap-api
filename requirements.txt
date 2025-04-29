@@ -17,6 +17,6 @@ joblib
 windrose
 tqdm
 boto3
-s3fs
+s3fs==2025.3.2
 xarray
-zarr==2.18.2
+zarr==3.0.7
