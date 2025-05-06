@@ -11,6 +11,7 @@ services:
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
+      - DATABASE_URL=${DATABASE_URL:-postgresql://windwatts:windwatts@postgres:5432/windwatts_db}
     expose:
       - 8000
     volumes:
@@ -41,5 +42,19 @@ services:
     depends_on:
       - windwatts-api
 
+  postgres:
+    image: postgres:15-alpine
+    container_name: windwatts-db
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-windwatts}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-windwatts}
+      - POSTGRES_DB=${POSTGRES_DB:-windwatts_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./windwatts-api/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+
 volumes:
   node_modules:
+  postgres_data:
