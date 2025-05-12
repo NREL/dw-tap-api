@@ -6,7 +6,6 @@ import json
 from typing import Dict, Any
 import logging
 import uuid
-from urllib.parse import urlparse
 import time
 
 logger = logging.getLogger(__name__)
@@ -35,11 +34,10 @@ class AuditMiddleware(BaseHTTPMiddleware):
             
             # Only log successful requests to audit log
             if response.status_code < 400:
-                self._log_audit(
+                self._log_request(
                     request=request,
                     response=response,
                     duration_ms=duration_ms,
-                    request_data=request_data,
                     request_size=request_size,
                     response_size=response_size,
                     request_id=request_id
@@ -69,20 +67,6 @@ class AuditMiddleware(BaseHTTPMiddleware):
             return {}
         return {}
 
-    def _get_endpoint_category(self, path: str) -> str:
-        """Extract endpoint category from path"""
-        parts = path.strip('/').split('/')
-        if len(parts) >= 2:
-            return parts[1]  # e.g., /api/v1/forecast -> "forecast"
-        return "other"
-
-    def _get_api_version(self, path: str) -> str:
-        """Extract API version from path"""
-        parts = path.strip('/').split('/')
-        if len(parts) >= 2 and parts[0] == "api":
-            return parts[1]  # e.g., /api/v1/forecast -> "v1"
-        return None
-
     def _get_client_type(self, user_agent: str) -> str:
         """Determine client type from user agent"""
         if not user_agent:
@@ -94,15 +78,13 @@ class AuditMiddleware(BaseHTTPMiddleware):
             return "api"
         return "web"
 
-    def _log_audit(
+    def _log_request(
         self,
         request: Request,
         response,
         duration_ms: int,
-        request_data: Dict[str, Any],
         request_size: int,
         response_size: int,
-        request_id: str
     ):
         """Create audit log entry for successful requests only"""
         db: Session = SessionLocal()
@@ -114,8 +96,6 @@ class AuditMiddleware(BaseHTTPMiddleware):
 
             # Extract path information
             path = str(request.url.path)
-            endpoint_category = self._get_endpoint_category(path)
-            api_version = self._get_api_version(path)
 
             # Create audit log entry
             audit_log = AuditLog(
@@ -126,19 +106,11 @@ class AuditMiddleware(BaseHTTPMiddleware):
                 status_code=response.status_code,
                 ip_address=request.client.host if request.client else None,
                 user_agent=request.headers.get("user-agent"),
-                request_data=request_data,
                 duration_ms=duration_ms,
-                api_version=api_version,
-                endpoint_category=endpoint_category,
                 request_size_bytes=request_size,
                 response_size_bytes=response_size,
-                is_error=False,
-                client_type=self._get_client_type(request.headers.get("user-agent")),
-                referrer=request.headers.get("referer"),
-                request_id=request_id,
                 metadata={
                     "query_params": dict(request.query_params),
-                    "headers": dict(request.headers),
                     "path_params": request.path_params
                 }
             )
