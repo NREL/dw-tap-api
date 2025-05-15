@@ -6,6 +6,7 @@ class AuditLog(Base):
     __tablename__ = "audit_logs"
 
     id = Column(Integer, primary_key=True, index=True)
+    request_id = Column(String, nullable=True, index=True)
     timestamp = Column(DateTime(timezone=True), server_default=func.now(), index=True)
     user_id = Column(String, nullable=True, index=True)
     action = Column(String, index=True)
@@ -17,4 +18,4 @@ class AuditLog(Base):
     duration_ms = Column(Integer, nullable=True, index=True)
     request_size_bytes = Column(Integer, nullable=True)
     response_size_bytes = Column(Integer, nullable=True)
-    metadata = Column(JSON, nullable=True)
+    log_metadata = Column(JSON, nullable=True)

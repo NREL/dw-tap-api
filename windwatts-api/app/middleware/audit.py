@@ -85,6 +85,7 @@ class AuditMiddleware(BaseHTTPMiddleware):
         duration_ms: int,
         request_size: int,
         response_size: int,
+        request_id: str
     ):
         """Create audit log entry for successful requests only"""
         db: Session = SessionLocal()
@@ -109,7 +110,8 @@ class AuditMiddleware(BaseHTTPMiddleware):
                 duration_ms=duration_ms,
                 request_size_bytes=request_size,
                 response_size_bytes=response_size,
-                metadata={
+                request_id=request_id,
+                log_metadata={
                     "query_params": dict(request.query_params),
                     "path_params": request.path_params
                 }
