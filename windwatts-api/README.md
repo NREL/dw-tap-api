@@ -41,4 +41,41 @@ $ pip install -r requirements.txt
 
 - `uvicorn app.main:app --reload` runs the webservice layer locally for testing
 
+## Database Configuration
+
+### Local Development
+The project uses PostgreSQL for data storage. For local development:
+
+1. Add the following to `.env` in the api root:
+```.env
+DATABASE_URL=postgresql://windwatts:windwatts@postgres:5432/windwatts_db
+POSTGRES_USER=windwatts
+POSTGRES_PASSWORD=windwatts
+POSTGRES_DB=windwatts_db
+```
+
+2. Start the services using docker-compose:
+```bash
+docker-compose up
+```
+
+The local PostgreSQL instance will be available at:
+- Host: postgres
+- Port: 5432
+- Database: windwatts_db
+- Username: windwatts
+- Password: windwatts
+
+### Production Deployment TODOs
+For production deployment, the following items need to be configured by the cloud team:
+
+1. Set up an RDS PostgreSQL instance in AWS
+2. Configure the following in AWS Secrets Manager:
+   - Database connection string (DATABASE_URL)
+   - Other necessary database credentials
+3. Update the appfleet configuration to:
+   - Remove the local postgres service
+   - Include the AWS Secrets Manager ARN for database configuration
+   - Configure necessary IAM roles for RDS access
+
 Enjoy!

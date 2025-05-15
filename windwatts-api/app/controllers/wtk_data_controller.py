@@ -1,4 +1,3 @@
-import random
 from fastapi import APIRouter, HTTPException
 
 # commented out the data functions until I can get local athena_config working
