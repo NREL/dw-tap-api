@@ -1,5 +1,5 @@
 import time
-from fastapi import Request
+from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 import logging
 import json
@@ -41,7 +41,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
             )
             
             # Reconstruct response
-            return response.__class__(
+            return Response(
                 content=response_body,
                 status_code=response.status_code,
                 headers=dict(response.headers),
