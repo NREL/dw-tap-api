@@ -57,7 +57,7 @@ export default function WindspeedCards() {
       title: "Production",
       subheader: "Estimated annual production potential",
       data: convertOutput(data?.energy_production, units.output),
-      details: [],
+      details: [`The wind resource, and by extension the energy production, varies month to month and year to year. It is important to understand the average characteristics as well as the variability you can expect to see from your wind turbine on any given year.`],
     },
   ];
 
