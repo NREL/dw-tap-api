@@ -19,7 +19,7 @@ export default function WindspeedCards() {
     data: energy,
     error: energyError,
   } = useSWR(
-    shouldFetch && powerCurve ? { lat, lng, hubHeight, powerCurve } : null,
+    shouldFetch && powerCurve ? { lat, lng, hubHeight, powerCurve, time_period: 'global' } : null,
     getEnergyProduction
   );
 
@@ -32,6 +32,7 @@ export default function WindspeedCards() {
     getWindspeedByLatLong
   );
 
+  // Combine loading states and errors for wind speed and energy production
   const isLoading = energyIsLoading || windspeedIsLoading;
   const error = energyError || windspeedError;
   const data = energy && windspeed ? { ...energy, ...windspeed } : null;
@@ -63,16 +64,20 @@ export default function WindspeedCards() {
 
   return (
     <Stack spacing={2} sx={{ marginTop: 4 }}>
-      {error && (
+      {error && ( // Error State
         <Grid2>
           <Typography marginTop={2} variant="body1" color="error" gutterBottom>
             There was an error loading data: {error?.message}
           </Typography>
         </Grid2>
       )}
-      {isLoading ? (
+      {isLoading ? ( // Loading State
         <Grid2>
-          <Skeleton variant="rounded" animation="wave" height={180} />
+          <Skeleton
+            variant="rounded"
+            animation="wave"
+            height={180}
+          />
           <Skeleton
             sx={{ marginTop: 2 }}
             variant="rounded"
@@ -86,7 +91,7 @@ export default function WindspeedCards() {
             height={180}
           />
         </Grid2>
-      ) : data ? (
+      ) : data ? ( // Data Loaded State
         dataCards.map((data, index) => (
           <Grid2 key={"result_card_" + index}>
             <ResultCard data={data} />

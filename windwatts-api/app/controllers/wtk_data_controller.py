@@ -88,7 +88,7 @@ def fetch_available_powercurves():
 @router.get("/energy-production", summary="Get global energy production estimate for a location at a height with a selected power curve")
 def energy_production(lat: float, lng: float, height: int,
                                selected_powercurve: str,
-                               time_period: str = None,
+                               time_period: str = 'global',
                                source: str = "athena"):
     """
     Fetches the global, yearly and monthly energy production and average windspeed for a given location, height, and power curve.
@@ -96,8 +96,7 @@ def energy_production(lat: float, lng: float, height: int,
         lat (float): Latitude of the location.
         lng (float): Longitude of the location.
         height (int): Height in meters.
-        time_period (str, optional): Time period to retrieve. Must be one of: yearly and monthly.
-                                   If not provided, returns energy production for all time.
+        time_period (str, optional): Time period to retrieve. Must be one of: global, yearly, monthly, all.
         source (str): Source of the data. Must be one of: athena, s3, database.
     Returns:
         A JSON object containing average windspeeds and energy production at specified time period or global energy production when time period is not specified.
@@ -117,22 +116,29 @@ def energy_production(lat: float, lng: float, height: int,
         
          # If a specific time period is requested, return only that data
         print(f"Fetching data for time period: {time_period}")
-        if time_period:
-            print(f"Fetching data for time period: {time_period}")
-            if time_period not in ["yearly", "monthly"]:
-                raise ValueError(f"time_period must be one of: yearly, monthly")
-            if time_period == 'yearly':
-                yearly_avg_energy_production = {'Lowest year': {'year': 2015, 'Average wind speed (m/s)': '3.88', 'kWh produced': 74708.0}, 'Average year': {'year': None, 'Average wind speed (m/s)': '4.19', 'kWh produced': 96544.0}, 'Highest year': {'year': 2014, 'Average wind speed (m/s)': '4.47', 'kWh produced': 118540.0}}
-                # yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(df,height,selected_powercurve)
-                return {yearly_avg_energy_production}
-            elif time_period == 'monthly':
-                monthly_avg_energy_production = {'Jan': {'Average wind speed (m/s)': '4.49', 'kWh produced': 10196.0}, 'Feb': {'Average wind speed (m/s)': '4.44', 'kWh produced': 9410.0}, 'Mar': {'Average wind speed (m/s)': '4.52', 'kWh produced': 9751.0}, 'Apr': {'Average wind speed (m/s)': '4.55', 'kWh produced': 10009.0}, 'May': {'Average wind speed (m/s)': '4.31', 'kWh produced': 8618.0}, 'Jun': {'Average wind speed (m/s)': '4.14', 'kWh produced': 7800.0}, 'Jul': {'Average wind speed (m/s)': '3.86', 'kWh produced': 6272.0}, 'Aug': {'Average wind speed (m/s)': '3.81', 'kWh produced': 5936.0}, 'Sep': {'Average wind speed (m/s)': '3.71', 'kWh produced': 5305.0}, 'Oct': {'Average wind speed (m/s)': '3.86', 'kWh produced': 5971.0}, 'Nov': {'Average wind speed (m/s)': '4.19', 'kWh produced': 7821.0}, 'Dec': {'Average wind speed (m/s)': '4.45', 'kWh produced': 9455.0}}
-                # monthly_avg_energy_production = power_curve_manager.fetch_monthly_avg_energy_production(df,height,selected_powercurve)
-                return {monthly_avg_energy_production}
-        else:
+        if time_period == 'global':
             # yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(df,height,selected_powercurve)
             # return {"energy_production" : yearly_avg_energy_production['Average year']['kWh produced']}
             return {"energy_production" : 5000}
+        elif time_period == 'yearly':
+            yearly_avg_energy_production = {'Lowest year': {'year': 2015, 'Average wind speed (m/s)': '3.88', 'kWh produced': 74708.0}, 'Average year': {'year': None, 'Average wind speed (m/s)': '4.19', 'kWh produced': 96544.0}, 'Highest year': {'year': 2014, 'Average wind speed (m/s)': '4.47', 'kWh produced': 118540.0}}
+            # yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(df,height,selected_powercurve)
+            return {yearly_avg_energy_production}
+        elif time_period == 'monthly':
+            monthly_avg_energy_production = {'Jan': {'Average wind speed (m/s)': '4.49', 'kWh produced': 10196.0}, 'Feb': {'Average wind speed (m/s)': '4.44', 'kWh produced': 9410.0}, 'Mar': {'Average wind speed (m/s)': '4.52', 'kWh produced': 9751.0}, 'Apr': {'Average wind speed (m/s)': '4.55', 'kWh produced': 10009.0}, 'May': {'Average wind speed (m/s)': '4.31', 'kWh produced': 8618.0}, 'Jun': {'Average wind speed (m/s)': '4.14', 'kWh produced': 7800.0}, 'Jul': {'Average wind speed (m/s)': '3.86', 'kWh produced': 6272.0}, 'Aug': {'Average wind speed (m/s)': '3.81', 'kWh produced': 5936.0}, 'Sep': {'Average wind speed (m/s)': '3.71', 'kWh produced': 5305.0}, 'Oct': {'Average wind speed (m/s)': '3.86', 'kWh produced': 5971.0}, 'Nov': {'Average wind speed (m/s)': '4.19', 'kWh produced': 7821.0}, 'Dec': {'Average wind speed (m/s)': '4.45', 'kWh produced': 9455.0}}
+            # monthly_avg_energy_production = power_curve_manager.fetch_monthly_avg_energy_production(df,height,selected_powercurve)
+            return {monthly_avg_energy_production}
+        elif time_period == 'all':
+            # yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(df,height,selected_powercurve)
+            # monthly_avg_energy_production = power_curve_manager.fetch_monthly_avg_energy_production(df,height,selected_powercurve)
+            # return {
+            #     "energy_production" : yearly_avg_energy_production['Average year']['kWh produced'],
+            #     "yearly_avg_energy_production": yearly_avg_energy_production,
+            #     "monthly_avg_energy_production": monthly_avg_energy_production
+            # }
+            return {}
+        else:
+            raise ValueError(f"time_period must be one of: global, yearly, monthly, all")
     
     except ValueError as ve:
         raise HTTPException(status_code=400, detail=str(ve))

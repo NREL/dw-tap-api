@@ -91,12 +91,12 @@ const ResultCard = ({
             <CardContent>
               {/* Text Details */}
               {data.details.map((detail, index) => (
-                <Typography key={"result_detail" + index} variant="body2">
+                <Typography key={data.title + "result_detail" + index} variant="body2">
                   {detail}
                 </Typography>
               ))}
               {/* Table Details */}
-              {loadingProductionTable ? (
+              {data.title === "Production" && (loadingProductionTable ? (
                 <CircularProgress size={24} />
               ) : productionTableError ? (
                 <Typography color="error" variant="body2">
@@ -112,13 +112,13 @@ const ResultCard = ({
                 >
                   {productionTables.map((table, index) => (
                     <Box
-                      key={`table_${index}`}
+                      key={data.title + `table_${index}`}
                       sx={{ flex: 1, minWidth: "300px" }}>
                       <ProductionTable tableData={table} />
                     </Box>
                   ))}
                 </Box>
-              )}
+              ))}
             </CardContent>
           </Collapse>
         </>
