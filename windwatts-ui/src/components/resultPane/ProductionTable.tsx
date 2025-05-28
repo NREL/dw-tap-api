@@ -9,7 +9,10 @@ const ProductionTable = (
     <Typography variant="h6" gutterBottom>
         {tableData.title}
       </Typography>
-      <Table size="small">
+      <Table
+        size="small"
+        aria-label={ tableData.title }
+        sx={{ border: 1, borderColor: "divider" }}>
         <TableHead>
           <TableRow>
             {tableData.headers.map((header, index) => (

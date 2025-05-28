@@ -11,11 +11,16 @@ import {
   Box,
 } from "@mui/material";
 import useSWR from "swr";
-import { getProductionTables } from "../../services/api";
 import { SettingsContext } from "../../providers/SettingsContext";
 import ProductionTable from "./ProductionTable";
-import { productionConvert2Table } from "../../utils/production";
 import { BaseTable } from "../../types/Tables";
+import { getEnergyProduction } from "../../services/api";
+import { productionConvert2Table } from "../../utils/production";
+
+const defaultAverageProductionData = {
+  "yearly_avg_energy_production": {'Lowest year': {'year': 2015, 'Average wind speed (m/s)': '3.88', 'kWh produced': 74708.0}, 'Average year': {'year': null, 'Average wind speed (m/s)': '4.19', 'kWh produced': 96544.0}, 'Highest year': {'year': 2014, 'Average wind speed (m/s)': '4.47', 'kWh produced': 118540.0}},
+  "monthly_avg_energy_production": {'Jan': {'Average wind speed (m/s)': '4.49', 'kWh produced': 10196.0}, 'Feb': {'Average wind speed (m/s)': '4.44', 'kWh produced': 9410.0}, 'Mar': {'Average wind speed (m/s)': '4.52', 'kWh produced': 9751.0}, 'Apr': {'Average wind speed (m/s)': '4.55', 'kWh produced': 10009.0}, 'May': {'Average wind speed (m/s)': '4.31', 'kWh produced': 8618.0}, 'Jun': {'Average wind speed (m/s)': '4.14', 'kWh produced': 7800.0}, 'Jul': {'Average wind speed (m/s)': '3.86', 'kWh produced': 6272.0}, 'Aug': {'Average wind speed (m/s)': '3.81', 'kWh produced': 5936.0}, 'Sep': {'Average wind speed (m/s)': '3.71', 'kWh produced': 5305.0}, 'Oct': {'Average wind speed (m/s)': '3.86', 'kWh produced': 5971.0}, 'Nov': {'Average wind speed (m/s)': '4.19', 'kWh produced': 7821.0}, 'Dec': {'Average wind speed (m/s)': '4.45', 'kWh produced': 9455.0}}
+}
 
 const ResultCard = ({
   data,
@@ -38,24 +43,19 @@ const ResultCard = ({
     data: averageProductionData,
     error: productionTableError,
   } = useSWR(
-    expanded && shouldFetch ? { lat, lng, hubHeight, powerCurve } : null,
-    getProductionTables
+    expanded && shouldFetch ? { lat, lng, hubHeight, powerCurve, time_period: "all" } : null,
+    getEnergyProduction,
+    { fallbackData: defaultAverageProductionData }
   );
 
-  const defaultAverageProductionData = {
-    'yearly': {'L': {'year': 11, 'Average wind speed (m/s)': '3.88', 'kWh produced': 74708.0}, 'A': {'year': null, 'Average wind speed (m/s)': '4.19', 'kWh produced': 96544.0}, 'H': {'year': 2014, 'Average wind speed (m/s)': '4.47', 'kWh produced': 118540.0}},
-    'monthly': {'Jan': {'Average wind speed (m/s)': '4.49', 'kWh produced': 10196.0}}
-  }
-
-  console.log("Average production data", averageProductionData);
   const productionTables: BaseTable[] = averageProductionData? 
     [
-      productionConvert2Table(averageProductionData.yearly, 'Year'),
-      productionConvert2Table(averageProductionData.monthly, 'Month')
+      productionConvert2Table(averageProductionData.yearly_avg_energy_production, 'Year'),
+      productionConvert2Table(averageProductionData.monthly_avg_energy_production, 'Month')
     ] : 
     [
-      productionConvert2Table(defaultAverageProductionData.yearly, 'Year'),
-      productionConvert2Table(defaultAverageProductionData.monthly, 'Month')
+      productionConvert2Table(defaultAverageProductionData.yearly_avg_energy_production, 'Year'),
+      productionConvert2Table(defaultAverageProductionData.monthly_avg_energy_production, 'Month')
     ];
 
   // console.log("Production tables", productionTables);
@@ -91,7 +91,7 @@ const ResultCard = ({
             <CardContent>
               {/* Text Details */}
               {data.details.map((detail, index) => (
-                <Typography key={data.title + "result_detail" + index} variant="body2">
+                <Typography mb={2} key={data.title + "result_detail" + index} variant="body2">
                   {detail}
                 </Typography>
               ))}

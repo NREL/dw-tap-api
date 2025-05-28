@@ -1,14 +1,14 @@
 import { BaseTable } from "../types/Tables";
 
 export const productionConvert2Table = (
-  data: Record<string, any>,
+  data: Record<string, Record<string, string | number | null>>,
   avg_type: string
 ): BaseTable => {
   if (!data || typeof data !== "object" || Object.keys(data).length === 0) {
     console.log("Invalid data provided for conversion:", data);
     // Return an empty table if data is invalid
     return {
-      title: `Estimates by ${avg_type}`,
+      title: `Production Estimates by ${avg_type}`,
       headers: [avg_type],
       rows: [],
     };
@@ -20,12 +20,12 @@ export const productionConvert2Table = (
   // Map rows from the data object
   const rows = Object.entries(data).map(([key, values]) => [
     key,
-    ...Object.values(values),
+    ...Object.values(values).map(v => v === null ? "" : v),
   ]);
 
   // Construct the BaseTable object
   return {
-    title: `Estimates by ${avg_type}`,
+    title: `Production Estimates by ${avg_type}`,
     headers,
     rows,
   };
