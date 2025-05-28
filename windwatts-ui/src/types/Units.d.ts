@@ -1,3 +1,3 @@
 export interface StoredUnits {
-  [key: string]: any;
+  [key: string]: string;
 }

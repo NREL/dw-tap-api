@@ -9,4 +9,5 @@ export interface EnergyProductionRequest {
   lng: number;
   hubHeight: number;
   powerCurve: string;
+  time_period?: string;
 }

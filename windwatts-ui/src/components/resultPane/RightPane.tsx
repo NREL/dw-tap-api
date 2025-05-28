@@ -2,7 +2,7 @@ import { Box, Typography, Link, Paper, Grid2 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import WindspeedCards from "./WindspeedCards";
 import { useContext } from "react";
-import { SettingsContext } from "../providers/SettingsContext";
+import { SettingsContext } from "../../providers/SettingsContext";
 
 const Item = styled(Paper)(({ theme }) => ({
   ...theme.typography.body2,

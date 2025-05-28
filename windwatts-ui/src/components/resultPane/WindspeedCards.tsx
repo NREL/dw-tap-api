@@ -1,11 +1,11 @@
 import useSWR from "swr";
 import ResultCard from "./ResultCard";
-import { getEnergyProduction, getWindspeedByLatLong } from "../services/api";
-import { convertOutput, convertWindspeed, getWindResource } from "../utils";
+import { getEnergyProduction, getWindspeedByLatLong } from "../../services/api";
+import { convertOutput, convertWindspeed, getWindResource } from "../../utils";
 import { Typography, Grid2, Stack, Skeleton } from "@mui/material";
 import { useContext } from "react";
-import { UnitsContext } from "../providers/UnitsContext";
-import { SettingsContext } from "../providers/SettingsContext";
+import { UnitsContext } from "../../providers/UnitsContext";
+import { SettingsContext } from "../../providers/SettingsContext";
 
 export default function WindspeedCards() {
   const { currentPosition, hubHeight, powerCurve } =
@@ -19,7 +19,7 @@ export default function WindspeedCards() {
     data: energy,
     error: energyError,
   } = useSWR(
-    shouldFetch && powerCurve ? { lat, lng, hubHeight, powerCurve } : null,
+    shouldFetch && powerCurve ? { lat, lng, hubHeight, powerCurve, time_period: 'global' } : null,
     getEnergyProduction
   );
 
@@ -32,6 +32,7 @@ export default function WindspeedCards() {
     getWindspeedByLatLong
   );
 
+  // Combine loading states and errors for wind speed and energy production
   const isLoading = energyIsLoading || windspeedIsLoading;
   const error = energyError || windspeedError;
   const data = energy && windspeed ? { ...energy, ...windspeed } : null;
@@ -57,22 +58,26 @@ export default function WindspeedCards() {
       title: "Production",
       subheader: "Estimated annual production potential",
       data: convertOutput(data?.energy_production, units.output),
-      details: [],
+      details: [`The wind resource, and by extension the energy production, varies month to month and year to year. It is important to understand the average characteristics as well as the variability you can expect to see from your wind turbine on any given year.`],
     },
   ];
 
   return (
     <Stack spacing={2} sx={{ marginTop: 4 }}>
-      {error && (
+      {error && ( // Error State
         <Grid2>
           <Typography marginTop={2} variant="body1" color="error" gutterBottom>
             There was an error loading data: {error?.message}
           </Typography>
         </Grid2>
       )}
-      {isLoading ? (
+      {isLoading ? ( // Loading State
         <Grid2>
-          <Skeleton variant="rounded" animation="wave" height={180} />
+          <Skeleton
+            variant="rounded"
+            animation="wave"
+            height={180}
+          />
           <Skeleton
             sx={{ marginTop: 2 }}
             variant="rounded"
@@ -86,7 +91,7 @@ export default function WindspeedCards() {
             height={180}
           />
         </Grid2>
-      ) : data ? (
+      ) : data ? ( // Data Loaded State
         dataCards.map((data, index) => (
           <Grid2 key={"result_card_" + index}>
             <ResultCard data={data} />

@@ -31,8 +31,9 @@ export const getEnergyProduction = async ({
   lng,
   hubHeight,
   powerCurve,
+  time_period = 'global'
 }: EnergyProductionRequest) => {
-  const url = `/api/wtk/energy-production?lat=${lat}&lng=${lng}&height=${hubHeight}&selected_powercurve=${powerCurve}`;
+  const url = `/api/wtk/energy-production?lat=${lat}&lng=${lng}&height=${hubHeight}&selected_powercurve=${powerCurve}&time_period=${time_period}`;
   const options = {
     method: "GET",
     headers: {

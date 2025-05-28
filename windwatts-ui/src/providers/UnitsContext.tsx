@@ -1,15 +1,20 @@
 import { createContext, useState, useEffect } from "react";
 import { StoredUnits } from "../types/Units";
 
-export interface Units extends StoredUnits {
+export interface Units {
+  units: StoredUnits;
   setUnits: (units: StoredUnits) => void;
-  updateUnit: (key: string, value: any) => void;
+  updateUnit: (key: string, value: string) => void;
   updateUnits: (newValues: StoredUnits) => void;
 }
 
-const defaultValues: Units = {
+const defaultUnitValues: StoredUnits = {
   windspeed: "m/s",
   output: "kWh",
+};
+
+const defaultValues: Units = {
+  units: defaultUnitValues,
   setUnits: () => {},
   updateUnit: () => {},
   updateUnits: () => {},
@@ -25,10 +30,10 @@ export default function UnitsProvider({
   const [units, setUnits] = useState<StoredUnits>(() => {
     try {
       const stored = localStorage.getItem("units");
-      return stored ? JSON.parse(stored) : defaultValues;
+      return stored ? JSON.parse(stored) : defaultUnitValues;
     } catch (error) {
       console.error("Error reading from localStorage:", error);
-      return defaultValues;
+      return defaultUnitValues;
     }
   });
 
@@ -40,7 +45,7 @@ export default function UnitsProvider({
     }
   }, [units]);
 
-  const updateUnit = (key: string, value: any) => {
+  const updateUnit = (key: string, value: string) => {
     setUnits((prev) => ({
       ...prev,
       [key]: value,
@@ -53,6 +58,7 @@ export default function UnitsProvider({
       ...newValues,
     }));
   };
+  
   return (
     <UnitsContext.Provider value={{ units, setUnits, updateUnit, updateUnits }}>
       {children}
