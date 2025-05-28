@@ -34,16 +34,16 @@ const ResultCard = ({
 
 }) => {
   const [expanded, setExpanded] = useState(false);
-  const { currentPosition, hubHeight, powerCurve } =
+  const { currentPosition, hubHeight, powerCurve, preferredModel } =
     useContext(SettingsContext);
   const { lat, lng } = currentPosition || {};
-  const shouldFetch = data && data.title === "Production" && lat && lng && hubHeight;
+  const shouldFetch = data && data.title === "Production" && lat && lng && hubHeight && powerCurve && preferredModel;
   const { 
     isLoading: loadingProductionTable,
     data: averageProductionData,
     error: productionTableError,
   } = useSWR(
-    expanded && shouldFetch ? { lat, lng, hubHeight, powerCurve, time_period: "all" } : null,
+    expanded && shouldFetch ? { lat, lng, hubHeight, powerCurve, dataModel: preferredModel, time_period: "all" } : null,
     getEnergyProduction,
     { fallbackData: defaultAverageProductionData }
   );

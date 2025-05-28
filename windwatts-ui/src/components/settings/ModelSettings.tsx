@@ -46,10 +46,10 @@ export function ModelSettings() {
             onChange={handleModelChange}
             aria-label="model"
           >
-            <ToggleButton value="WTK">
+            <ToggleButton value="wtk">
               <Typography variant="body2">WTK</Typography>
             </ToggleButton>
-            <ToggleButton value="ERA5">
+            <ToggleButton value="era5">
               <Typography variant="body2">ERA5</Typography>
             </ToggleButton>
           </SettingToggleButtonGroup>

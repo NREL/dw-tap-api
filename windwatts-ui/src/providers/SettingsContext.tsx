@@ -1,5 +1,6 @@
 import { createContext, useState, useEffect } from "react";
 import useToggle from "../hooks/useToggle";
+import { DataModel } from "../types/Requests";
 
 export interface CurrentPosition {
   lat: number;
@@ -12,7 +13,7 @@ export interface StoredSettings {
   currentPosition: CurrentPosition | null;
   hubHeight: number;
   powerCurve: string;
-  preferredModel: string;
+  preferredModel: DataModel;
 }
 
 export interface Settings extends StoredSettings {
@@ -21,7 +22,7 @@ export interface Settings extends StoredSettings {
   setCurrentPosition: (position: CurrentPosition) => void;
   setHubHeight: (hubHeight: number) => void;
   setPowerCurve: (curve: string) => void;
-  setPreferredModel: (preferredModel: string) => void;
+  setPreferredModel: (preferredModel: DataModel) => void;
 }
 
 const defaultValues: StoredSettings = {
@@ -30,7 +31,7 @@ const defaultValues: StoredSettings = {
   currentPosition: null,
   hubHeight: 30,
   powerCurve: "nrel-reference-100kW",
-  preferredModel: "WTK",
+  preferredModel: "wtk", // default to WTK model
 };
 
 export const SettingsContext = createContext<Settings>({

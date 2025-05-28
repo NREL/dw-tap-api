@@ -8,18 +8,18 @@ import { UnitsContext } from "../../providers/UnitsContext";
 import { SettingsContext } from "../../providers/SettingsContext";
 
 export default function WindspeedCards() {
-  const { currentPosition, hubHeight, powerCurve } =
+  const { currentPosition, hubHeight, powerCurve, preferredModel } =
     useContext(SettingsContext);
   const { units } = useContext(UnitsContext);
   const { lat, lng } = currentPosition || {};
-  const shouldFetch = lat && lng && hubHeight;
+  const shouldFetch = lat && lng && hubHeight && preferredModel;
 
   const {
     isLoading: energyIsLoading,
     data: energy,
     error: energyError,
   } = useSWR(
-    shouldFetch && powerCurve ? { lat, lng, hubHeight, powerCurve, time_period: 'global' } : null,
+    shouldFetch && powerCurve ? { lat, lng, hubHeight, powerCurve, dataModel: preferredModel, time_period: 'global' } : null,
     getEnergyProduction
   );
 
@@ -28,7 +28,7 @@ export default function WindspeedCards() {
     data: windspeed,
     error: windspeedError,
   } = useSWR(
-    shouldFetch ? { lat, lng, hubHeight } : null,
+    shouldFetch ? { lat, lng, hubHeight, dataModel: preferredModel } : null,
     getWindspeedByLatLong
   );
 

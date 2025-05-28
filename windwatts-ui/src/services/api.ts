@@ -1,4 +1,5 @@
 import {
+  DataModel,
   EnergyProductionRequest,
   WindspeedByLatLngRequest,
 } from "../types/Requests";
@@ -15,8 +16,9 @@ export const getWindspeedByLatLong = async ({
   lat,
   lng,
   hubHeight,
+  dataModel,
 }: WindspeedByLatLngRequest) => {
-  const url = `/api/wtk/windspeed?lat=${lat}&lng=${lng}&height=${hubHeight}`;
+  const url = `/api/${dataModel}/windspeed?lat=${lat}&lng=${lng}&height=${hubHeight}`;
   const options = {
     method: "GET",
     headers: {
@@ -31,9 +33,10 @@ export const getEnergyProduction = async ({
   lng,
   hubHeight,
   powerCurve,
+  dataModel,
   time_period = 'global'
 }: EnergyProductionRequest) => {
-  const url = `/api/wtk/energy-production?lat=${lat}&lng=${lng}&height=${hubHeight}&selected_powercurve=${powerCurve}&time_period=${time_period}`;
+  const url = `/api/${dataModel}/energy-production?lat=${lat}&lng=${lng}&height=${hubHeight}&selected_powercurve=${powerCurve}&time_period=${time_period}`;
   const options = {
     method: "GET",
     headers: {
@@ -43,8 +46,10 @@ export const getEnergyProduction = async ({
   return fetchWrapper(url, options);
 };
 
-export const getAvailablePowerCurves = async () => {
-  const url = `/api/wtk/available-powercurves`;
+export const getAvailablePowerCurves = async ({
+  dataModel,
+}: { dataModel: DataModel }) => {
+  const url = `/api/${dataModel}/available-powercurves`;
   const options = {
     method: "GET",
     headers: {
