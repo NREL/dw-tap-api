@@ -18,7 +18,6 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-<<<<<<< HEAD
 # Download and install windwatts_data.whl from s3
 ARG WINDWATTS_DATA_VERSION=1.0.1
 ARG WINDWATTS_DATA_URL
@@ -26,15 +25,6 @@ ARG WINDWATTS_DATA_FILE=windwatts_data-${WINDWATTS_DATA_VERSION}-py3-none-any.wh
 RUN curl -o /tmp/windwatts_data-${WINDWATTS_DATA_VERSION}-py3-none-any.whl ${WINDWATTS_DATA_URL}${WINDWATTS_DATA_FILE} && \
     pip install --no-cache-dir /tmp/${WINDWATTS_DATA_FILE} && \
     rm /tmp/${WINDWATTS_DATA_FILE}
-=======
-# # Download and install windwatts_data.whl from s3
-# ARG WINDWATTS_DATA_VERSION=1.0.1
-# ARG WINDWATTS_DATA_URL
-# ARG WINDWATTS_DATA_FILE=windwatts_data-${WINDWATTS_DATA_VERSION}-py3-none-any.whl
-# RUN curl -o /tmp/windwatts_data-${WINDWATTS_DATA_VERSION}-py3-none-any.whl ${WINDWATTS_DATA_URL}${WINDWATTS_DATA_FILE} && \
-#     pip install --no-cache-dir /tmp/${WINDWATTS_DATA_FILE} && \
-#     rm /tmp/${WINDWATTS_DATA_FILE}
->>>>>>> feat/prod-table-ui
 
 # Copy the FastAPI application
 COPY . .
