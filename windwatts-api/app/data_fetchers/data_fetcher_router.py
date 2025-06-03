@@ -1,5 +1,5 @@
 import json
-from .abstract_data_fetcher import WTKDataFetcher
+from .abstract_data_fetcher import AbstractDataFetcher
 
 class DataFetcherRouter:
     def __init__(self):
@@ -8,7 +8,7 @@ class DataFetcherRouter:
         """
         self.fetchers = {}
 
-    def register_fetcher(self, fetcher_name: str, fetcher: WTKDataFetcher):
+    def register_fetcher(self, fetcher_name: str, fetcher: AbstractDataFetcher):
         """
         Register a data fetcher with the router.
 
@@ -16,9 +16,9 @@ class DataFetcherRouter:
             fetcher_name (str): The name of the fetcher.
             fetcher: The fetcher object.
         """
-        self.fetchers[fetcher_name] = fetcher
+        self.fetchers[(fetcher_name, fetcher.data_type)] = fetcher
 
-    def fetch_data(self, params: dict, source: str = "athena"):
+    def fetch_data(self, params: dict , data_type: str, source: str = "athena"):
         """
         Fetch data using specified data fetcher.
 
@@ -27,52 +27,56 @@ class DataFetcherRouter:
                 lat (float): Latitude of the location
                 lng (float): Longitude of the location
                 height (int): Heights in meters
+            data_type (str) : Source data
             source (str): The name of the fetcher to use
 
         Returns:
             dict: The fetched data as a dictionary.
         """
-        fetcher = self.fetchers.get(source)
+        fetcher = self.fetchers.get((source, data_type))
         if fetcher:
             return fetcher.fetch_data(**params)
-        return {}
+        else:
+            raise ValueError(f"No fetcher found for source={source}, data_type={data_type}")
+        
 
-    def fetch_data_routing(self, params: dict):
+    def fetch_data_routing(self, params: dict, data_type: str = "wtk"):
         """
         Fetch data using the appropriate data fetcher through routing logics.
 
         Args:
-            params (dict): The parameters to pass to the fetcher, including
-                lat (float): Latitude of the location
-                lng (float): Longitude of the location
-                height (int): Heights in meters
+            params (dict): The parameters to pass to the fetcher.
+            data_type (str): The type of data source ('wtk' or 'era5').
 
         Returns:
             dict: The fetched data as a dictionary.
         """
-        data = {}
-        
-        db_fetcher_available = True if "database" in self.data_fetchers else False
-        s3_fetcher_available = True if "s3" in self.data_fetchers else False
-        athena_fetcher_available = True if "athena" in self.data_fetchers else False
+        data = None
+        cached_data = None
+
+        # Check available fetchers by name and type
+        db_key = ("database", data_type)
+        s3_key = ("s3", data_type)
+        athena_key = ("athena", data_type)
+
+        db_fetcher_available = db_key in self.fetchers
+        s3_fetcher_available = s3_key in self.fetchers
+        athena_fetcher_available = athena_key in self.fetchers
 
         if db_fetcher_available:
-            # 1. Fetch cached data from the database
-            cached_data = self.fetchers["database"].fetch_data(**params)
+            cached_data = self.fetchers[db_key].fetch_data(**params)
             if cached_data:
                 return cached_data
 
         if athena_fetcher_available and self.is_complex_query(params):
-            # 2. Fetch data from Athena
-            data = self.fetchers["athena"].fetch_data(**params)
+            data = self.fetchers[athena_key].fetch_data(**params)
         elif s3_fetcher_available:
-            # 3. Fetch data from S3
-            data = self.fetchers["s3"].fetch_data(**params)
+            data = self.fetchers[s3_key].fetch_data(**params)
 
         if db_fetcher_available and not cached_data and data:
-            # Store the fetched data in the database
-            self.fetchers["database"].store_data(**params, data=json.dumps(data))
-        return data
+            self.fetchers[db_key].store_data(**params, data=json.dumps(data))
+
+        return data or {}
 
     @staticmethod
     def is_complex_query(params: dict) -> bool:

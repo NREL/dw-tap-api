@@ -43,13 +43,13 @@ class PowerCurve(object):
 
     def windspeed_to_kw(self, df, ws_column="ws-adjusted", dt_column="datetime", trim=True):
         """ Converts wind speed to kw """
-
+        
         # by default round down/up values below or under the range of the curve
         if trim:
             ws = df[ws_column].apply(lambda x: 0 if x < 0 else x).apply(lambda x: self.max_ws if x > self.max_ws else x)
         else:
             ws = df[ws_column]
-
+        
         kw = self.powercurve_intrp(ws)
 
         below_curve = df[kw < 0]
