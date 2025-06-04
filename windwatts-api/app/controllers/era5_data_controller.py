@@ -8,7 +8,7 @@ from app.data_fetchers.athena_data_fetcher import AthenaDataFetcher
 from app.data_fetchers.data_fetcher_router import DataFetcherRouter
 # from app.database_manager import DatabaseManager
 
-from app.power_curve.power_curve_manager import PowerCurveManager
+from app.power_curve.global_power_curve_manager import power_curve_manager
 
 router = APIRouter()
 
@@ -30,12 +30,9 @@ data_fetcher_router = DataFetcherRouter()
 # data_fetcher_router.register_fetcher("s3", s3_data_fetcher)
 data_fetcher_router.register_fetcher("athena_era5", athena_data_fetcher_era5)
 
-# Load power curves
-power_curve_manager = PowerCurveManager("./app/power_curve/powercurves", data_type='era5')
-
 # Multiple average types for wind speed
 wind_speed_avg_types = ["global", "yearly"]
-
+data_type='era5'
 
 @router.get("/windspeed/{avg_type}", summary="Retrieve wind speed with avg type - wtk data")
 @router.get("/windspeed", summary="Retrieve wind speed with default global avg - wtk data")
@@ -108,15 +105,15 @@ def energy_production(lat: float, lng: float, height: int,
              raise HTTPException(status_code=404, detail="Data not found")
         
         if time_period == 'global':
-            yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(df,height,selected_powercurve)
+            yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(df,height,selected_powercurve,data_type)
             return {"energy_production" : yearly_avg_energy_production['Average year']['kWh produced']}
             
         elif time_period == 'yearly':
-            yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(df,height,selected_powercurve)
+            yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(df,height,selected_powercurve,data_type)
             return {yearly_avg_energy_production}
         
         elif time_period == 'all':
-            yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(df,height,selected_powercurve)
+            yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(df,height,selected_powercurve,data_type)
             return {
                 "energy_production" : yearly_avg_energy_production['Average year']['kWh produced'],
                 "yearly_avg_energy_production": yearly_avg_energy_production

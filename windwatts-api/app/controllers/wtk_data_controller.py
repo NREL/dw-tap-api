@@ -8,7 +8,7 @@ from app.data_fetchers.athena_data_fetcher import AthenaDataFetcher
 from app.data_fetchers.data_fetcher_router import DataFetcherRouter
 # from app.database_manager import DatabaseManager
 
-from app.power_curve.power_curve_manager import PowerCurveManager
+from app.power_curve.global_power_curve_manager import power_curve_manager
 
 router = APIRouter()
 
@@ -30,12 +30,9 @@ data_fetcher_router = DataFetcherRouter()
 # data_fetcher_router.register_fetcher("s3", s3_data_fetcher)
 data_fetcher_router.register_fetcher("athena_wtk", athena_data_fetcher_wtk)
 
-# Load power curves
-power_curve_manager = PowerCurveManager("./app/power_curve/powercurves", data_type='wtk')
-
 # Multiple average types for wind speed
 wind_speed_avg_types = ["global", "monthly", "yearly", "hourly"]
-
+data_type = "wtk"
 
 @router.get("/windspeed/{avg_type}", summary="Retrieve wind speed with avg type - wtk data")
 @router.get("/windspeed", summary="Retrieve wind speed with default global avg - wtk data")
@@ -75,6 +72,7 @@ def fetch_available_powercurves():
     '''
     returns available power curves
     '''
+    print(list(power_curve_manager.power_curves.keys()))
     return {'available_power_curves': list(power_curve_manager.power_curves.keys())}
 
 @router.get("/energy-production/{time_period}", summary="Get yearly and monthly energy production estimate and average windspeed for a location at a height with a selected power curve")
@@ -110,24 +108,24 @@ def energy_production(lat: float, lng: float, height: int,
          # If a specific time period is requested, return only that data
         print(f"Fetching data for time period: {time_period}")
         if time_period == 'global':
-            yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(df,height,selected_powercurve)
+            yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(df,height,selected_powercurve,data_type)
             return {"energy_production" : yearly_avg_energy_production['Average year']['kWh produced']}
             # return {"energy_production" : 5000}
         elif time_period == 'yearly':
             # yearly_avg_energy_production = {'Lowest year': {'year': 2015, 'Average wind speed (m/s)': '3.88', 'kWh produced': 74708.0}, 'Average year': {'year': None, 'Average wind speed (m/s)': '4.19', 'kWh produced': 96544.0}, 'Highest year': {'year': 2014, 'Average wind speed (m/s)': '4.47', 'kWh produced': 118540.0}}
-            yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(df,height,selected_powercurve)
+            yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(df,height,selected_powercurve,data_type)
             return {yearly_avg_energy_production}
         elif time_period == 'monthly':
             # monthly_avg_energy_production = {'Jan': {'Average wind speed (m/s)': '4.49', 'kWh produced': 10196.0}, 'Feb': {'Average wind speed (m/s)': '4.44', 'kWh produced': 9410.0}, 'Mar': {'Average wind speed (m/s)': '4.52', 'kWh produced': 9751.0}, 'Apr': {'Average wind speed (m/s)': '4.55', 'kWh produced': 10009.0}, 'May': {'Average wind speed (m/s)': '4.31', 'kWh produced': 8618.0}, 'Jun': {'Average wind speed (m/s)': '4.14', 'kWh produced': 7800.0}, 'Jul': {'Average wind speed (m/s)': '3.86', 'kWh produced': 6272.0}, 'Aug': {'Average wind speed (m/s)': '3.81', 'kWh produced': 5936.0}, 'Sep': {'Average wind speed (m/s)': '3.71', 'kWh produced': 5305.0}, 'Oct': {'Average wind speed (m/s)': '3.86', 'kWh produced': 5971.0}, 'Nov': {'Average wind speed (m/s)': '4.19', 'kWh produced': 7821.0}, 'Dec': {'Average wind speed (m/s)': '4.45', 'kWh produced': 9455.0}}
-            monthly_avg_energy_production = power_curve_manager.fetch_monthly_avg_energy_production(df,height,selected_powercurve)
+            monthly_avg_energy_production = power_curve_manager.fetch_monthly_avg_energy_production(df,height,selected_powercurve,data_type)
             return {monthly_avg_energy_production}
         elif time_period == 'hourly':
-            hourly_avg_energy_production = power_curve_manager.fetch_hourly_avg_energy_production(df,height,selected_powercurve)
+            hourly_avg_energy_production = power_curve_manager.fetch_hourly_avg_energy_production(df,height,selected_powercurve,data_type)
             return {hourly_avg_energy_production}
         elif time_period == 'all':
-            yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(df,height,selected_powercurve)
-            monthly_avg_energy_production = power_curve_manager.fetch_monthly_avg_energy_production(df,height,selected_powercurve)
-            hourly_avg_energy_production = power_curve_manager.fetch_hourly_avg_energy_production(df,height,selected_powercurve)
+            yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(df,height,selected_powercurve,data_type)
+            monthly_avg_energy_production = power_curve_manager.fetch_monthly_avg_energy_production(df,height,selected_powercurve,data_type)
+            hourly_avg_energy_production = power_curve_manager.fetch_hourly_avg_energy_production(df,height,selected_powercurve,data_type)
             return {
                 "energy_production" : yearly_avg_energy_production['Average year']['kWh produced'],
                 "yearly_avg_energy_production": yearly_avg_energy_production,

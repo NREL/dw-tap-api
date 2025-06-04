@@ -8,7 +8,7 @@ class PowerCurveManager:
     """
     Manages multiple power curves stored in a directory.
     """
-    def __init__(self, power_curve_dir: str, data_type: str):
+    def __init__(self, power_curve_dir: str):
         """
         Initialize PowerCurveManager to load multiple power curves.
 
@@ -16,7 +16,6 @@ class PowerCurveManager:
         """
         self.power_curves = {}
         self.load_power_curves(power_curve_dir)
-        self.data_type = data_type
     
     def load_power_curves(self, directory: str):
         """
@@ -41,7 +40,7 @@ class PowerCurveManager:
             raise KeyError(f"Power curve '{curve_name}' not found.")
         return self.power_curves[curve_name]
     
-    def fetch_energy_production_df(self, df: pd.DataFrame, height: int, selected_power_curve: str, relevant_columns_only: bool = True) -> pd.DataFrame:
+    def fetch_energy_production_df(self, df: pd.DataFrame, height: int, selected_power_curve: str, data_type : str, relevant_columns_only: bool = True) -> pd.DataFrame:
         """
         Computes energy production data using the selected power curve.
 
@@ -56,13 +55,13 @@ class PowerCurveManager:
         """
         ws_col = f'windspeed_{height}m'
         power_curve = self.get_curve(selected_power_curve)
-        if self.data_type == 'wtk':
+        if data_type == 'wtk':
             # era5 data doesn't have month and hour columns
             df['month'], df['hour'] = df['mohr'] // 100, df['mohr'] % 100
             df[f"{ws_col}_kw"] = power_curve.windspeed_to_kw(df, ws_col)
             if relevant_columns_only:
                 return df[["year", "mohr", "month", "hour", ws_col, f"{ws_col}_kw"]]
-        elif self.data_type == 'era5':
+        elif data_type == 'era5':
             records = []
 
             for year, group in df.groupby("year"):
@@ -89,10 +88,10 @@ class PowerCurveManager:
             if relevant_columns_only:
                 return midpoints_df[["year", ws_col, f"{ws_col}_kw"]]
         else:
-            raise ValueError(f"Invalid data_type: {self.data_type}.")
+            raise ValueError(f"Invalid data_type: {data_type}.")
         return df
     
-    def fetch_yearly_avg_energy_production(self, df: pd.DataFrame, height: int, selected_power_curve: str) -> dict:
+    def fetch_yearly_avg_energy_production(self, df: pd.DataFrame, height: int, selected_power_curve: str, data_type: str) -> dict:
         """
         Computes yearly average energy production.
 
@@ -113,11 +112,11 @@ class PowerCurveManager:
 
             Note: for "Average year" the "year" is "None" as it's the global average production.
         """
-        prod_df = self.fetch_energy_production_df(df, height, selected_power_curve)
+        prod_df = self.fetch_energy_production_df(df, height, selected_power_curve, data_type)
         ws_column = f'windspeed_{height}m'
         kw_column = f'windspeed_{height}m_kw'
 
-        if self.data_type=='wtk':
+        if data_type=='wtk':
             # era5 data doesn't have mohr, month and hour columns
             prod_df = prod_df.drop(columns=["mohr", "month", "hour"] + [col for col in prod_df.columns if "winddirection" in col])
         
@@ -125,9 +124,9 @@ class PowerCurveManager:
         for year, group in prod_df.groupby("year"):
             avg_ws = group[ws_column].mean()
 
-            if self.data_type == 'wtk':
+            if data_type == 'wtk':
                 kwh = group[kw_column].sum() * 30 # Approximate estimation for 30 days per month
-            elif self.data_type == 'era5':
+            elif data_type == 'era5':
                 kwh = group[kw_column].sum() * 8760.0 / len(group) # 8760 hours/year
 
             res_list.append({
