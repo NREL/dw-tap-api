@@ -16,9 +16,9 @@ class DataFetcherRouter:
             fetcher_name (str): The name of the fetcher.
             fetcher: The fetcher object.
         """
-        self.fetchers[(fetcher_name, fetcher.data_type)] = fetcher
+        self.fetchers[fetcher_name] = fetcher
 
-    def fetch_data(self, params: dict , data_type: str, source: str = "athena"):
+    def fetch_data(self, params: dict , source: str = "athena_wtk"):
         """
         Fetch data using specified data fetcher.
 
@@ -27,27 +27,25 @@ class DataFetcherRouter:
                 lat (float): Latitude of the location
                 lng (float): Longitude of the location
                 height (int): Heights in meters
-            data_type (str) : Source data
             source (str): The name of the fetcher to use
 
         Returns:
             dict: The fetched data as a dictionary.
         """
-        fetcher = self.fetchers.get((source, data_type))
+        fetcher = self.fetchers.get(source)
         if fetcher:
             return fetcher.fetch_data(**params)
         else:
-            raise ValueError(f"No fetcher found for source={source}, data_type={data_type}")
+            raise ValueError(f"No fetcher found for source={source}")
         
 
-    def fetch_data_routing(self, params: dict, data_type: str = "wtk"):
+    def fetch_data_routing(self, params: dict, source: str = "athena_wtk"):
         """
         Fetch data using the appropriate data fetcher through routing logics.
 
         Args:
             params (dict): The parameters to pass to the fetcher.
-            data_type (str): The type of data source ('wtk' or 'era5').
-
+            source (str): The name of the fetcher to use
         Returns:
             dict: The fetched data as a dictionary.
         """
@@ -55,9 +53,9 @@ class DataFetcherRouter:
         cached_data = None
 
         # Check available fetchers by name and type
-        db_key = ("database", data_type)
-        s3_key = ("s3", data_type)
-        athena_key = ("athena", data_type)
+        db_key = "database"
+        s3_key = "s3"
+        athena_key = source
 
         db_fetcher_available = db_key in self.fetchers
         s3_fetcher_available = s3_key in self.fetchers

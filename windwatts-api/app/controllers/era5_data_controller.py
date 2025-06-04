@@ -28,7 +28,7 @@ athena_data_fetcher_era5 = AthenaDataFetcher(athena_config=athena_config, data_t
 data_fetcher_router = DataFetcherRouter()
 # data_fetcher_router.register_fetcher("database", db_data_fetcher)
 # data_fetcher_router.register_fetcher("s3", s3_data_fetcher)
-data_fetcher_router.register_fetcher("athena", athena_data_fetcher_era5)
+data_fetcher_router.register_fetcher("athena_era5", athena_data_fetcher_era5)
 
 # Load power curves
 power_curve_manager = PowerCurveManager("./app/power_curve/powercurves", data_type='era5')
@@ -39,7 +39,7 @@ wind_speed_avg_types = ["global", "yearly"]
 
 @router.get("/windspeed/{avg_type}", summary="Retrieve wind speed with avg type - wtk data")
 @router.get("/windspeed", summary="Retrieve wind speed with default global avg - wtk data")
-def get_windspeed(lat: float, lng: float, height: int, avg_type: str = 'global', source: str = "athena"):
+def get_windspeed(lat: float, lng: float, height: int, avg_type: str = 'global', source: str = "athena_era5"):
     '''
     Retrieve wind speed data from the WTK database.
     Args:
@@ -59,7 +59,7 @@ def get_windspeed(lat: float, lng: float, height: int, avg_type: str = 'global',
             "avg_type": avg_type
         }
 
-        data = data_fetcher_router.fetch_data(params, data_type='era5', source=source)
+        data = data_fetcher_router.fetch_data(params, source=source)
         
         if data is None:
             raise HTTPException(status_code=404, detail="Data not found")
@@ -82,7 +82,7 @@ def fetch_available_powercurves():
 def energy_production(lat: float, lng: float, height: int,
                                selected_powercurve: str,
                                time_period: str = 'global',
-                               source: str = "athena"):
+                               source: str = "athena_era5"):
     """
     Fetches the global, yearly and monthly energy production and average windspeed for a given location, height, and power curve.
     Args:
@@ -102,7 +102,7 @@ def energy_production(lat: float, lng: float, height: int,
                 "avg_type" : "none"
                 }
         # # Retrieves full dataframe for a specific location from s3
-        df = data_fetcher_router.fetch_data(params, data_type='era5', source=source)
+        df = data_fetcher_router.fetch_data(params, source=source)
         
         if df is None:
              raise HTTPException(status_code=404, detail="Data not found")

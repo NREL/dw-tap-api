@@ -38,12 +38,12 @@ class AthenaDataFetcher(AbstractDataFetcher):
         Raises:
             ValueError: If the avg_type is not supported for the selected client.
         """
-        valid_avg_types = {
+        valid_avg_types_params = {
             'wtk': ['global', 'yearly', 'monthly', 'hourly', 'none'],
             'era5': ['global', 'yearly', 'none']
         }
 
-        if avg_type not in valid_avg_types[self.data_type]:
+        if avg_type not in valid_avg_types_params[self.data_type]:
             raise ValueError(f"avg_type '{avg_type}' is not supported for data type '{self.data_type}'")
 
         if avg_type == 'none':
