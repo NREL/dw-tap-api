@@ -1,7 +1,7 @@
 import { Box, Typography, ToggleButton } from "@mui/material";
 import { useContext } from "react";
 import { UnitsContext } from "../../providers/UnitsContext";
-import UnitsToggleButtonGroup from "./UnitsToggleButtonGroup";
+import SettingToggleButtonGroup from "./SettingToggleButtonGroup";
 
 export function UnitsSettings() {
   const { units, updateUnit } = useContext(UnitsContext);
@@ -48,7 +48,7 @@ export function UnitsSettings() {
             textAlign: "left",
           }}
         >
-          <UnitsToggleButtonGroup
+          <SettingToggleButtonGroup
             value={units.windspeed}
             exclusive
             size="small"
@@ -61,13 +61,13 @@ export function UnitsSettings() {
             <ToggleButton value="m/s">
               <Typography variant="body2">m/s</Typography>
             </ToggleButton>
-          </UnitsToggleButtonGroup>
+          </SettingToggleButtonGroup>
         </Box>
         <Box sx={{ gridColumn: "span 4" }}>
           <Typography variant="body2">Output:</Typography>
         </Box>
         <Box sx={{ gridColumn: "span 8", textAlign: "left" }}>
-          <UnitsToggleButtonGroup
+          <SettingToggleButtonGroup
             value={units.output}
             exclusive
             size="small"
@@ -80,7 +80,7 @@ export function UnitsSettings() {
             <ToggleButton value="kWh">
               <Typography variant="body2">kWh</Typography>
             </ToggleButton>
-          </UnitsToggleButtonGroup>
+          </SettingToggleButtonGroup>
         </Box>
       </Box>
     </Box>
