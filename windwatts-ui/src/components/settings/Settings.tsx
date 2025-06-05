@@ -8,7 +8,7 @@ import { Close } from "@mui/icons-material";
 import { UnitsSettings } from "./UnitsSettings";
 import { useContext } from "react";
 import { SettingsContext } from "../../providers/SettingsContext";
-import { ModelSettings } from "./ModelSettings";
+// import { ModelSettings } from "./ModelSettings";
 import { PowerCurveSettings } from "./PowerCurveSettings";
 import { HubHeightSettings } from "./HubHeightSettings";
 
@@ -60,7 +60,7 @@ const Settings = () => {
 
         <UnitsSettings />
 
-        <ModelSettings />
+        {/* <ModelSettings /> */}
       </Box>
     </Modal>
   );

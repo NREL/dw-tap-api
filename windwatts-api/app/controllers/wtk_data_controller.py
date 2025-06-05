@@ -8,7 +8,7 @@ from fastapi import APIRouter, HTTPException
 # from app.data_fetchers.data_fetcher_router import DataFetcherRouter
 # from app.database_manager import DatabaseManager
 
-# from app.power_curve.power_curve_manager import PowerCurveManager
+from app.power_curve.power_curve_manager import PowerCurveManager
 
 router = APIRouter()
 
@@ -31,7 +31,7 @@ router = APIRouter()
 # data_fetcher_router.register_fetcher("athena", athena_data_fetcher)
 
 # # Load power curves
-# power_curve_manager = PowerCurveManager("./app/power_curve/powercurves")
+power_curve_manager = PowerCurveManager("./app/power_curve/powercurves")
 
 # Multiple average types for wind speed
 wind_speed_avg_types = ["global", "yearly", "monthly", "hourly"]

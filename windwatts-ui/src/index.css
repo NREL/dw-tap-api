@@ -23,44 +23,40 @@
 
 /* needed to force the footer to comply with it's allowed space */
 #root {
-  .right-pane {
-    width: 420px;
-  }
   .nrel-footer-wrapper {
     height: unset;
-
-    footer {
-      .container {
-        max-width: 420px !important;
-      }
-    }
-
-    .col-md-4.col-lg-5 {
-      -ms-flex: 0 0 33.333333%;
-      flex: 0 0 33.333333%;
-      max-width: 33.333333%;
-    }
-
-    .col-md-8 {
-      -ms-flex: 0 0 66.666667%;
-      flex: 0 0 66.666667%;
-      max-width: 66.666667%;
-    }
   }
 
-  @media (min-width: 992px) {
+  /* 
+   * MUI md breakpoint (900px) - for main app responsiveness
+   * This handles the main app layout using MUI's breakpoint system
+   */
+  @media (min-width: 900px) {
     .right-pane {
       width: 530px;
     }
+  }
+
+  /* 
+   * Bootstrap lg breakpoint (992px) - ONLY for NREL footer compatibility 
+   * This handles the footer's Bootstrap grid system without affecting app layout
+   */
+  @media (min-width: 992px) {
+    /* 
+     * NREL Footer Bootstrap overrides - scoped to footer only
+     * These styles override Bootstrap classes that come from nrel-branding-react
+     */
     .nrel-footer-wrapper footer {
       .container {
-        max-width: 530px !important;
+        max-width: 100% !important; /* Let it use available right-pane width */
+        padding: 0 16px; /* Add padding to the container matching the right-pane padding { p: 2 } */
       }
 
       .global div {
         margin: 1em 0 0 0;
       }
 
+      /* Override Bootstrap grid classes for footer layout */
       .col-md-4.col-lg-5 {
         -ms-flex: 0 0 33.333333%;
         flex: 0 0 33.333333%;
