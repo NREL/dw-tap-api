@@ -46,10 +46,21 @@ export const getEnergyProduction = async ({
   return fetchWrapper(url, options);
 };
 
-export const getAvailablePowerCurves = async ({
-  dataModel,
-}: { dataModel: DataModel }) => {
-  const url = `/api/${dataModel}/available-powercurves`;
+// export const getAvailablePowerCurves = async ({
+//   dataModel,
+// }: { dataModel: DataModel }) => {
+//   const url = `/api/${dataModel}/available-powercurves`;
+//   const options = {
+//     method: "GET",
+//     headers: {
+//       "Content-Type": "application/json",
+//     },
+//   };
+//   return fetchWrapper(url, options);
+// };
+
+export const getAvailablePowerCurves = async () => {
+  const url = `/api/wtk/available-powercurves`; // if fetching from era5, replace the wtk with era5
   const options = {
     method: "GET",
     headers: {

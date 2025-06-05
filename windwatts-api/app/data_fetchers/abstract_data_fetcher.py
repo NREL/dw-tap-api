@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List
 
-class WTKDataFetcher(ABC):
+class AbstractDataFetcher(ABC):
     """
     Abstract class for fetching data from the WTK API
     """

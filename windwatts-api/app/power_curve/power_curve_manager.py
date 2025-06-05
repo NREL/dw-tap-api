@@ -2,6 +2,7 @@ from .powercurve import PowerCurve
 import os
 import pandas as pd
 import calendar
+import numpy as np
 
 class PowerCurveManager:
     """
@@ -39,7 +40,7 @@ class PowerCurveManager:
             raise KeyError(f"Power curve '{curve_name}' not found.")
         return self.power_curves[curve_name]
     
-    def fetch_energy_production_df(self, df: pd.DataFrame, height: int, selected_power_curve: str, relevant_columns_only: bool = True) -> pd.DataFrame:
+    def fetch_energy_production_df(self, df: pd.DataFrame, height: int, selected_power_curve: str, data_type : str, relevant_columns_only: bool = True) -> pd.DataFrame:
         """
         Computes energy production data using the selected power curve.
 
@@ -53,16 +54,44 @@ class PowerCurveManager:
             pd.DataFrame: Processed dataframe with estimated power production.
         """
         ws_col = f'windspeed_{height}m'
-        df['month'], df['hour'] = df['mohr'] // 100, df['mohr'] % 100
         power_curve = self.get_curve(selected_power_curve)
-        df[f"{ws_col}_kw"] = power_curve.windspeed_to_kw(df, ws_col)
+        if data_type == 'wtk':
+            # era5 data doesn't have month and hour columns
+            df['month'], df['hour'] = df['mohr'] // 100, df['mohr'] % 100
+            df[f"{ws_col}_kw"] = power_curve.windspeed_to_kw(df, ws_col)
+            if relevant_columns_only:
+                return df[["year", "mohr", "month", "hour", ws_col, f"{ws_col}_kw"]]
+        elif data_type == 'era5':
+            records = []
 
-        if relevant_columns_only:
-            return df[["year", "mohr", "month", "hour", ws_col, f"{ws_col}_kw"]]
-        
+            for year, group in df.groupby("year"):
+                # sorting by probability is important since the records might be shuffled by "groupby" and we are using midpoint method.
+                group = group.sort_values("probability").reset_index(drop=True)
+                wind_values = group[ws_col]
+
+                # Compute midpoints (32 values from 33 quantiles)
+                midpoints = (wind_values.shift(-1) + wind_values) / 2
+                midpoints = midpoints.iloc[:-1]  # drop last NaN
+            
+                # Compute power for each midpoint
+                kw_values = power_curve.windspeed_to_kw(pd.DataFrame({"ws": midpoints}), "ws")
+                
+                for mp, kw in zip(midpoints, kw_values):
+                    records.append({
+                        "year": year,
+                        ws_col: mp, # pass midpoints
+                        f"{ws_col}_kw": kw
+                    })
+
+            midpoints_df = pd.DataFrame(records)
+
+            if relevant_columns_only:
+                return midpoints_df[["year", ws_col, f"{ws_col}_kw"]]
+        else:
+            raise ValueError(f"Invalid data_type: {data_type}.")
         return df
     
-    def fetch_yearly_avg_energy_production(self, df: pd.DataFrame, height: int, selected_power_curve: str) -> dict:
+    def fetch_yearly_avg_energy_production(self, df: pd.DataFrame, height: int, selected_power_curve: str, data_type: str) -> dict:
         """
         Computes yearly average energy production.
 
@@ -83,21 +112,35 @@ class PowerCurveManager:
 
             Note: for "Average year" the "year" is "None" as it's the global average production.
         """
-        prod_df = self.fetch_energy_production_df(df, height, selected_power_curve)
-        prod_df = prod_df.drop(columns=["mohr", "month", "hour"] + [col for col in prod_df.columns if "winddirection" in col])
+        prod_df = self.fetch_energy_production_df(df, height, selected_power_curve, data_type)
         ws_column = f'windspeed_{height}m'
         kw_column = f'windspeed_{height}m_kw'
 
-        res = prod_df.groupby("year").agg(avg_ws=(ws_column, "mean"), kwh_total=(kw_column, "sum"))
-        res.reset_index(inplace=True)
-        res["kwh_total"] *= 30  # Approximate estimation for 30 days per month
+        if data_type=='wtk':
+            # era5 data doesn't have mohr, month and hour columns
+            prod_df = prod_df.drop(columns=["mohr", "month", "hour"] + [col for col in prod_df.columns if "winddirection" in col])
+        
+        res_list = []
+        for year, group in prod_df.groupby("year"):
+            avg_ws = group[ws_column].mean()
 
-        res.rename(columns={"avg_ws": "Average wind speed (m/s)", "kwh_total": "kWh produced"}, inplace=True)
+            if data_type == 'wtk':
+                kwh = group[kw_column].sum() * 30 # Approximate estimation for 30 days per month
+            elif data_type == 'era5':
+                kwh = group[kw_column].sum() * 8760.0 / len(group) # 8760 hours/year
+
+            res_list.append({
+                "year": year,
+                "Average wind speed (m/s)": avg_ws,
+                "kWh produced": kwh
+            })
+
+        res = pd.DataFrame(res_list)
         res.sort_values("Average wind speed (m/s)", inplace=True)
-
         res_avg = pd.DataFrame(res.drop(columns=['year']).mean()).T
         res_avg.index = ["Average year"]
 
+        # Final formatting
         res_summary = pd.concat([res.iloc[[0]], res_avg, res.iloc[[-1]]])
         res_summary["year"] = res_summary["year"].astype("Int64")
         res_summary["kWh produced"] = round(res_summary["kWh produced"].astype(float))
@@ -105,7 +148,7 @@ class PowerCurveManager:
 
         res_summary.index = [
             f"Lowest year",
-            res_summary.index[1],
+            res_summary.index[1], # Average year
             f"Highest year"
         ]
 
