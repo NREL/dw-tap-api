@@ -31,21 +31,21 @@ const WindResourceCard = () => {
         color: 'success',
         bgColor: 'success.light',
         textColor: 'success.contrastText',
-        tooltip: 'High wind resource refers to speeds above 5.00 m/s - excellent for wind energy generation'
+        tooltip: 'High wind resource refers to speeds above 5.00 m/s (11.2 mph) - excellent for wind energy generation'
       };
     } else if (resourceLower.includes('moderate')) {
       return {
         color: 'info',
         bgColor: 'info.light', 
         textColor: 'info.contrastText',
-        tooltip: 'Moderate wind resource refers to speeds between 3.00 m/s and 5.00 m/s - good for wind energy generation'
+        tooltip: 'Moderate wind resource refers to speeds between 3.00 m/s (6.7 mph) and 5.00 m/s (11.2 mph) - good for wind energy generation'
       };
     } else {
       return {
         color: 'warning',
         bgColor: 'warning.light',
         textColor: 'warning.contrastText', 
-        tooltip: 'Low wind resource refers to speeds below 3.00 m/s - limited wind energy potential'
+        tooltip: 'Low wind resource refers to speeds below 3.00 m/s (6.7 mph) - limited wind energy potential'
       };
     }
   };
