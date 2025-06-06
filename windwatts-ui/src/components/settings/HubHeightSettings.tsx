@@ -1,14 +1,40 @@
-import { useContext } from "react";
+import { useContext, useEffect, useMemo } from "react";
 import { SettingsContext } from "../../providers/SettingsContext";
 import { Box, Slider, Typography } from "@mui/material";
+import { DataModel } from "../../types/Requests";
+import { Heights } from "../../types/Heights";
 
-const hubHeightMarks = [40, 60, 80, 100, 120, 140].map((value: number) => ({
-  value: value,
-  label: `${value}m`,
-}));
+const HUB_HEIGHTS: Record<DataModel | 'default', Heights> = {
+  era5: { values: [30, 40, 50, 60, 80, 100], interpolation: null },
+  wtk: { values: [40, 60, 80, 100, 120, 140], interpolation: 10},
+  default: { values: [40, 60, 80, 100], interpolation: null },
+}
 
 export function HubHeightSettings() {
-  const { hubHeight, setHubHeight } = useContext(SettingsContext);
+  const { hubHeight, setHubHeight, preferredModel: dataModel } = useContext(SettingsContext);
+
+  const { values: availableHeights, interpolation: step} = useMemo(() => {
+    if (dataModel && HUB_HEIGHTS[dataModel]) {
+      return HUB_HEIGHTS[dataModel];
+    }
+    return HUB_HEIGHTS.default;
+  }, [dataModel]);
+
+  // ensure slider compatibility with model switching and available heights changes
+  useEffect(() => {
+    if (!availableHeights.includes(hubHeight)) {
+      // if current height not available, set to the closest available height
+      const closestHeight = availableHeights.reduce((prev, curr) =>
+        Math.abs(curr - hubHeight) < Math.abs(prev - hubHeight) ? curr : prev
+      );
+      setHubHeight(closestHeight);
+    }
+  }, [availableHeights, hubHeight, setHubHeight]);
+
+  const hubHeightMarks = availableHeights.map((value: number) => ({
+    value: value,
+    label: `${value}m`,
+  }));
 
   const handleHubHeightChange = (
     _: Event,
@@ -33,10 +59,10 @@ export function HubHeightSettings() {
         aria-labelledby="hub-height-slider"
         valueLabelDisplay="auto"
         getAriaValueText={(value) => `${value}m`}
-        step={10}
+        step={step}
         marks={hubHeightMarks}
-        min={30}
-        max={140}
+        min={Math.min(...availableHeights)}
+        max={Math.max(...availableHeights)}
       />
     </Box>
   );
