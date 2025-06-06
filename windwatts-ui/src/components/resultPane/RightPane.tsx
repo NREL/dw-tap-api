@@ -1,6 +1,6 @@
-import { Box, Typography, Link, Paper, Grid2 } from "@mui/material";
+import { Box, Typography, Paper, Grid2, Link } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import WindspeedCards from "./WindspeedCards";
+import AnalysisResults from "./AnalysisResults";
 import { useContext } from "react";
 import { SettingsContext } from "../../providers/SettingsContext";
 
@@ -38,8 +38,7 @@ const RightPane = () => {
     <Box
       sx={{
         bgcolor: "background.paper",
-        p: 3,
-        pt: 2,
+        p: 2,
         "> *": {
           color: "text.primary",
         },
@@ -51,7 +50,8 @@ const RightPane = () => {
           flexDirection: "column",
         }}
       >
-        <Typography variant="body1" marginBottom={3}>
+        <Typography variant="body1" marginBottom={2}>
+          {/* Analysis presented below was performed using summary data from NREL&apos;s ERA5 dataset using the following options: */}
           Analysis presented below was performed using summary data from&nbsp;
           <Link
             href="https://www.energy.gov/eere/wind/articles/new-wind-resource-database-includes-updated-wind-toolkit"
@@ -67,6 +67,7 @@ const RightPane = () => {
           container
           direction="row"
           spacing={1}
+          marginBottom={2}
           sx={{
             justifyContent: "space-between",
             alignItems: "stretch",
@@ -84,7 +85,7 @@ const RightPane = () => {
           ))}
         </Grid2>
 
-        <WindspeedCards />
+        <AnalysisResults />
 
         <Typography variant="body2" color="textSecondary" marginTop={2}>
           Disclaimer: This summary represents a PRELIMINARY analysis. Research
