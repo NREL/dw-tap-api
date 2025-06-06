@@ -2,13 +2,14 @@ import { Box, ToggleButton, Typography } from "@mui/material";
 import SettingToggleButtonGroup from "./SettingToggleButtonGroup";
 import { useContext } from "react";
 import { SettingsContext } from "../../providers/SettingsContext";
+import { DataModel } from "../../types/Requests";
 
 export function ModelSettings() {
   const { preferredModel, setPreferredModel } = useContext(SettingsContext);
 
   const handleModelChange = (
     _: React.MouseEvent<HTMLElement>,
-    newModel: string
+    newModel: DataModel
   ) => {
     if (newModel !== null) {
       setPreferredModel(newModel);

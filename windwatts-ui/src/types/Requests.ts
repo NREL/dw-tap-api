@@ -1,5 +1,3 @@
-import { Data } from "@react-google-maps/api";
-
 export type DataModel = 'wtk' | 'era5';
 
 export interface WindspeedByLatLngRequest {
@@ -14,6 +12,6 @@ export interface EnergyProductionRequest {
   lng: number;
   hubHeight: number;
   powerCurve: string;
-  dataModel: Data;
+  dataModel: DataModel;
   time_period?: string;
 }

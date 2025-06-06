@@ -12,11 +12,11 @@ from app.power_curve.global_power_curve_manager import power_curve_manager
 
 router = APIRouter()
 
-# # Initialize ConfigManager
-# config_manager = ConfigManager(
-#     secret_arn_env_var="WINDWATTS_DATA_CONFIG_SECRET_ARN",
-#     local_config_path="./app/config/windwatts_data_config.json") # replace with YOUR local config path
-# athena_config = config_manager.get_config()
+# Initialize ConfigManager
+config_manager = ConfigManager(
+    secret_arn_env_var="WINDWATTS_DATA_CONFIG_SECRET_ARN",
+    local_config_path="./app/config/windwatts_data_config.json") # replace with YOUR local config path
+athena_config = config_manager.get_config()
 
 # Initialize DataFetchers
 # s3_data_fetcher = S3DataFetcher("WINDWATTS_S3_BUCKET_NAME")
@@ -99,7 +99,6 @@ def energy_production(lat: float, lng: float, height: int,
                 "lng": lng,
                 "height": height,
                 "time_period": time_period,
-                "avg_type" : "none"
                 }
         # # Retrieves full dataframe for a specific location from s3
         df = data_fetcher_router.fetch_data(params, source=source)

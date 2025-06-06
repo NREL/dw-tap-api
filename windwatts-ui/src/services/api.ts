@@ -34,7 +34,7 @@ export const getEnergyProduction = async ({
   hubHeight,
   powerCurve,
   dataModel,
-  time_period = 'global'
+  time_period = 'all'
 }: EnergyProductionRequest) => {
   const url = `/api/${dataModel}/energy-production?lat=${lat}&lng=${lng}&height=${hubHeight}&selected_powercurve=${powerCurve}&time_period=${time_period}`;
   const options = {

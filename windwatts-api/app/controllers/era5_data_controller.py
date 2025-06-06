@@ -78,7 +78,7 @@ def fetch_available_powercurves():
 @router.get("/energy-production", summary="Get global energy production estimate for a location at a height with a selected power curve")
 def energy_production(lat: float, lng: float, height: int,
                                selected_powercurve: str,
-                               time_period: str = 'global',
+                               time_period: str = 'all',
                                source: str = "athena_era5"):
     """
     Fetches the global, yearly and monthly energy production and average windspeed for a given location, height, and power curve.

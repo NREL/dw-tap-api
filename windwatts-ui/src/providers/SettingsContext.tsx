@@ -30,7 +30,7 @@ export const defaultValues: StoredSettings = {
   currentPosition: null,
   hubHeight: 30,
   powerCurve: "nrel-reference-100kW",
-  preferredModel: "wtk", // default to WTK model
+  preferredModel: "era5", // default to era5 model
 };
 
 export const SettingsContext = createContext<Settings>({
