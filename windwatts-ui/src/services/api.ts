@@ -1,5 +1,4 @@
 import {
-  DataModel,
   EnergyProductionRequest,
   WindspeedByLatLngRequest,
 } from "../types/Requests";
