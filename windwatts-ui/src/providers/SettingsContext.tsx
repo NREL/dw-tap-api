@@ -28,8 +28,8 @@ export const defaultValues: StoredSettings = {
   settingsOpen: false,
   resultsOpen: false,
   currentPosition: null,
-  hubHeight: 30,
-  powerCurve: "nrel-reference-100kW",
+  hubHeight: 40, // default hub height in meters
+  powerCurve: "nrel-reference-100kW", // default power curve
   preferredModel: "era5", // default to era5 model
 };
 

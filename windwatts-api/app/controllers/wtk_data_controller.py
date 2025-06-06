@@ -73,8 +73,24 @@ def fetch_available_powercurves():
     '''
     returns available power curves
     '''
-    print(list(power_curve_manager.power_curves.keys()))
-    return {'available_power_curves': list(power_curve_manager.power_curves.keys())}
+    all_curves = list(power_curve_manager.power_curves.keys())
+
+    def extract_kw(curve_name: str):
+        # Extracts the kw value from nrel curves, e.g. "nrel-reference-2.5kW" -> 2.5
+        import re
+        match = re.search(r"nrel-reference-([0-9.]+)kW", curve_name)
+        if match:
+            return float(match.group(1))
+        return float('inf')
+
+    nrel_curves = [c for c in all_curves if c.startswith("nrel-reference-")]
+    other_curves = [c for c in all_curves if not c.startswith("nrel-reference-")]
+
+    nrel_curves_sorted = sorted(nrel_curves, key=extract_kw)
+    other_curves_sorted = sorted(other_curves)
+
+    ordered_curves = nrel_curves_sorted + other_curves_sorted
+    return {'available_power_curves': ordered_curves}
 
 @router.get("/energy-production/{time_period}", summary="Get yearly and monthly energy production estimate and average windspeed for a location at a height with a selected power curve")
 @router.get("/energy-production", summary="Get global energy production estimate for a location at a height with a selected power curve")
