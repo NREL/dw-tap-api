@@ -23,7 +23,7 @@ import { ExpandMore, ExpandLess } from "@mui/icons-material";
 
 const ProductionCard = () => {
   const [expanded, setExpanded] = useState(false);
-  const { currentPosition, hubHeight, powerCurve } = useContext(SettingsContext);
+  const { currentPosition, hubHeight, powerCurve, preferredModel: dataModel } = useContext(SettingsContext);
   const { units } = useContext(UnitsContext);
   const { lat, lng } = currentPosition || {};
   
@@ -33,13 +33,13 @@ const ProductionCard = () => {
     "The wind resource, and by extension the energy production, varies month to month and year to year. It is important to understand the average characteristics as well as the variability you can expect to see from your wind turbine on any given year."
   ];
   
-  const shouldFetch = lat && lng && hubHeight;
+  const shouldFetch = lat && lng && hubHeight && powerCurve && dataModel;
   const { 
     isLoading,
     data: productionData,
     error,
   } = useSWR(
-    shouldFetch ? { lat, lng, hubHeight, powerCurve, time_period: "all" } : null,
+    shouldFetch ? { lat, lng, hubHeight, powerCurve, dataModel, time_period: "all" } : null,
     getEnergyProduction
   );
 

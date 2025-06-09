@@ -2,13 +2,14 @@ import { Box, ToggleButton, Typography } from "@mui/material";
 import SettingToggleButtonGroup from "./SettingToggleButtonGroup";
 import { useContext } from "react";
 import { SettingsContext } from "../../providers/SettingsContext";
+import { DataModel } from "../../types/Requests";
 
 export function ModelSettings() {
   const { preferredModel, setPreferredModel } = useContext(SettingsContext);
 
   const handleModelChange = (
     _: React.MouseEvent<HTMLElement>,
-    newModel: string
+    newModel: DataModel
   ) => {
     if (newModel !== null) {
       setPreferredModel(newModel);
@@ -46,10 +47,10 @@ export function ModelSettings() {
             onChange={handleModelChange}
             aria-label="model"
           >
-            <ToggleButton value="WTK">
+            <ToggleButton value="wtk">
               <Typography variant="body2">WTK</Typography>
             </ToggleButton>
-            <ToggleButton value="ERA5">
+            <ToggleButton value="era5">
               <Typography variant="body2">ERA5</Typography>
             </ToggleButton>
           </SettingToggleButtonGroup>

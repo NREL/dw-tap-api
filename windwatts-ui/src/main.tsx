@@ -4,8 +4,8 @@ import "./index.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Layout from "./components/Layout";
 import MapView from "./components/MapView";
-import UnitsProvider from "./providers/UnitsContext";
-import SettingsProvider from "./providers/SettingsContext";
+import SettingsProvider from "./providers/SettingsProvider";
+import UnitsProvider from "./providers/UnitsProvider";
 
 const router = createBrowserRouter([
   {

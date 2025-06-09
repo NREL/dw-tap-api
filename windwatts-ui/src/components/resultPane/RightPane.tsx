@@ -11,9 +11,22 @@ const Item = styled(Paper)(({ theme }) => ({
   color: theme.palette.text.secondary,
 }));
 
+const DATMODEL_INFO: Record<string, { label: string, href: string }> = {
+    era5: {
+    label: "ERA5 dataset",
+    href: "https://cds.climate.copernicus.eu/datasets/reanalysis-era5-single-levels?tab=overview",
+  },
+  wtk: {
+    label: "NREL's 20-year WTK-LED dataset",
+    href: "https://www.energy.gov/eere/wind/articles/new-wind-resource-database-includes-updated-wind-toolkit",
+  },
+};
+
 const RightPane = () => {
-  const { currentPosition, hubHeight, powerCurve } =
+
+  const { currentPosition, hubHeight, powerCurve, preferredModel: dataModel } =
     useContext(SettingsContext);
+  
   const { lat, lng } = currentPosition ?? {};
 
   const settingOptions = [
@@ -33,6 +46,8 @@ const RightPane = () => {
       data: powerCurve ? `${powerCurve}` : "Not selected",
     },
   ];
+
+  const dataModelInfo = DATMODEL_INFO[dataModel] || DATMODEL_INFO.era5;
 
   return (
     <Box
@@ -54,12 +69,12 @@ const RightPane = () => {
           {/* Analysis presented below was performed using summary data from NREL&apos;s ERA5 dataset using the following options: */}
           Analysis presented below was performed using summary data from&nbsp;
           <Link
-            href="https://www.energy.gov/eere/wind/articles/new-wind-resource-database-includes-updated-wind-toolkit"
+            href={dataModelInfo.href}
             underline="hover"
             target="_blank"
             rel="noopener noreferrer"
           >
-            NREL&apos;s 20-year WTK-LED dataset
+            {dataModelInfo.label}
           </Link>
           &nbsp;using the following options:
         </Typography>

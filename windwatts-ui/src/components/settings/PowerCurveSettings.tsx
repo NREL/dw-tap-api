@@ -5,8 +5,8 @@ import { useContext } from "react";
 import { getAvailablePowerCurves } from "../../services/api";
 
 const NRELPowerCurveOptions = [
-  "nrel-reference-100kW",
   "nrel-reference-2.5kW",
+  "nrel-reference-100kW",
   "nrel-reference-250kW",
   "nrel-reference-2000kW",
 ];
