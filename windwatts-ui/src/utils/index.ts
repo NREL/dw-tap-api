@@ -1,3 +1,6 @@
+import { MODEL_COORDINATES_BOUNDS } from "../constants/coordinates";
+import { DataModel } from "../types/Requests";
+
 export const getWindResource = (speed: number) => {
   return speed > 5 ? "High" : speed >= 3 ? "Moderate" : "Low";
 };
@@ -34,3 +37,26 @@ export const formatNumber = (
 
   return Number(formattedNum).toLocaleString(locale);
 };
+
+export function isOutOfBounds(
+  lat: number,
+  lng: number,
+  model: DataModel
+): boolean {
+  const bounds = MODEL_COORDINATES_BOUNDS[model];
+  if (!bounds) return false;
+  return (
+    lat < bounds.minLat ||
+    lat > bounds.maxLat ||
+    lng < bounds.minLng ||
+    lng > bounds.maxLng
+  );
+}
+
+export function getBoundsMessage(model: DataModel): string {
+  const bounds = MODEL_COORDINATES_BOUNDS[model];
+  if (!bounds) return "No bounds defined for this model.";
+  return `Supported range for ${model} model: 
+    Lat: ${bounds.minLat} to ${bounds.maxLat}, 
+    Lng: ${bounds.minLng} to ${bounds.maxLng}`;
+}
