@@ -92,7 +92,7 @@ class PowerCurveManager:
             raise ValueError(f"Invalid data_type: {data_type}.")
         return df
     
-    def fetch_yearly_avg_energy_production(self, df: pd.DataFrame, height: int, selected_power_curve: str, data_type: str, get_summary_df = False) -> dict:
+    def fetch_yearly_avg_energy_production(self, df: pd.DataFrame, height: int, selected_power_curve: str, data_type: str, fetch_only_df=False) -> dict:
         """
         Computes yearly average energy production and windspeed.
 
@@ -101,20 +101,13 @@ class PowerCurveManager:
             height (int): Height in meters.
             selected_power_curve (str): Power curve
             data_type (str): data source {wtk or era5}
-            get_summary_df (bool): condition to return summary or full yearly average windspeed and energy production
+            fetch_only_df (bool): return yearly avg prod dataframe instead of dict for dependent methods.
 
         Returns:
             dict
         
         Example:
-            If get_summary_df is True, returns a summary with:
-            {
-                "Lowest year": {"year": 2015, "Average wind speed (m/s)": "5.36", "kWh produced": 202791},
-                "Average year": {"year": None, "Average wind speed (m/s)": "5.86", "kWh produced": 267712},
-                "Highest year": {"year": 2014, "Average wind speed (m/s)": "6.32", "kWh produced": 326354}
-            }
-
-            If get_summary_df is False, returns full breakdown per year:
+            returns full breakdown of per year:
             {
                 "2001": {"Average wind speed (m/s)": "5.65", "kWh produced": 250117},
                 "2002": {"Average wind speed (m/s)": "5.72", "kWh produced": 264044},
@@ -146,18 +139,44 @@ class PowerCurveManager:
 
         res = pd.DataFrame(res_list)
         res.sort_values("Average wind speed (m/s)", inplace=True)
+
+        if fetch_only_df:
+            return res
         
-        if not get_summary_df:
-            res["year"] = res["year"].astype(str)
-            res["kWh produced"] = round(res["kWh produced"].astype(float))
-            res["Average wind speed (m/s)"] = res["Average wind speed (m/s)"].astype(float).map('{:,.2f}'.format)
-            return res.set_index("year").to_dict(orient="index")
+        # if not get_summary_df:
+        res["year"] = res["year"].astype(str)
+        res["kWh produced"] = round(res["kWh produced"].astype(float))
+        res["Average wind speed (m/s)"] = res["Average wind speed (m/s)"].astype(float).map('{:,.2f}'.format)
+
+        return res.set_index("year").to_dict(orient="index")
+    
+    def fetch_avg_energy_production_summary(self, df: pd.DataFrame, height: int, selected_power_curve: str, data_type: str) -> dict:
+        """
+        Computes yearly average energy production and windspeed summary.
+
+        Args:
+            df (pd.DataFrame): Dataframe containing data at all heights for a location.
+            height (int): Height in meters.
+            selected_power_curve (str): Power curve
+            data_type (str): data source {wtk or era5}
+
+        Returns:
+            dict
         
-        res_avg = pd.DataFrame(res.drop(columns=['year']).mean()).T
+        Example:
+            If get_summary_df is True, returns a summary with:
+            {
+                "Lowest year": {"year": 2015, "Average wind speed (m/s)": "5.36", "kWh produced": 202791},
+                "Average year": {"year": None, "Average wind speed (m/s)": "5.86", "kWh produced": 267712},
+                "Highest year": {"year": 2014, "Average wind speed (m/s)": "6.32", "kWh produced": 326354}
+            }
+        """
+        yearly_avg_energy_prod_df = self.fetch_yearly_avg_energy_production(df,height,selected_power_curve,data_type,fetch_only_df=True)
+        res_avg = pd.DataFrame(yearly_avg_energy_prod_df.drop(columns=['year']).mean()).T
         res_avg.index = ["Average year"]
 
         # Final formatting
-        res_summary = pd.concat([res.iloc[[0]], res_avg, res.iloc[[-1]]])
+        res_summary = pd.concat([yearly_avg_energy_prod_df.iloc[[0]], res_avg, yearly_avg_energy_prod_df.iloc[[-1]]])
         res_summary["year"] = res_summary["year"].astype("Int64")
         res_summary["kWh produced"] = round(res_summary["kWh produced"].astype(float))
         res_summary["Average wind speed (m/s)"] = res_summary["Average wind speed (m/s)"].astype(float).map('{:,.2f}'.format)
