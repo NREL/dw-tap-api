@@ -10,3 +10,9 @@ The ERA5 reanalysis dataset was rigorously evaluated using wind speed observatio
 
 Overall, ERA5 provides reliable and well-characterized wind speed estimates for the United States, with strong temporal resolution, low error, and minimal bias demonstrated in recent years. These attributes support its use as a credible and practical resource for distributed wind energy stakeholders seeking to evaluate project opportunities and manage uncertainty in the absence of on-site observational data.
 
+
+## Spatial Coverage
+
+The official [ERA5 data](https://www.ecmwf.int/en/forecasts/dataset/ecmwf-reanalysis-v5) offers global coverage. For WindWatts, we chose to focus on the continental United States to balance usability with data storage and processing efficiency. As a result, current wind resource estimates are provided only for locations within the highlighted region:
+
+<a href="era5-coverage.png"><img src="era5-coverage.png" width="75%"></a>
