@@ -168,10 +168,10 @@ const ProductionCard = () => {
   }
 
   // Data loaded successfully
-  const yearlyData = productionData.yearly_avg_energy_production;
-  const avgProduction = yearlyData?.['Average year']?.['kWh produced'] || 0;
-  const lowProduction = yearlyData?.['Lowest year']?.['kWh produced'] || 0;
-  const highProduction = yearlyData?.['Highest year']?.['kWh produced'] || 0;
+  const summaryData = productionData.summary_avg_energy_production;
+  const avgProduction = summaryData?.['Average year']?.['kWh produced'] || 0;
+  const lowProduction = summaryData?.['Lowest year']?.['kWh produced'] || 0;
+  const highProduction = summaryData?.['Highest year']?.['kWh produced'] || 0;
 
   return (
     <Card>
