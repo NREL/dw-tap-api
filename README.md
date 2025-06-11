@@ -70,16 +70,25 @@ http://localhost:8080/status
      - Create or update `windwatts_data_config.json` under `config/`:
        ```json
        {
-         "region_name": "us-east-1",
-         "bucket_name": "sample-bucket",
-         "database": "sample_database",
-         "output_location": "s3://sample-output-location/",
-         "output_bucket": "sample-output-bucket",
-         "athena_table_name": "sample_table",
-         "alt_athena_table_name": "sample_alt_table",
-         "athena_workgroup": "sample_workgroup"
-       }
-       ```
+        "region_name": "us-west-2",
+        "output_location": "S3_BUCKET_URI_FOR_ATHENA_RESULTS",
+        "output_bucket": "NAME_OF_S3_BUCKET_FOR_ATHENA_RESULTS",
+        "database": "NAME_OF_THE_GLUE_DATABASE",
+        "athena_workgroup": "NAME_OF_THE_ATHENA_WORKGROUP",
+        "sources": {
+          "wtk": {
+            "bucket_name": "NAME_OF_THE_WTK_S3_BUCKET",
+            "athena_table_name": "NAME_OF_THE_ATHENA_TABLE_FOR_WTK",
+            "alt_athena_table_name": ""
+          },
+          "era5": {
+            "bucket_name": "NAME_OF_THE_ERA5_S3_BUCKET",
+            "athena_table_name": "NAME_OF_THE_ATHENA_TABLE_FOR_ERA5",
+            "alt_athena_table_name": ""
+          }
+        }
+      }
+      ```
 
 3. **Deploy the app**:
    - Start Docker containers:
