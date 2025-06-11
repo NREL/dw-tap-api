@@ -59,7 +59,7 @@ export const getEnergyProduction = async ({
 // };
 
 export const getAvailablePowerCurves = async () => {
-  const url = `/api/wtk/available-powercurves`; // if fetching from era5, replace the wtk with era5
+  const url = `/api/era5/available-powercurves`; // if fetching from era5, replace the wtk with era5
   const options = {
     method: "GET",
     headers: {
