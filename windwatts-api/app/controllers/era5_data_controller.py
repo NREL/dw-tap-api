@@ -134,7 +134,6 @@ def energy_production(lat: float, lng: float, height: int,
         elif time_period == 'all':
             summary_avg_energy_production = power_curve_manager.fetch_avg_energy_production_summary(df,height,selected_powercurve,data_type)
             yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(df,height,selected_powercurve,data_type)
-
             return {
                 "energy_production" : summary_avg_energy_production['Average year']['kWh produced'],
                 "summary_avg_energy_production":summary_avg_energy_production,

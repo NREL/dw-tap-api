@@ -92,27 +92,18 @@ class PowerCurveManager:
             raise ValueError(f"Invalid data_type: {data_type}.")
         return df
     
-    def fetch_yearly_avg_energy_production(self, df: pd.DataFrame, height: int, selected_power_curve: str, data_type: str, fetch_only_df=False) -> dict:
+    def prepare_yearly_production_df(self, df: pd.DataFrame, height: int, selected_power_curve: str, data_type: str) -> pd.DataFrame:
         """
-        Computes yearly average energy production and windspeed.
+        Prepares yearly average energy production and windspeed dataframe for dependent methods.
 
         Args:
             df (pd.DataFrame): Dataframe containing data at all heights for a location.
             height (int): Height in meters.
             selected_power_curve (str): Power curve
             data_type (str): data source {wtk or era5}
-            fetch_only_df (bool): return yearly avg prod dataframe instead of dict for dependent methods.
 
         Returns:
-            dict
-        
-        Example:
-            returns full breakdown of per year:
-            {
-                "2001": {"Average wind speed (m/s)": "5.65", "kWh produced": 250117},
-                "2002": {"Average wind speed (m/s)": "5.72", "kWh produced": 264044},
-                ...
-            }
+            pd.Dataframe
         """
         prod_df = self.fetch_energy_production_df(df, height, selected_power_curve, data_type)
         ws_column = f'windspeed_{height}m'
@@ -140,15 +131,36 @@ class PowerCurveManager:
         res = pd.DataFrame(res_list)
         res.sort_values("Average wind speed (m/s)", inplace=True)
 
-        if fetch_only_df:
-            return res
+        return res
+    
+    def fetch_yearly_avg_energy_production(self, df: pd.DataFrame, height: int, selected_power_curve: str, data_type: str) -> dict:
+        """
+        Computes yearly average energy production and windspeed.
+
+        Args:
+            df (pd.DataFrame): Dataframe containing data at all heights for a location.
+            height (int): Height in meters.
+            selected_power_curve (str): Power curve
+            data_type (str): data source {wtk or era5}
+
+        Returns:
+            dict
+        
+        Example:
+            {
+                "2001": {"Average wind speed (m/s)": "5.65", "kWh produced": 250117},
+                "2002": {"Average wind speed (m/s)": "5.72", "kWh produced": 264044},
+                ...
+            }
+        """
+        yearly_prod_df = self.prepare_yearly_production_df(df,height,selected_power_curve,data_type)
         
         # if not get_summary_df:
-        res["year"] = res["year"].astype(str)
-        res["kWh produced"] = round(res["kWh produced"].astype(float))
-        res["Average wind speed (m/s)"] = res["Average wind speed (m/s)"].astype(float).map('{:,.2f}'.format)
+        yearly_prod_df["year"] = yearly_prod_df["year"].astype(str)
+        yearly_prod_df["kWh produced"] = round(yearly_prod_df["kWh produced"].astype(float))
+        yearly_prod_df["Average wind speed (m/s)"] = yearly_prod_df["Average wind speed (m/s)"].astype(float).map('{:,.2f}'.format)
 
-        return res.set_index("year").to_dict(orient="index")
+        return yearly_prod_df.set_index("year").to_dict(orient="index")
     
     def fetch_avg_energy_production_summary(self, df: pd.DataFrame, height: int, selected_power_curve: str, data_type: str) -> dict:
         """
@@ -164,19 +176,18 @@ class PowerCurveManager:
             dict
         
         Example:
-            If get_summary_df is True, returns a summary with:
             {
                 "Lowest year": {"year": 2015, "Average wind speed (m/s)": "5.36", "kWh produced": 202791},
                 "Average year": {"year": None, "Average wind speed (m/s)": "5.86", "kWh produced": 267712},
                 "Highest year": {"year": 2014, "Average wind speed (m/s)": "6.32", "kWh produced": 326354}
             }
         """
-        yearly_avg_energy_prod_df = self.fetch_yearly_avg_energy_production(df,height,selected_power_curve,data_type,fetch_only_df=True)
-        res_avg = pd.DataFrame(yearly_avg_energy_prod_df.drop(columns=['year']).mean()).T
+        yearly_prod_df = self.prepare_yearly_production_df(df,height,selected_power_curve,data_type)
+        res_avg = pd.DataFrame(yearly_prod_df.drop(columns=['year']).mean()).T
         res_avg.index = ["Average year"]
 
         # Final formatting
-        res_summary = pd.concat([yearly_avg_energy_prod_df.iloc[[0]], res_avg, yearly_avg_energy_prod_df.iloc[[-1]]])
+        res_summary = pd.concat([yearly_prod_df.iloc[[0]], res_avg, yearly_prod_df.iloc[[-1]]])
         res_summary["year"] = res_summary["year"].astype("Int64")
         res_summary["kWh produced"] = round(res_summary["kWh produced"].astype(float))
         res_summary["Average wind speed (m/s)"] = res_summary["Average wind speed (m/s)"].astype(float).map('{:,.2f}'.format)
@@ -194,10 +205,11 @@ class PowerCurveManager:
 
         Args:
             df (pd.DataFrame): Dataframe containing data at all heights for a location.
-            height (int): Height in meters.po
-
+            height (int): Height in meters.
+            selected_power_curve (str): Power curve
+            data_type (str): data source {wtk or era5}
         Returns:
-            pd.DataFrame: Dataframe summarizing monthly energy production.
+            dict: dict summarizing monthly energy production and windspeed.
 
         Example:
         {'Jan': {'Average wind speed, m/s': '3.80', 'kWh produced': '5,934'}, 
