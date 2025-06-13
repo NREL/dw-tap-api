@@ -15,13 +15,25 @@ import { convertOutput, convertWindspeed } from "../../utils";
 interface ProductionDataTableProps {
   title: string;
   data: Record<string, Record<string, string | number | null>>;
+  timeUnit?: 'month' | 'year';
 }
 
-const MonthlyProductionDisplay = ({ data }: { data: Record<string, Record<string, string | number | null>> }) => {
+const ProductionDisplay = ({ 
+  data, 
+  timeUnit = 'month' 
+}: { 
+  data: Record<string, Record<string, string | number | null>>;
+  timeUnit: 'month' | 'year';
+}) => {
   const { units } = useContext(UnitsContext);
-  const monthOrder = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const sortedData = monthOrder
-    .map(month => ({ month, values: data[month] }))
+  
+  // Define order based on time unit
+  const timeOrder = timeUnit === 'month' 
+    ? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    : Object.keys(data).sort((a, b) => parseInt(a) - parseInt(b));
+
+  const sortedData = timeOrder
+    .map(time => ({ time, values: data[time] }))
     .filter(({ values }) => values);
 
   // Calculate min/max for better wind speed bar scaling
@@ -42,13 +54,19 @@ const MonthlyProductionDisplay = ({ data }: { data: Record<string, Record<string
       <Table size="small" sx={{ width: '100%' }}>
         <TableHead>
           <TableRow>
-            <TableCell sx={{ fontWeight: 'bold', width: '20%' }}>Month</TableCell>
-            <TableCell align="right" sx={{ fontWeight: 'bold', width: '40%' }}>Wind Speed ({units.windspeed})</TableCell>
-            <TableCell align="right" sx={{ fontWeight: 'bold', width: '40%' }}>Energy ({units.output})</TableCell>
+            <TableCell sx={{ fontWeight: 'bold', width: '10%' }}>
+              {timeUnit === 'month' ? 'Month' : 'Year'}
+            </TableCell>
+            <TableCell align="right" sx={{ fontWeight: 'bold', width: '50%' }}>
+              Wind Speed ({units.windspeed})
+            </TableCell>
+            <TableCell align="right" sx={{ fontWeight: 'bold', width: '40%' }}>
+              Energy ({units.output})
+            </TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
-          {sortedData.map(({ month, values }) => {
+          {sortedData.map(({ time, values }) => {
             const windSpeed = Number(values['Average wind speed (m/s)']);
             const production = Number(values['kWh produced']);
             
@@ -61,8 +79,8 @@ const MonthlyProductionDisplay = ({ data }: { data: Record<string, Record<string
             const energyPercentage = 30 + ((production / maxProduction) * 70);
             
             return (
-              <TableRow key={month} hover>
-                <TableCell sx={{ fontWeight: 'medium', whiteSpace: 'nowrap' }}>{month}</TableCell>
+              <TableRow key={time} hover>
+                <TableCell sx={{ fontWeight: 'medium', whiteSpace: 'nowrap' }}>{time}</TableCell>
                 
                 {/* Wind Speed Cell - Responsive within available space */}
                 <TableCell align="right">
@@ -138,7 +156,7 @@ const MonthlyProductionDisplay = ({ data }: { data: Record<string, Record<string
   );
 };
 
-const ProductionDataTable = ({ title, data }: ProductionDataTableProps) => {
+const ProductionDataTable = ({ title, data, timeUnit = 'month' }: ProductionDataTableProps) => {
   if (!data || typeof data !== "object" || Object.keys(data).length === 0) {
     return (
       <>
@@ -152,13 +170,12 @@ const ProductionDataTable = ({ title, data }: ProductionDataTableProps) => {
     );
   }
 
-  // Only show monthly data now since yearly is redundant
   return (
     <>
       <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
         {title}
       </Typography>
-      <MonthlyProductionDisplay data={data} />
+      <ProductionDisplay data={data} timeUnit={timeUnit} />
     </>
   );
 };
