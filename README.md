@@ -69,17 +69,37 @@ http://localhost:8080/status
    - **Backend directory (windwatts-api)**:
      - Create or update `windwatts_data_config.json` under `config/`:
        ```json
-       {
-         "region_name": "us-east-1",
-         "bucket_name": "sample-bucket",
-         "database": "sample_database",
-         "output_location": "s3://sample-output-location/",
-         "output_bucket": "sample-output-bucket",
-         "athena_table_name": "sample_table",
-         "alt_athena_table_name": "sample_alt_table",
-         "athena_workgroup": "sample_workgroup"
-       }
+        {
+          "region_name": "us-west-2",
+          "output_location": "S3_BUCKET_URI_FOR_ATHENA_RESULTS",
+          "output_bucket": "NAME_OF_S3_BUCKET_FOR_ATHENA_RESULTS",
+          "database": "NAME_OF_THE_GLUE_DATABASE",
+          "athena_workgroup": "NAME_OF_THE_ATHENA_WORKGROUP",
+          "sources": {
+            "wtk": {
+              "bucket_name": "NAME_OF_THE_WTK_S3_BUCKET",
+              "athena_table_name": "NAME_OF_THE_ATHENA_TABLE_FOR_WTK",
+              "alt_athena_table_name": ""
+            },
+            "era5": {
+              "bucket_name": "NAME_OF_THE_ERA5_S3_BUCKET",
+              "athena_table_name": "NAME_OF_THE_ATHENA_TABLE_FOR_ERA5",
+              "alt_athena_table_name": ""
+            }
+          }
+        }
        ```
+      - Parameter Description
+          -  **region_name** : AWS region where your S3 buckets and Athena services are hosted.
+          - **output_location** : S3 bucket URI where Athena will store query results (e.g., s3://bucket-name/).
+          - **output_bucket**	: Name of the bucket used above.
+          - **database** : AWS Glue database name in which athena tables are created.
+          - **athena_workgroup** : Name of the Athena workgroup to use for querying.
+          - **sources**.*wtk*	: Configuration specific to WTK-Led Climate dataset.
+          - **sources**.*era5* : Configuration specific to ERA5 dataset.
+          - **athena_table_name**	: Primary Athena table name for the dataset. This table is used for location specific queries.
+          - **alt_athena_table_name** : Optional alternate Athena table name for non-location specific queries.
+
 
 3. **Deploy the app**:
    - Start Docker containers:

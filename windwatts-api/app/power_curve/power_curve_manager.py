@@ -155,7 +155,6 @@ class PowerCurveManager:
         """
         yearly_prod_df = self.prepare_yearly_production_df(df,height,selected_power_curve,data_type)
         
-        # if not get_summary_df:
         yearly_prod_df["year"] = yearly_prod_df["year"].astype(str)
         yearly_prod_df["kWh produced"] = round(yearly_prod_df["kWh produced"].astype(float))
         yearly_prod_df["Average wind speed (m/s)"] = yearly_prod_df["Average wind speed (m/s)"].astype(float).map('{:,.2f}'.format)
