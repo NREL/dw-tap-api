@@ -53,10 +53,18 @@ export function isOutOfBounds(
   );
 }
 
-export function getBoundsMessage(model: DataModel): string {
+export function getOutOfBoundsMessage(
+  lat: number | undefined,
+  lng: number | undefined,
+  model: DataModel
+): string {
+  if (lat === undefined || lng === undefined) {
+    return "No location selected.";
+  }
   const bounds = MODEL_COORDINATES_BOUNDS[model];
   if (!bounds) return "No bounds defined for this model.";
-  return `Supported range for ${model} model: 
-    Lat: ${bounds.minLat} to ${bounds.maxLat}, 
-    Lng: ${bounds.minLng} to ${bounds.maxLng}`;
+  return (
+    `(${lat.toFixed(3)}, ${lng.toFixed(3)}) is outside the supported region for ${model.toUpperCase()}:\n` +
+    `Lat: [${bounds.minLat} ~ ${bounds.maxLat}], Lng: [${bounds.minLng} ~ ${bounds.maxLng}]`
+  );
 }

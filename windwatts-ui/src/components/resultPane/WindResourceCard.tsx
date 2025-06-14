@@ -10,18 +10,35 @@ import {
   Skeleton,
 } from "@mui/material";
 import { InfoOutlined } from "@mui/icons-material";
-import { getWindResource } from "../../utils";
+import { getWindResource, getOutOfBoundsMessage } from "../../utils";
 import { useWindData } from "../../hooks/useWindData";
+import OutOfBoundsWarning from "../shared/OutOfBoundsWarning";
 
 const WindResourceCard = () => {
   const [expanded, setExpanded] = useState(false);
-  const { windData, isLoading, error, hasData } = useWindData();
+  const { windData, isLoading, error, hasData, outOfBounds, dataModel, lat, lng } = useWindData();
 
   const title = "Wind Resource";
   const subheader = "Broad measure of how much wind is available";
   const details: string[] = [
     // Add any wind resource details here if needed in the future
   ];
+
+  if (outOfBounds) {
+    return (
+      <Paper sx={{ 
+        p: 2, 
+        minHeight: 100,
+        display: 'flex',
+        justifyContent: 'center',
+        bgcolor: 'warning.light',
+      }}>
+        <OutOfBoundsWarning
+          message={getOutOfBoundsMessage(lat, lng, dataModel)}
+        />
+      </Paper>
+    );
+  }
 
   // Helper function for wind resource colors and tooltips
   const getWindResourceInfo = (resource: string) => {
