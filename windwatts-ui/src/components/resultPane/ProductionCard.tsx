@@ -198,10 +198,21 @@ const ProductionCard = () => {
   }
 
   // Data loaded successfully
-  const yearlyData = productionData.yearly_avg_energy_production;
-  const avgProduction = yearlyData?.['Average year']?.['kWh produced'] || 0;
-  const lowProduction = yearlyData?.['Lowest year']?.['kWh produced'] || 0;
-  const highProduction = yearlyData?.['Highest year']?.['kWh produced'] || 0;
+  const summaryData = productionData.summary_avg_energy_production;
+  const avgProduction = summaryData?.['Average year']?.['kWh produced'] || 0;
+  const lowProduction = summaryData?.['Lowest year']?.['kWh produced'] || 0;
+  const highProduction = summaryData?.['Highest year']?.['kWh produced'] || 0;
+
+  // Determine data type and set up variables
+  // may need something more robust here if we add more data types
+  const monthlyData = "monthly_avg_energy_production" in productionData;
+  const tableData = monthlyData ? productionData.monthly_avg_energy_production : productionData.yearly_avg_energy_production;
+  
+  const detailsLabel = monthlyData 
+    ? 'Monthly Production Details' 
+    : 'Yearly Production Details';
+  
+  const tableTitle = '';
 
   return (
     <Card>
@@ -274,11 +285,14 @@ const ProductionCard = () => {
       <Divider sx={{ borderStyle: 'dotted' }} />
 
       {/* Detailed Breakdown - Expandable */}
-      <CardActions sx={{ justifyContent: 'space-between', px: 2}}>
-        <Typography variant="body2" color="text.secondary" sx={{ 
+      <CardActions sx={{ 
+        justifyContent: { xs: 'flex-end', sm: 'space-between' }, 
+        px: 2 
+      }}>
+        <Typography variant="body1" color="text.secondary" sx={{ 
           display: { xs: 'none', sm: 'block' } // Hide on mobile to save space
         }}>
-          Monthly Production Details
+          {detailsLabel}
         </Typography>
         <Button
           onClick={handleExpandClick}
@@ -290,8 +304,7 @@ const ProductionCard = () => {
           sx={{
             whiteSpace: 'nowrap',
             minWidth: 'auto',
-            fontSize: { xs: '0.75rem', sm: '0.875rem' },
-            px: { xs: 1, sm: 2 }
+            px: 2
           }}
         >
           {expanded ? "Hide" : "Show"}
@@ -300,10 +313,13 @@ const ProductionCard = () => {
 
       <Collapse in={expanded} timeout="auto" unmountOnExit>
         <CardContent sx={{ pt: 0 }}>
-          <ProductionDataTable 
-            title=""
-            data={productionData.monthly_avg_energy_production}
-          />
+          {tableData && (
+            <ProductionDataTable 
+              title={tableTitle}
+              data={tableData}
+              timeUnit={monthlyData ? 'month' : 'year'}
+            />
+          )}
         </CardContent>
       </Collapse>
     </Card>
