@@ -59,7 +59,7 @@ const MapView = () => {
         { maximumAge: 60000, timeout: 5000, enableHighAccuracy: true }
       );
     }
-  }, []);
+  }, );
 
   // Updated marker management
   useEffect(() => {

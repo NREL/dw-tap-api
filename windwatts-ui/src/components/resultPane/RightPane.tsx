@@ -1,8 +1,6 @@
-import { Box, Typography, Paper, Grid2, Link, IconButton, Collapse, Chip } from "@mui/material";
+import { Box, Typography, Paper, Grid2, Link, Collapse, Chip } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import ExpandLessIcon from "@mui/icons-material/ExpandLess";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AnalysisResults from "./AnalysisResults";
 import { useContext, useState } from "react";
 import { SettingsContext } from "../../providers/SettingsContext";
