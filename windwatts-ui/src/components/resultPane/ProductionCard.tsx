@@ -32,7 +32,7 @@ const ProductionCard = () => {
   const title = "Production";
   const subheader = "Estimated annual production potential";
   const details = [
-    "The wind resource, and by extension the energy production, varies month to month and year to year. It is important to understand the average characteristics as well as the variability you can expect to see from your wind turbine on any given year."
+    "Wind energy production can vary significantly from year to year. Understanding both the average resource and its variability is key to setting realistic expectations."
   ];
   
   const shouldFetch = lat && lng && hubHeight && powerCurve && dataModel;

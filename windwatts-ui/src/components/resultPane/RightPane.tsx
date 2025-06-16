@@ -1,7 +1,10 @@
-import { Box, Typography, Paper, Grid2, Link } from "@mui/material";
+import { Box, Typography, Paper, Grid2, Link, IconButton, Collapse, Chip } from "@mui/material";
 import { styled } from "@mui/material/styles";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AnalysisResults from "./AnalysisResults";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { SettingsContext } from "../../providers/SettingsContext";
 
 const Item = styled(Paper)(({ theme }) => ({
@@ -11,14 +14,16 @@ const Item = styled(Paper)(({ theme }) => ({
   color: theme.palette.text.secondary,
 }));
 
-const DATMODEL_INFO: Record<string, { label: string, href: string }> = {
-    era5: {
-    label: "ERA5 dataset",
-    href: "https://cds.climate.copernicus.eu/datasets/reanalysis-era5-single-levels?tab=overview",
+const DATMODEL_INFO: Record<string, { label: string, source_href: string, help_href: string }> = {
+  era5: {
+    label: "ERA5",
+    source_href: "https://www.ecmwf.int/en/forecasts/dataset/ecmwf-reanalysis-v5",
+    help_href: "https://github.com/NREL/dw-tap-api/blob/master/about/era5.md",
   },
   wtk: {
     label: "NREL's 20-year WTK-LED dataset",
-    href: "https://www.energy.gov/eere/wind/articles/new-wind-resource-database-includes-updated-wind-toolkit",
+    source_href: "https://www.energy.gov/eere/wind/articles/new-wind-resource-database-includes-updated-wind-toolkit",
+    help_href: "",
   },
 };
 
@@ -49,6 +54,8 @@ const RightPane = () => {
 
   const dataModelInfo = DATMODEL_INFO[dataModel] || DATMODEL_INFO.era5;
 
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
+
   return (
     <Box
       sx={{
@@ -65,18 +72,29 @@ const RightPane = () => {
           flexDirection: "column",
         }}
       >
-        <Typography variant="body1" marginBottom={2}>
-          {/* Analysis presented below was performed using summary data from NREL&apos;s ERA5 dataset using the following options: */}
-          Analysis presented below was performed using summary data from&nbsp;
+        <Typography variant="body1" marginBottom={2} sx={{ lineHeight: 1.7 }}>
+          WindWatts is currently based on&nbsp;
           <Link
-            href={dataModelInfo.href}
+            href={ dataModelInfo.source_href }
             underline="hover"
             target="_blank"
             rel="noopener noreferrer"
+            sx={{ fontWeight: 500 }}
           >
-            {dataModelInfo.label}
+            { dataModelInfo.label.toUpperCase() } reanalysis dataset
           </Link>
-          &nbsp;using the following options:
+          &nbsp;provided by ECMWF.
+          <br />
+          <Link
+            href={ dataModelInfo.help_href }
+            underline="hover"
+            target="_blank"
+            rel="noopener noreferrer"
+            sx={{ fontSize: "0.95em", fontWeight: 400, display: "inline-flex", alignItems: "center" }}
+          >
+            Why { dataModelInfo.label.toUpperCase()}?
+            <InfoOutlinedIcon fontSize="small" sx={{ ml: 0.5 }} />
+          </Link>
         </Typography>
         <Grid2
           container
@@ -102,12 +120,29 @@ const RightPane = () => {
 
         <AnalysisResults />
 
-        <Typography variant="body2" color="textSecondary" marginTop={2}>
-          Disclaimer: This summary represents a PRELIMINARY analysis. Research
-          conducted at national laboratories suggests that multiple models
-          should be used for more thorough analysis. Reach out to a qualified
-          installer for a refined estimate.
-        </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", mt: 2 }}>
+          <Chip
+            label="Disclaimer"
+            color="info"
+            variant="outlined"
+            sx={{ border: "none", fontSize: "0.95rem" }}
+            onClick={() => setShowDisclaimer((v) => !v)}
+            icon={<InfoOutlinedIcon sx={{ fontSize: "1.1rem" }} />}
+          />
+        </Box>
+        <Collapse in={showDisclaimer}>
+          <Typography variant="body2" color="textSecondary" marginBottom={2} px={1}>
+            WindWatts offers quick, approximate wind resource estimates. For more detailed or location-specific data, consider reaching out to local wind installers who may share insights from nearby projects. To access alternative wind models, visit&nbsp;
+            <Link
+              href="https://wrdb.nrel.gov"
+              target="_blank"
+              rel="noopener noreferrer"
+              underline="hover"
+            >
+              NREL's Wind Resource Database
+            </Link>.
+          </Typography>
+        </Collapse>
       </Box>
     </Box>
   );
