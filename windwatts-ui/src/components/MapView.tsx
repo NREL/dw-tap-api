@@ -1,5 +1,5 @@
 import { GoogleMap, InfoWindow, Libraries, Marker, useJsApiLoader } from "@react-google-maps/api";
-import { useCallback, useContext, useEffect, useState, useRef } from "react";
+import { useCallback, useContext, useEffect, useState, useRef, useMemo } from "react";
 import SearchBar from "./SearchBar";
 import { Box, Backdrop, CircularProgress } from "@mui/material";
 import { SettingsContext } from "../providers/SettingsContext";
@@ -17,7 +17,7 @@ interface RecentSearch {
 const MapView = () => {
   const { currentPosition, setCurrentPosition, preferredModel } = useContext(SettingsContext);
   const [zoom, setZoom] = useState(8);
-  const defaultCenter = { lat: 39.7392, lng: -104.9903 };
+  const defaultCenter = useMemo(() => ({ lat: 39.7392, lng: -104.9903 }), []);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
   const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
@@ -59,8 +59,8 @@ const MapView = () => {
         { maximumAge: 60000, timeout: 5000, enableHighAccuracy: true }
       );
     }
-  }, );
-
+  }, [defaultCenter, setCurrentPosition]);
+  
   // Updated marker management
   useEffect(() => {
     if (isLoaded && map && currentPosition && window.google?.maps?.marker) {
