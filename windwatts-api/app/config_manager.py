@@ -29,6 +29,7 @@ class ConfigManager:
                 
                 # Save the secret to a temporary file
                 temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".json")
+                temp_file.close()
                 with open(temp_file.name, 'w') as f:
                     json.dump(config_data, f)
                 return temp_file.name
@@ -39,6 +40,7 @@ class ConfigManager:
         env_config = self._get_config_from_env()
         if env_config:
             temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".json")
+            temp_file.close()
             with open(temp_file.name, 'w') as f:
                 json.dump(env_config, f)
             print("Config loaded from environment variables.")
