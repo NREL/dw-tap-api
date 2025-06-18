@@ -18,19 +18,21 @@ import { SettingsContext } from "../../providers/SettingsContext";
 import { UnitsContext } from "../../providers/UnitsContext";
 import ProductionDataTable from "./ProductionDataTable";
 import { getEnergyProduction } from "../../services/api";
-import { convertOutput } from "../../utils";
+import { convertOutput, getOutOfBoundsMessage, isOutOfBounds } from "../../utils";
 import { ExpandMore, ExpandLess } from "@mui/icons-material";
+import OutOfBoundsWarning from "../shared/OutOfBoundsWarning";
 
 const ProductionCard = () => {
   const [expanded, setExpanded] = useState(false);
   const { currentPosition, hubHeight, powerCurve, preferredModel: dataModel } = useContext(SettingsContext);
   const { units } = useContext(UnitsContext);
   const { lat, lng } = currentPosition || {};
+  const outOfBounds = lat && lng && dataModel ? isOutOfBounds(lat, lng, dataModel) : false;
   
   const title = "Production";
   const subheader = "Estimated annual production potential";
   const details = [
-    "The wind resource, and by extension the energy production, varies month to month and year to year. It is important to understand the average characteristics as well as the variability you can expect to see from your wind turbine on any given year."
+    "Wind energy production can vary significantly from year to year. Understanding both the average resource and its variability is key to setting realistic expectations."
   ];
   
   const shouldFetch = lat && lng && hubHeight && powerCurve && dataModel;
@@ -46,6 +48,34 @@ const ProductionCard = () => {
   const handleExpandClick = () => {
     setExpanded(!expanded);
   };
+
+  // Out-of-bounds state
+    if (outOfBounds) {
+    return (
+      <Card>
+        <CardHeader
+          title={
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              Production
+              <Chip 
+                label="Primary Analysis" 
+                size="small" 
+                color="warning" 
+                variant="outlined"
+              />
+            </Box>
+          }
+          subheader="Estimated annual production potential"
+          sx={{ bgcolor: "warning.light", pb: 1 }}
+        />
+        <CardContent sx={{ py: 2 }}>
+          <OutOfBoundsWarning
+            message={getOutOfBoundsMessage(lat, lng, dataModel)}
+          />
+        </CardContent>
+      </Card>
+    );
+  }
 
   // Loading state
   if (isLoading) {

@@ -1,3 +1,6 @@
+import { MODEL_COORDINATES_BOUNDS } from "../constants/coordinates";
+import { DataModel } from "../types/Requests";
+
 export const getWindResource = (speed: number) => {
   return speed > 5 ? "High" : speed >= 3 ? "Moderate" : "Low";
 };
@@ -34,3 +37,34 @@ export const formatNumber = (
 
   return Number(formattedNum).toLocaleString(locale);
 };
+
+export function isOutOfBounds(
+  lat: number,
+  lng: number,
+  model: DataModel
+): boolean {
+  const bounds = MODEL_COORDINATES_BOUNDS[model];
+  if (!bounds) return false;
+  return (
+    lat < bounds.minLat ||
+    lat > bounds.maxLat ||
+    lng < bounds.minLng ||
+    lng > bounds.maxLng
+  );
+}
+
+export function getOutOfBoundsMessage(
+  lat: number | undefined,
+  lng: number | undefined,
+  model: DataModel
+): string {
+  if (lat === undefined || lng === undefined) {
+    return "No location selected.";
+  }
+  const bounds = MODEL_COORDINATES_BOUNDS[model];
+  if (!bounds) return "No bounds defined for this model.";
+  return (
+    `(${lat.toFixed(3)}, ${lng.toFixed(3)}) is outside the supported region for ${model.toUpperCase()}:\n` +
+    `Lat: [${bounds.minLat} ~ ${bounds.maxLat}], Lng: [${bounds.minLng} ~ ${bounds.maxLng}]`
+  );
+}

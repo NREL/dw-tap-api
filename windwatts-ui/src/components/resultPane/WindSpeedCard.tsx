@@ -1,15 +1,30 @@
 import { useContext } from "react";
 import { Paper, Typography, Skeleton } from "@mui/material";
 import { UnitsContext } from "../../providers/UnitsContext";
-import { convertWindspeed } from "../../utils";
+import { convertWindspeed, getOutOfBoundsMessage } from "../../utils";
 import { useWindData } from "../../hooks/useWindData";
+import OutOfBoundsWarning from "../shared/OutOfBoundsWarning";
 
 const WindSpeedCard = () => {
   const { units } = useContext(UnitsContext);
-  const { windData, isLoading, error, hasData } = useWindData();
+  const { windData, isLoading, error, hasData, outOfBounds, dataModel, lat, lng } = useWindData();
 
   const title = "Average Wind Speed";
   const subheader = "Average wind speed at selected height";
+
+  if (outOfBounds) {
+    return (
+      <Paper sx={{
+        p: 2,
+        minHeight: 100,
+        bgcolor: 'warning.light',
+      }}>
+        <OutOfBoundsWarning
+          message={getOutOfBoundsMessage(lat, lng, dataModel)}
+        />
+      </Paper>
+    );
+  }
 
   if (error) {
     return (
@@ -93,4 +108,4 @@ const WindSpeedCard = () => {
   );
 };
 
-export default WindSpeedCard; 
+export default WindSpeedCard;

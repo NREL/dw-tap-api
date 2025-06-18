@@ -2,11 +2,13 @@ import { useContext } from "react";
 import useSWR from "swr";
 import { SettingsContext } from "../providers/SettingsContext";
 import { getWindspeedByLatLong } from "../services/api";
+import { isOutOfBounds } from "../utils";
 
 export const useWindData = () => {
   const { currentPosition, hubHeight, preferredModel: dataModel } = useContext(SettingsContext);
   const { lat, lng } = currentPosition || {};
-  const shouldFetch = lat && lng && hubHeight && dataModel;
+  const outOfBounds = lat && lng && dataModel ? isOutOfBounds(lat, lng, dataModel) : false;
+  const shouldFetch = lat && lng && hubHeight && dataModel && !outOfBounds;
 
   const {
     isLoading,
@@ -21,6 +23,10 @@ export const useWindData = () => {
     windData: data,
     isLoading,
     error,
-    hasData: !!data
+    hasData: !!data,
+    outOfBounds,
+    dataModel,
+    lat,
+    lng,
   };
-}; 
+};
