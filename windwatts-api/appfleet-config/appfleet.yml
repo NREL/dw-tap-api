@@ -60,6 +60,11 @@ ecs_service:
   grace_period: 300
   task_execution_role: nrel-ops-ecs-generic-task-execution-role
   launch_type: EC2
+  task_memory:
+    $release_name:
+      dev: 1024
+      stage: 1024
+      prod: 1024
   cluster:
     $release_name:
       dev: ecs-low01-dev
@@ -145,9 +150,9 @@ containers:
         prod: 256
     memory:
       $release_name:
-        dev: 64
-        stage: 64
-        prod: 128
+        dev: 512
+        stage: 512
+        prod: 512
     port_map:
       - "8000:8000"
     volume_mounts: []
