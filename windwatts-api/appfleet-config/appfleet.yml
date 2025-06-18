@@ -45,7 +45,7 @@ target_groups:
     sticky_duration: 86400
     target_type: instance
     healthcheck:
-      path: /healthcheck
+      path: /api/healthcheck
       port: traffic-port
       protocol: HTTP
       interval: 10
@@ -62,9 +62,9 @@ ecs_service:
   launch_type: EC2
   task_memory:
     $release_name:
-      dev: 1024
-      stage: 1024
-      prod: 1024
+      dev: 5120
+      stage: 5120
+      prod: 5120
   cluster:
     $release_name:
       dev: ecs-low01-dev
@@ -150,9 +150,9 @@ containers:
         prod: 256
     memory:
       $release_name:
-        dev: 512
-        stage: 512
-        prod: 512
+        dev: 4096
+        stage: 4096
+        prod: 4096
     port_map:
       - "8000:8000"
     volume_mounts: []
