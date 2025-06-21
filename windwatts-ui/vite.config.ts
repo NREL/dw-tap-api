@@ -14,4 +14,12 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    minify: 'terser',
+    terserOptions: {
+      format: {
+        comments: false, // Remove license/version
+      },
+    },
+  },
 } as UserConfig);
