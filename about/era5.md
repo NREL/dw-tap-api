@@ -2,7 +2,7 @@
 
 ## ERA5 data
 
-The WindWatts team analyzed available wind datasets to advance its mission of supporting the distributed wind energy community. Using high-quality wind speed observations from 304 sites across the United States—spanning a broad range of geographies and measurement heights—the team rigorously evaluated the [ERA5 reanalysis dataset provided by ECMWF](https://www.ecmwf.int/en/forecasts/dataset/ecmwf-reanalysis-v5). The evaluation, focused on the 2015–2023 period, assessed the dataset’s  performance and revealed the following:
+The WindWatts team analyzed available wind datasets to advance its mission of supporting the distributed wind energy community. Using high-quality wind speed observations from 304 sites (from met towers, lidars, turbines, etc.) across the United States—spanning a broad range of geographies and measurement heights—the team rigorously evaluated the [ERA5 reanalysis dataset provided by ECMWF](https://www.ecmwf.int/en/forecasts/dataset/ecmwf-reanalysis-v5). The evaluation, focused on the 2015–2023 period, assessed the dataset’s  performance and revealed the following:
 
 - **High temporal fidelity:** ERA5 demonstrated a strong ability to capture hourly wind speed variability, achieving a Pearson correlation coefficient of 0.775 during the 2015–2023 period.
 - **Low error:** The mean absolute error (MAE) for ERA5 was 1.58 m/s, indicating close agreement with observed wind speeds across diverse locations and conditions.
@@ -31,24 +31,24 @@ Unlike traditional methods such as **12×24 aggregation** (which averages data a
 
 ### 2. Problems with 12×24 Aggregation
 - Intuitive but overly simplistic
-- Produces **large errors** in energy estimates (as compared to hourly-data-based estimates). The following are averages for >50 sites:
+- Produces **large errors** in annual energy estimates (as compared to hourly-data-based estimates). The following are averages for >50 sites:
   - **4.5% error** for a small turbine
   - **13.4% error** for a mid-size turbine
   - **28.0% error** for a large turbine
-- Fails to preserve the true wind speed distribution (as seen in distorted CDF curves)
+- Fails to preserve the true wind speed distribution
 
-### 4. How Quantile-Based Aggregation Works
+### 3. How Quantile-Based Aggregation Works
 1. **Select a number of quantiles (e.g., 32–128)** based on desired accuracy/performance tradeoff.
 2. **Replace hourly data with quantile values** that approximate the cumulative distribution of wind speeds.
 3. **Use quantiles + power curve models** to estimate energy production with high fidelity.
 
-### 5. Performance and Accuracy
+### 4. Performance and Accuracy
 - Errors are drastically reduced:
   - Down to **0.1% – 2.6%** in tested examples
 - Team's validation across >50 sites confirms that this method does **not introduce significant errors**, even when using a relatively small number of quantiles (32).
 - Enables WindWatts to be both **accurate and efficient**, critical for large-scale deployment.
 
-### 6. Comparison Summary
+### 5. Comparison Summary
 
 | Method             | Data Size Reduction | Accuracy for Energy Estimation | Preserves Wind Distribution? |
 |--------------------|---------------------|-------------------------------|-------------------------------|
