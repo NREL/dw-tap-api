@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
+import re
 
 # commented out the data functions until I can get local athena_config working
 from app.config_manager import ConfigManager
@@ -34,10 +35,56 @@ data_fetcher_router.register_fetcher("athena_era5", athena_data_fetcher_era5)
 wind_speed_avg_types = ["global", "yearly"]
 production_avg_types = ["summary", "yearly", "all"]
 data_type='era5'
+data_source = "athena_era5"
 
-@router.get("/windspeed/{avg_type}", summary="Retrieve wind speed with avg type - wtk data")
-@router.get("/windspeed", summary="Retrieve wind speed with default global avg - wtk data")
-def get_windspeed(lat: float, lng: float, height: int, avg_type: str = 'global', source: str = "athena_era5"):
+# Helper validation functions
+def validate_lat(lat: float) -> float:
+    if not (-90 <= lat <= 90):
+        raise HTTPException(status_code=400, detail="Latitude must be between -90 and 90.")
+    return lat
+
+def validate_lng(lng: float) -> float:
+    if not (-180 <= lng <= 180):
+        raise HTTPException(status_code=400, detail="Longitude must be between -180 and 180.")
+    return lng
+
+def validate_height(height: int) -> int:
+    if not (0 < height <= 300):
+        raise HTTPException(status_code=400, detail="Height must be between 1 and 300 meters.")
+    return height
+
+def validate_avg_type(avg_type: str) -> str:
+    if avg_type not in wind_speed_avg_types:
+        raise HTTPException(status_code=400, detail=f"Invalid avg_type. Must be one of: {wind_speed_avg_types}")
+    return avg_type
+
+def validate_production_avg_type(avg_type: str) -> str:
+    if avg_type not in production_avg_types:
+        raise HTTPException(status_code=400, detail=f"Invalid time_period. Must be one of: {production_avg_types}")
+    return avg_type
+
+def validate_selected_powercurve(selected_powercurve: str) -> str:
+    # Only allow alphanumeric, dash, underscore, dot
+    if not re.match(r'^[\w\-.]+$', selected_powercurve):
+        raise HTTPException(status_code=400, detail="Invalid selected_powercurve name.")
+    if selected_powercurve not in power_curve_manager.power_curves:
+        raise HTTPException(status_code=400, detail="Selected power curve not found.")
+    return selected_powercurve
+
+def validate_source(source: str) -> str:
+    if source != data_source:
+        raise HTTPException(status_code=400, detail=f"Invalid source for {data_type} data. Must be: {data_source}.")
+    return source
+
+@router.get("/windspeed/{avg_type}", summary="Retrieve wind speed with avg type - era5 data")
+@router.get("/windspeed", summary="Retrieve wind speed with default global avg - era5 data")
+def get_windspeed(
+    lat: float = Query(..., description="Latitude of the location."),
+    lng: float = Query(..., description="Longitude of the location."),
+    height: int = Query(..., description="Height in meters."),
+    avg_type: str = Query('global', description="Type of average to retrieve."),
+    source: str = Query("athena_era5", description="Source of the data.")
+):
     '''
     Retrieve wind speed data from the WTK database.
     Args:
@@ -47,57 +94,64 @@ def get_windspeed(lat: float, lng: float, height: int, avg_type: str = 'global',
         avg_type (str): Type of average to retrieve. Must be one of: global (default), monthly, yearly.
         source (str): Source of the data. Must be one of: athena, s3, database.
     '''
-    if avg_type not in wind_speed_avg_types:
-        raise ValueError(f"windspeed avg_type must be one of: {wind_speed_avg_types} for {data_type} data.")
     try:
+        lat = validate_lat(lat)
+        lng = validate_lng(lng)
+        height = validate_height(height)
+        avg_type = validate_avg_type(avg_type)
+        source = validate_source(source)
+
         params = {
             "lat": lat,
             "lng": lng,
             "height": height,
             "avg_type": avg_type
         }
-
         data = data_fetcher_router.fetch_data(params, source=source)
-        
         if data is None:
             raise HTTPException(status_code=404, detail="Data not found")
         return data
-    except ValueError as ve:
-        raise HTTPException(status_code=400, detail=str(ve))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
-
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error.")
 
 @router.get("/available-powercurves", summary="Fetch all available power curves")
 def fetch_available_powercurves():
     '''
     returns available power curves
     '''
-    all_curves = list(power_curve_manager.power_curves.keys())
+    try:
+        all_curves = list(power_curve_manager.power_curves.keys())
 
-    def extract_kw(curve_name: str):
-        # Extracts the kw value from nrel curves, e.g. "nrel-reference-2.5kW" -> 2.5
-        import re
-        match = re.search(r"nrel-reference-([0-9.]+)kW", curve_name)
-        if match:
-            return float(match.group(1))
-        return float('inf')
+        def extract_kw(curve_name: str):
+            # Extracts the kw value from nrel curves, e.g. "nrel-reference-2.5kW" -> 2.5
+            match = re.search(r"nrel-reference-([0-9.]+)kW", curve_name)
+            if match:
+                return float(match.group(1))
+            return float('inf')
 
-    nrel_curves = [c for c in all_curves if c.startswith("nrel-reference-")]
-    other_curves = [c for c in all_curves if not c.startswith("nrel-reference-")]
+        nrel_curves = [c for c in all_curves if c.startswith("nrel-reference-")]
+        other_curves = [c for c in all_curves if not c.startswith("nrel-reference-")]
 
-    nrel_curves_sorted = sorted(nrel_curves, key=extract_kw)
-    other_curves_sorted = sorted(other_curves)
+        nrel_curves_sorted = sorted(nrel_curves, key=extract_kw)
+        other_curves_sorted = sorted(other_curves)
 
-    ordered_curves = nrel_curves_sorted + other_curves_sorted
-    return {'available_power_curves': ordered_curves}
+        ordered_curves = nrel_curves_sorted + other_curves_sorted
+        return {'available_power_curves': ordered_curves}
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error.")
 
 @router.get("/energy-production/{time_period}", summary="Get yearly and monthly energy production estimate and average windspeed for a location at a height with a selected power curve")
 @router.get("/energy-production", summary="Get global energy production estimate for a location at a height with a selected power curve")
-def energy_production(lat: float, lng: float, height: int,
-                               selected_powercurve: str,
-                               time_period: str = 'all',
-                               source: str = "athena_era5"):
+def energy_production(
+    lat: float = Query(..., description="Latitude of the location."),
+    lng: float = Query(..., description="Longitude of the location."),
+    height: int = Query(..., description="Height in meters."),
+    selected_powercurve: str = Query(..., description="Selected power curve name."),
+    time_period: str = Query('all', description="Time period for production estimate."),
+    source: str = Query("athena_era5", description="Source of the data.")
+):
     """
     Fetches the global, yearly and monthly energy production and average windspeed for a given location, height, and power curve.
     Args:
@@ -110,7 +164,13 @@ def energy_production(lat: float, lng: float, height: int,
         A JSON object containing average windspeeds and energy production at specified time period or global energy production when time period is not specified.
     """
     try:
-        
+        lat = validate_lat(lat)
+        lng = validate_lng(lng)
+        height = validate_height(height)
+        selected_powercurve = validate_selected_powercurve(selected_powercurve)
+        time_period = validate_production_avg_type(time_period)
+        source = validate_source(source)
+
         params = {
                 "lat": lat,
                 "lng": lng,
@@ -145,5 +205,5 @@ def energy_production(lat: float, lng: float, height: int,
     
     except ValueError as ve:
         raise HTTPException(status_code=400, detail=str(ve))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error.")
