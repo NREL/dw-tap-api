@@ -100,8 +100,8 @@ def get_windspeed(
         if data is None:
             raise HTTPException(status_code=404, detail="Data not found")
         return data
-    except HTTPException as e:
-        raise e
+    except HTTPException as he:
+        raise he
     except Exception:
         raise HTTPException(status_code=500, detail="Internal server error.")
 
@@ -171,7 +171,7 @@ def energy_production(
             }
         else:
             raise HTTPException(status_code=400, detail=f"Invalid time_period. Must be one of: {production_avg_types}")
-    except HTTPException as e:
-        raise e
+    except HTTPException as he:
+        raise he
     except Exception:
         raise HTTPException(status_code=500, detail="Internal server error.")
