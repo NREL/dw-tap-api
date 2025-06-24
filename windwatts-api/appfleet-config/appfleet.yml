@@ -45,7 +45,7 @@ target_groups:
     sticky_duration: 86400
     target_type: instance
     healthcheck:
-      path: /healthcheck
+      path: /api/healthcheck
       port: traffic-port
       protocol: HTTP
       interval: 10
@@ -60,6 +60,11 @@ ecs_service:
   grace_period: 300
   task_execution_role: nrel-ops-ecs-generic-task-execution-role
   launch_type: EC2
+  task_memory:
+    $release_name:
+      dev: 5120
+      stage: 5120
+      prod: 5120
   cluster:
     $release_name:
       dev: ecs-low01-dev
@@ -98,7 +103,7 @@ containers:
     healthcheck:
       command:
         - "CMD-SHELL"
-        - "curl -f http://localhost/ || exit 1"
+        - "curl -f http://localhost/api/healthcheck || exit 1"
       interval: 30
       retries: 3
       timeout: 5
@@ -145,9 +150,9 @@ containers:
         prod: 256
     memory:
       $release_name:
-        dev: 64
-        stage: 64
-        prod: 128
+        dev: 4096
+        stage: 4096
+        prod: 4096
     port_map:
       - "8000:8000"
     volume_mounts: []
