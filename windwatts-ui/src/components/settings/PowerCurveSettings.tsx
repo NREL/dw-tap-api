@@ -3,6 +3,7 @@ import useSWR from "swr";
 import { SettingsContext } from "../../providers/SettingsContext";
 import { useContext } from "react";
 import { getAvailablePowerCurves } from "../../services/api";
+import { POWER_CURVE_LABEL } from "../../constants/powerCurves";
 
 const NRELPowerCurveOptions = [
   "nrel-reference-2.5kW",
@@ -57,7 +58,11 @@ export function PowerCurveSettings() {
                 control={
                   <Radio sx={{ "& .MuiSvgIcon-root": { fontSize: 20 } }} />
                 }
-                label={<Typography variant="body2">{option}</Typography>}
+                label={
+                  <Typography variant="body2">
+                    {POWER_CURVE_LABEL[option] || option}
+                  </Typography>
+                }
               />
             ))
           ) : (

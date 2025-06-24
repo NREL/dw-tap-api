@@ -4,6 +4,7 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import AnalysisResults from "./AnalysisResults";
 import { useContext, useState } from "react";
 import { SettingsContext } from "../../providers/SettingsContext";
+import { POWER_CURVE_LABEL } from "../../constants/powerCurves";
 
 const Item = styled(Paper)(({ theme }) => ({
   ...theme.typography.body2,
@@ -12,7 +13,7 @@ const Item = styled(Paper)(({ theme }) => ({
   color: theme.palette.text.secondary,
 }));
 
-const DATMODEL_INFO: Record<string, { label: string, source_href: string, help_href: string }> = {
+const DATA_MODEL_INFO: Record<string, { label: string, source_href: string, help_href: string }> = {
   era5: {
     label: "ERA5",
     source_href: "https://www.ecmwf.int/en/forecasts/dataset/ecmwf-reanalysis-v5",
@@ -46,11 +47,11 @@ const RightPane = () => {
     },
     {
       title: "Power curve",
-      data: powerCurve ? `${powerCurve}` : "Not selected",
+      data: powerCurve ? `${POWER_CURVE_LABEL[powerCurve]}` : "Not selected",
     },
   ];
 
-  const dataModelInfo = DATMODEL_INFO[dataModel] || DATMODEL_INFO.era5;
+  const dataModelInfo = DATA_MODEL_INFO[dataModel] || DATA_MODEL_INFO.era5;
 
   const [showDisclaimer, setShowDisclaimer] = useState(false);
 
