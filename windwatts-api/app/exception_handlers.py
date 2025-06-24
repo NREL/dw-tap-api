@@ -13,7 +13,12 @@ async def log_unhandled_exceptions(request: Request, exc: Exception):
 
 async def log_validation_errors(request: Request, exc: RequestValidationError):
     logger.warning(f"⚠️ VALIDATION ERROR: {request.method} {request.url} | {exc.errors()}")
+    # Remove 'input' field from all error details
+    filtered_errors = []
+    for err in exc.errors():
+        filtered = {k: v for k, v in err.items() if k != "input"}
+        filtered_errors.append(filtered)
     return JSONResponse(
         status_code=422,
-        content={"detail": exc.errors()}
-   )
+        content={"detail": filtered_errors}
+    )
