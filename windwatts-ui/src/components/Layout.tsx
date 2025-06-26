@@ -24,7 +24,7 @@ function Layout() {
             <Box
               component="img"
               sx={{ height: 40 }}
-              src="https://windwatts.nrel.gov/static/NREL-logo-reversed.png"
+              src="/assets/NREL-logo-reversed.png"
               alt="NREL Logo"
             />
           </Toolbar>
