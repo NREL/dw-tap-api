@@ -25,7 +25,7 @@ function Layout() {
               component="img"
               sx={{ height: 40 }}
               src="/assets/NREL-logo-reversed.png"
-              alt="NREL Log"
+              alt="NREL Logo"
             />
           </Toolbar>
         </AppBar>
