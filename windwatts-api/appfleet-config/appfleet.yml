@@ -110,12 +110,12 @@ containers:
       grace_period: 10
     cpu:
       $release_name:
-        dev: 128
+        dev: 64
         stage: 64
         prod: 128
     memory:
       $release_name:
-        dev: 32
+        dev: 64
         stage: 32
         prod: 64
     links:
