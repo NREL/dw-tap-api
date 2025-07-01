@@ -4,6 +4,7 @@ import pandas as pd
 import calendar
 import numpy as np
 from scipy.interpolate import CubicSpline
+import time
 
 class PowerCurveManager:
     """
@@ -41,80 +42,80 @@ class PowerCurveManager:
             raise KeyError(f"Power curve '{curve_name}' not found.")
         return self.power_curves[curve_name]
     
-    def find_inverse(self, x_smooth, y_smooth, y_hat):
-        """
-        Finds the approximate inverse mapping of y values to x values based on a smoothed curve.
+    # def find_inverse(self, x_smooth, y_smooth, y_hat):
+    #     """
+    #     Finds the approximate inverse mapping of y values to x values based on a smoothed curve.
 
-        Given smoothed x and y arrays that define a functional relationship y = f(x), this function 
-        estimates the corresponding x values for a list of target y values (`y_hat`) by finding the 
-        x values where `y_smooth` is closest to each `y_hat`.
+    #     Given smoothed x and y arrays that define a functional relationship y = f(x), this function 
+    #     estimates the corresponding x values for a list of target y values (`y_hat`) by finding the 
+    #     x values where `y_smooth` is closest to each `y_hat`.
 
-        :param x_smooth: Array-like, smoothed x values. Must be the same length as y_smooth.
-        :type x_smooth: numpy.ndarray
-        :param y_smooth: Array-like, smoothed y values corresponding to x_smooth.
-        :type y_smooth: numpy.ndarray
-        :param y_hat: Array-like, target y values for which to find the corresponding x values.
-        :type y_hat: numpy.ndarray
+    #     :param x_smooth: Array-like, smoothed x values. Must be the same length as y_smooth.
+    #     :type x_smooth: numpy.ndarray
+    #     :param y_smooth: Array-like, smoothed y values corresponding to x_smooth.
+    #     :type y_smooth: numpy.ndarray
+    #     :param y_hat: Array-like, target y values for which to find the corresponding x values.
+    #     :type y_hat: numpy.ndarray
 
-        :return: An array of x values corresponding to the closest matches of each y_hat in y_smooth.
-        :rtype: numpy.ndarray
-        """
-        df = pd.DataFrame({
-            'x': x_smooth,
-            'y': y_smooth
-        })
+    #     :return: An array of x values corresponding to the closest matches of each y_hat in y_smooth.
+    #     :rtype: numpy.ndarray
+    #     """
+    #     df = pd.DataFrame({
+    #         'x': x_smooth,
+    #         'y': y_smooth
+    #     })
         
-        # Find the indices of the closest y values to each y_hat
-        closest_indices = [(df['y'] - y).abs().idxmin() for y in y_hat]
+    #     # Find the indices of the closest y values to each y_hat
+    #     closest_indices = [(df['y'] - y).abs().idxmin() for y in y_hat]
         
-        # Return the corresponding x values
-        return df.loc[closest_indices, 'x'].values
+    #     # Return the corresponding x values
+    #     return df.loc[closest_indices, 'x'].values
     
-    def estimation_quantiles_SWI(self, quantiles, probs, M1=1000, M2=501):
-        """
-        Estimate a smoother quantile function using the Spline With Inversion (SWI) method.
+    # def estimation_quantiles_SWI(self, quantiles, probs, M1=1000, M2=501):
+    #     """
+    #     Estimate a smoother quantile function using the Spline With Inversion (SWI) method.
 
-        This method constructs a cubic spline interpolation of the empirical CDF (defined by the 
-        provided `quantiles` and corresponding `probs`), and then performs an inversion to generate 
-        a smooth estimate of quantiles over a high-resolution, uniformly spaced probability range.
+    #     This method constructs a cubic spline interpolation of the empirical CDF (defined by the 
+    #     provided `quantiles` and corresponding `probs`), and then performs an inversion to generate 
+    #     a smooth estimate of quantiles over a high-resolution, uniformly spaced probability range.
 
-        Assumes that:
-            - `quantiles` and `probs` are both sorted in ascending order.
-            - `probs` span the interval [0, 1] and are uniformly spaced.
+    #     Assumes that:
+    #         - `quantiles` and `probs` are both sorted in ascending order.
+    #         - `probs` span the interval [0, 1] and are uniformly spaced.
 
-        :param quantiles: Observed quantile values (e.g., from sample data).
-        :type quantiles: numpy.ndarray
-        :param probs: Corresponding cumulative probabilities for the quantiles.
-        :type probs: numpy.ndarray
-        :param M1: Number of points for spline interpolation (default: 1000).
-        :type M1: int
-        :param M2: Number of evenly spaced probability points at which to estimate new quantiles (default: 501).
-        :type M2: int
+    #     :param quantiles: Observed quantile values (e.g., from sample data).
+    #     :type quantiles: numpy.ndarray
+    #     :param probs: Corresponding cumulative probabilities for the quantiles.
+    #     :type probs: numpy.ndarray
+    #     :param M1: Number of points for spline interpolation (default: 1000).
+    #     :type M1: int
+    #     :param M2: Number of evenly spaced probability points at which to estimate new quantiles (default: 501).
+    #     :type M2: int
 
-        :return: Tuple containing:
-            - probs_new (numpy.ndarray): Uniformly spaced probabilities in [0, 1] (length M2).
-            - quantiles_new (numpy.ndarray): Estimated quantile values corresponding to probs_new.
-        :rtype: Tuple[numpy.ndarray, numpy.ndarray]
-        """
+    #     :return: Tuple containing:
+    #         - probs_new (numpy.ndarray): Uniformly spaced probabilities in [0, 1] (length M2).
+    #         - quantiles_new (numpy.ndarray): Estimated quantile values corresponding to probs_new.
+    #     :rtype: Tuple[numpy.ndarray, numpy.ndarray]
+    #     """
 
-        x = quantiles
-        y = probs # interpolate probs w.r.t. quantile values
+    #     x = quantiles
+    #     y = probs # interpolate probs w.r.t. quantile values
 
-        # === Compute approximate derivatives at endpoints ===
-        dy_start = (y[1] - y[0]) / (x[1] - x[0])  # Forward difference
-        dy_end = (y[-1] - y[-2]) / (x[-1] - x[-2])  # Backward difference
+    #     # === Compute approximate derivatives at endpoints ===
+    #     dy_start = (y[1] - y[0]) / (x[1] - x[0])  # Forward difference
+    #     dy_end = (y[-1] - y[-2]) / (x[-1] - x[-2])  # Backward difference
 
-        # === Create the cubic spline with clamped boundary conditions ===
-        spline = CubicSpline(x, y, bc_type=((1, dy_start), (1, dy_end)))
+    #     # === Create the cubic spline with clamped boundary conditions ===
+    #     spline = CubicSpline(x, y, bc_type=((1, dy_start), (1, dy_end)))
         
-        #=== High-resolution discretization (interp_point_count is large) ===
-        x_smooth = np.linspace(x[0], x[-1], M1)
-        y_smooth = spline(x_smooth)
+    #     #=== High-resolution discretization (interp_point_count is large) ===
+    #     x_smooth = np.linspace(x[0], x[-1], M1)
+    #     y_smooth = spline(x_smooth)
 
-        probs_new = np.linspace(0, 1, M2)
-        quantiles_new = self.find_inverse(x_smooth, y_smooth, probs_new)
+    #     probs_new = np.linspace(0, 1, M2)
+    #     quantiles_new = self.find_inverse(x_smooth, y_smooth, probs_new)
 
-        return quantiles_new,probs_new
+    #     return quantiles_new,probs_new
     
     def fetch_energy_production_df(self, df: pd.DataFrame, height: int, selected_power_curve: str, data_type : str, relevant_columns_only: bool = True) -> pd.DataFrame:
         """
@@ -140,14 +141,16 @@ class PowerCurveManager:
                 return df[["year", "mohr", "month", "hour", ws_col, f"{ws_col}_kw"]]
         elif data_type == 'era5':
             records = []
-
             for year, group in df.groupby("year"):
                 # sorting by probability is important since the records might be shuffled by "groupby" and we are using midpoint method.
                 group = group.sort_values("probability").reset_index(drop=True)
-                quantiles, probs = self.estimation_quantiles_SWI(group[ws_col].values, group['probability'].values)
-
+                
+                # quantiles, probs = self.estimation_quantiles_SWI(group[ws_col].values, group['probability'].values)
+                wind_values = group[ws_col]
+                
                 # Compute midpoints (32 values from 33 quantiles)
-                midpoints = (pd.Series(quantiles).shift(-1) + pd.Series(quantiles)) / 2
+                # midpoints = (pd.Series(quantiles).shift(-1) + pd.Series(quantiles)) / 2
+                midpoints = (wind_values.shift(-1) + wind_values) / 2
                 midpoints = midpoints.iloc[:-1]  # drop last NaN
             
                 # Compute power for each midpoint
@@ -159,7 +162,6 @@ class PowerCurveManager:
                         ws_col: mp, # pass midpoints
                         f"{ws_col}_kw": kw
                     })
-
             midpoints_df = pd.DataFrame(records)
 
             if relevant_columns_only:

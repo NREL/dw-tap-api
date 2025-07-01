@@ -1,7 +1,7 @@
 from typing import Optional
 from fastapi import APIRouter, HTTPException, Path, Query
 import re
-
+import time
 # commented out the data functions until I can get local athena_config working
 from app.config_manager import ConfigManager
 # from app.data_fetchers.s3_data_fetcher import S3DataFetcher
@@ -208,6 +208,7 @@ def _get_energy_production_core(
     elif time_period == 'yearly':
         yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(df, height, selected_powercurve, data_type)
         return {yearly_avg_energy_production}
+    
     elif time_period == 'all':
         summary_avg_energy_production = power_curve_manager.fetch_avg_energy_production_summary(df, height, selected_powercurve, data_type)
         yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(df, height, selected_powercurve, data_type)
