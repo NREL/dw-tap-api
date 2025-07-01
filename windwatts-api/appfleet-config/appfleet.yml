@@ -62,9 +62,9 @@ ecs_service:
   launch_type: EC2
   task_memory:
     $release_name:
-      dev: 5120
-      stage: 5120
-      prod: 5120
+      dev: 8392
+      stage: 8392
+      prod: 8392
   cluster:
     $release_name:
       dev: ecs-low01-dev
@@ -150,9 +150,9 @@ containers:
         prod: 256
     memory:
       $release_name:
-        dev: 4096
-        stage: 4096
-        prod: 4096
+        dev: 8192
+        stage: 8192
+        prod: 8192
     port_map:
       - "8000:8000"
     volume_mounts: []
