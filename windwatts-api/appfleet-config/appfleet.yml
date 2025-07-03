@@ -146,7 +146,7 @@ containers:
     cpu:
       $release_name:
         dev: 1536
-        stage: 1536
+        stage: 2048
         prod: 2048
     memory:
       $release_name:
