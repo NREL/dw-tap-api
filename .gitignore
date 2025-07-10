@@ -20,3 +20,9 @@ templates/on_map3.html
 .vscode/
 .env
 .env.*
+windwatts-ui/appfleet-config
+windwatts-api/appfleet-config
+windwatts-ui/release.sh
+windwatts-api/release.sh
+windwatts-ui/env-vars.sh
+windwatts-api/env-vars.sh
