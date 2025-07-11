@@ -11,9 +11,7 @@
   },
   "lint-staged": {
     "windwatts-ui/src/**/*.{js,jsx,ts,tsx}": [
-      "cd windwatts-ui && yarn lint --fix",
-      "cd windwatts-ui && npx prettier --write",
-      "cd windwatts-ui && yarn format"
+      "./check-format.sh"
     ]
   },
   "devDependencies": {
