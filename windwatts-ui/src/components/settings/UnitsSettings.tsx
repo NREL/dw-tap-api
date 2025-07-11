@@ -8,7 +8,7 @@ export function UnitsSettings() {
 
   const handleWindspeedChange = (
     _: React.MouseEvent<HTMLElement>,
-    newWindspeedUnit: string
+    newWindspeedUnit: string,
   ) => {
     if (newWindspeedUnit !== null) {
       updateUnit("windspeed", newWindspeedUnit);
@@ -17,7 +17,7 @@ export function UnitsSettings() {
 
   const handleOutputChange = (
     _: React.MouseEvent<HTMLElement>,
-    newOutputUnit: string
+    newOutputUnit: string,
   ) => {
     if (newOutputUnit !== null) {
       updateUnit("output", newOutputUnit);

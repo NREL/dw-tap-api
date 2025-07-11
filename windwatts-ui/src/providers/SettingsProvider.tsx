@@ -34,7 +34,9 @@ export default function SettingsProvider({
     useState<CurrentPosition | null>(storedSettings.currentPosition);
   const [hubHeight, setHubHeight] = useState(storedSettings.hubHeight);
   const [powerCurve, setPowerCurve] = useState(storedSettings.powerCurve);
-  const [preferredModel, setPreferredModel] = useState(storedSettings.preferredModel);
+  const [preferredModel, setPreferredModel] = useState(
+    storedSettings.preferredModel,
+  );
 
   useEffect(() => {
     const settings = {
@@ -46,7 +48,14 @@ export default function SettingsProvider({
       preferredModel,
     };
     localStorage.setItem("settings", JSON.stringify(settings));
-  }, [settingsOpen, resultsOpen, currentPosition, hubHeight, powerCurve, preferredModel]);
+  }, [
+    settingsOpen,
+    resultsOpen,
+    currentPosition,
+    hubHeight,
+    powerCurve,
+    preferredModel,
+  ]);
 
   return (
     <SettingsContext.Provider

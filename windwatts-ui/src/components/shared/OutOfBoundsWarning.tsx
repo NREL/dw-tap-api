@@ -19,10 +19,16 @@ export default function OutOfBoundsWarning({ message }: { message: string }) {
     >
       <WarningAmberIcon sx={{ color: "#ff9800", fontSize: 22, mt: "2px" }} />
       <Box>
-        <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.25, fontSize: 15 }}>
+        <Typography
+          variant="subtitle2"
+          sx={{ fontWeight: 600, mb: 0.25, fontSize: 15 }}
+        >
           Out of Bounds
         </Typography>
-        <Typography variant="body2" sx={{ whiteSpace: "pre-line", fontSize: 13 }}>
+        <Typography
+          variant="body2"
+          sx={{ whiteSpace: "pre-line", fontSize: 13 }}
+        >
           {message}
         </Typography>
         <Typography variant="body2" sx={{ mt: 1, fontSize: 12 }}>

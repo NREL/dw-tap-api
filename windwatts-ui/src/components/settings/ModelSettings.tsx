@@ -9,7 +9,7 @@ export function ModelSettings() {
 
   const handleModelChange = (
     _: React.MouseEvent<HTMLElement>,
-    newModel: DataModel
+    newModel: DataModel,
   ) => {
     if (newModel !== null) {
       setPreferredModel(newModel);

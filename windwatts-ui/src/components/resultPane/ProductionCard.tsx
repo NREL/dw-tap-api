@@ -18,31 +18,43 @@ import { SettingsContext } from "../../providers/SettingsContext";
 import { UnitsContext } from "../../providers/UnitsContext";
 import ProductionDataTable from "./ProductionDataTable";
 import { getEnergyProduction } from "../../services/api";
-import { convertOutput, getOutOfBoundsMessage, isOutOfBounds } from "../../utils";
+import {
+  convertOutput,
+  getOutOfBoundsMessage,
+  isOutOfBounds,
+} from "../../utils";
 import { ExpandMore, ExpandLess } from "@mui/icons-material";
 import OutOfBoundsWarning from "../shared/OutOfBoundsWarning";
 
 const ProductionCard = () => {
   const [expanded, setExpanded] = useState(false);
-  const { currentPosition, hubHeight, powerCurve, preferredModel: dataModel } = useContext(SettingsContext);
+  const {
+    currentPosition,
+    hubHeight,
+    powerCurve,
+    preferredModel: dataModel,
+  } = useContext(SettingsContext);
   const { units } = useContext(UnitsContext);
   const { lat, lng } = currentPosition || {};
-  const outOfBounds = lat && lng && dataModel ? isOutOfBounds(lat, lng, dataModel) : false;
-  
+  const outOfBounds =
+    lat && lng && dataModel ? isOutOfBounds(lat, lng, dataModel) : false;
+
   const title = "Production";
   const subheader = "Estimated annual production potential";
   const details = [
-    "Wind energy production can vary significantly from year to year. Understanding both the average resource and its variability is key to setting realistic expectations."
+    "Wind energy production can vary significantly from year to year. Understanding both the average resource and its variability is key to setting realistic expectations.",
   ];
-  
+
   const shouldFetch = lat && lng && hubHeight && powerCurve && dataModel;
-  const { 
+  const {
     isLoading,
     data: productionData,
     error,
   } = useSWR(
-    shouldFetch ? { lat, lng, hubHeight, powerCurve, dataModel, time_period: "all" } : null,
-    getEnergyProduction
+    shouldFetch
+      ? { lat, lng, hubHeight, powerCurve, dataModel, time_period: "all" }
+      : null,
+    getEnergyProduction,
   );
 
   const handleExpandClick = () => {
@@ -50,17 +62,17 @@ const ProductionCard = () => {
   };
 
   // Out-of-bounds state
-    if (outOfBounds) {
+  if (outOfBounds) {
     return (
       <Card>
         <CardHeader
           title={
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               Production
-              <Chip 
-                label="Primary Analysis" 
-                size="small" 
-                color="warning" 
+              <Chip
+                label="Primary Analysis"
+                size="small"
+                color="warning"
                 variant="outlined"
               />
             </Box>
@@ -83,12 +95,12 @@ const ProductionCard = () => {
       <Card>
         <CardHeader
           title={
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               {title}
-              <Chip 
-                label="Primary Analysis" 
-                size="small" 
-                color="primary" 
+              <Chip
+                label="Primary Analysis"
+                size="small"
+                color="primary"
                 variant="outlined"
               />
             </Box>
@@ -96,24 +108,41 @@ const ProductionCard = () => {
           subheader={subheader}
           sx={{ bgcolor: "var(--color-light)", pb: 1 }}
         />
-        
+
         <CardContent sx={{ pb: 2 }}>
           {/* Skeleton for production metrics */}
-          <Box sx={{ 
-            display: 'grid', 
-            gridTemplateColumns: { 
-              xs: '1fr', 
-              sm: '1fr', 
-              md: 'repeat(3, 1fr)' 
-            }, 
-            gap: 2, 
-            mb: 3 
-          }}>
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: {
+                xs: "1fr",
+                sm: "1fr",
+                md: "repeat(3, 1fr)",
+              },
+              gap: 2,
+              mb: 3,
+            }}
+          >
             {[1, 2, 3].map((index) => (
-              <Paper key={index} sx={{ p: 2, textAlign: 'center' }}>
-                <Skeleton variant="text" width="60%" height={20} sx={{ mx: 'auto' }} />
-                <Skeleton variant="text" width="80%" height={40} sx={{ mx: 'auto', mt: 0.5 }} />
-                <Skeleton variant="text" width="40%" height={16} sx={{ mx: 'auto' }} />
+              <Paper key={index} sx={{ p: 2, textAlign: "center" }}>
+                <Skeleton
+                  variant="text"
+                  width="60%"
+                  height={20}
+                  sx={{ mx: "auto" }}
+                />
+                <Skeleton
+                  variant="text"
+                  width="80%"
+                  height={40}
+                  sx={{ mx: "auto", mt: 0.5 }}
+                />
+                <Skeleton
+                  variant="text"
+                  width="40%"
+                  height={16}
+                  sx={{ mx: "auto" }}
+                />
               </Paper>
             ))}
           </Box>
@@ -123,9 +152,9 @@ const ProductionCard = () => {
           <Skeleton variant="text" width="90%" height={20} />
         </CardContent>
 
-        <Divider sx={{ borderStyle: 'dotted' }} />
+        <Divider sx={{ borderStyle: "dotted" }} />
 
-        <CardActions sx={{ justifyContent: 'space-between', px: 2}}>
+        <CardActions sx={{ justifyContent: "space-between", px: 2 }}>
           <Skeleton variant="text" width="150px" height={20} />
           <Skeleton variant="rectangular" width="60px" height={32} />
         </CardActions>
@@ -139,12 +168,12 @@ const ProductionCard = () => {
       <Card>
         <CardHeader
           title={
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               {title}
-              <Chip 
-                label="Primary Analysis" 
-                size="small" 
-                color="error" 
+              <Chip
+                label="Primary Analysis"
+                size="small"
+                color="error"
                 variant="outlined"
               />
             </Box>
@@ -152,13 +181,14 @@ const ProductionCard = () => {
           subheader={subheader}
           sx={{ bgcolor: "var(--color-light)", pb: 1 }}
         />
-        
-        <CardContent sx={{ py: 4, textAlign: 'center' }}>
+
+        <CardContent sx={{ py: 4, textAlign: "center" }}>
           <Typography color="error" variant="h6" gutterBottom>
             Error Loading Production Data
           </Typography>
           <Typography color="text.secondary" variant="body2">
-            Unable to load production analysis. Please check your settings and try again.
+            Unable to load production analysis. Please check your settings and
+            try again.
           </Typography>
         </CardContent>
       </Card>
@@ -171,12 +201,12 @@ const ProductionCard = () => {
       <Card>
         <CardHeader
           title={
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               {title}
-              <Chip 
-                label="Primary Analysis" 
-                size="small" 
-                color="default" 
+              <Chip
+                label="Primary Analysis"
+                size="small"
+                color="default"
                 variant="outlined"
               />
             </Box>
@@ -184,13 +214,14 @@ const ProductionCard = () => {
           subheader={subheader}
           sx={{ bgcolor: "var(--color-light)", pb: 1 }}
         />
-        
-        <CardContent sx={{ py: 4, textAlign: 'center' }}>
+
+        <CardContent sx={{ py: 4, textAlign: "center" }}>
           <Typography color="text.secondary" variant="h6" gutterBottom>
             No Production Data Available
           </Typography>
           <Typography color="text.secondary" variant="body2">
-            Please set your location and turbine settings to see production analysis.
+            Please set your location and turbine settings to see production
+            analysis.
           </Typography>
         </CardContent>
       </Card>
@@ -199,31 +230,33 @@ const ProductionCard = () => {
 
   // Data loaded successfully
   const summaryData = productionData.summary_avg_energy_production;
-  const avgProduction = summaryData?.['Average year']?.['kWh produced'] || 0;
-  const lowProduction = summaryData?.['Lowest year']?.['kWh produced'] || 0;
-  const highProduction = summaryData?.['Highest year']?.['kWh produced'] || 0;
+  const avgProduction = summaryData?.["Average year"]?.["kWh produced"] || 0;
+  const lowProduction = summaryData?.["Lowest year"]?.["kWh produced"] || 0;
+  const highProduction = summaryData?.["Highest year"]?.["kWh produced"] || 0;
 
   // Determine data type and set up variables
   // may need something more robust here if we add more data types
   const monthlyData = "monthly_avg_energy_production" in productionData;
-  const tableData = monthlyData ? productionData.monthly_avg_energy_production : productionData.yearly_avg_energy_production;
-  
-  const detailsLabel = monthlyData 
-    ? 'Monthly Production Details' 
-    : 'Yearly Production Details';
-  
-  const tableTitle = '';
+  const tableData = monthlyData
+    ? productionData.monthly_avg_energy_production
+    : productionData.yearly_avg_energy_production;
+
+  const detailsLabel = monthlyData
+    ? "Monthly Production Details"
+    : "Yearly Production Details";
+
+  const tableTitle = "";
 
   return (
     <Card>
       <CardHeader
         title={
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             {title}
-            <Chip 
-              label="Primary Analysis" 
-              size="small" 
-              color="primary" 
+            <Chip
+              label="Primary Analysis"
+              size="small"
+              color="primary"
               variant="outlined"
             />
           </Box>
@@ -231,67 +264,110 @@ const ProductionCard = () => {
         subheader={subheader}
         sx={{ bgcolor: "var(--color-light)", pb: 1 }}
       />
-      
+
       {/* Key Production Metrics - Always Visible */}
       <CardContent sx={{ pb: 2 }}>
-        <Box sx={{ 
-          display: 'grid', 
-          gridTemplateColumns: { 
-            xs: '1fr', 
-            sm: '1fr', 
-            md: 'repeat(3, 1fr)' 
-          }, 
-          gap: 2, 
-          mb: 3 
-        }}>
-          <Paper sx={{ p: 2, textAlign: 'center', bgcolor: 'primary.light', color: 'primary.contrastText' }}>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "1fr",
+              sm: "1fr",
+              md: "repeat(3, 1fr)",
+            },
+            gap: 2,
+            mb: 3,
+          }}
+        >
+          <Paper
+            sx={{
+              p: 2,
+              textAlign: "center",
+              bgcolor: "primary.light",
+              color: "primary.contrastText",
+            }}
+          >
             <Typography variant="caption" sx={{ opacity: 0.9 }}>
-              Average 
+              Average
             </Typography>
-            <Typography variant="h5" sx={{ fontWeight: 'bold', mt: 0.5 }}>
-              {convertOutput(Number(avgProduction), units.output).replace(/\s\w+$/, '')}
+            <Typography variant="h5" sx={{ fontWeight: "bold", mt: 0.5 }}>
+              {convertOutput(Number(avgProduction), units.output).replace(
+                /\s\w+$/,
+                "",
+              )}
             </Typography>
             <Typography variant="caption">{units.output}</Typography>
           </Paper>
-          
-          <Paper sx={{ p: 2, textAlign: 'center', bgcolor: 'success.light', color: 'success.contrastText' }}>
+
+          <Paper
+            sx={{
+              p: 2,
+              textAlign: "center",
+              bgcolor: "success.light",
+              color: "success.contrastText",
+            }}
+          >
             <Typography variant="caption" sx={{ opacity: 0.9 }}>
               Highest Year
             </Typography>
-            <Typography variant="h6" sx={{ fontWeight: 'bold', mt: 0.5 }}>
-              {convertOutput(Number(highProduction), units.output).replace(/\s\w+$/, '')}
+            <Typography variant="h6" sx={{ fontWeight: "bold", mt: 0.5 }}>
+              {convertOutput(Number(highProduction), units.output).replace(
+                /\s\w+$/,
+                "",
+              )}
             </Typography>
             <Typography variant="caption">{units.output}</Typography>
           </Paper>
-          
-          <Paper sx={{ p: 2, textAlign: 'center', bgcolor: 'warning.light', color: 'warning.contrastText' }}>
+
+          <Paper
+            sx={{
+              p: 2,
+              textAlign: "center",
+              bgcolor: "warning.light",
+              color: "warning.contrastText",
+            }}
+          >
             <Typography variant="caption" sx={{ opacity: 0.9 }}>
               Lowest Year
             </Typography>
-            <Typography variant="h6" sx={{ fontWeight: 'bold', mt: 0.5 }}>
-              {convertOutput(Number(lowProduction), units.output).replace(/\s\w+$/, '')}
+            <Typography variant="h6" sx={{ fontWeight: "bold", mt: 0.5 }}>
+              {convertOutput(Number(lowProduction), units.output).replace(
+                /\s\w+$/,
+                "",
+              )}
             </Typography>
             <Typography variant="caption">{units.output}</Typography>
           </Paper>
         </Box>
 
         {details.map((detail, index) => (
-          <Typography mb={1} key={title + "result_detail" + index} variant="body2" color="text.secondary">
+          <Typography
+            mb={1}
+            key={title + "result_detail" + index}
+            variant="body2"
+            color="text.secondary"
+          >
             {detail}
           </Typography>
         ))}
       </CardContent>
 
-      <Divider sx={{ borderStyle: 'dotted' }} />
+      <Divider sx={{ borderStyle: "dotted" }} />
 
       {/* Detailed Breakdown - Expandable */}
-      <CardActions sx={{ 
-        justifyContent: { xs: 'flex-end', sm: 'space-between' }, 
-        px: 2 
-      }}>
-        <Typography variant="body1" color="text.secondary" sx={{ 
-          display: { xs: 'none', sm: 'block' } // Hide on mobile to save space
-        }}>
+      <CardActions
+        sx={{
+          justifyContent: { xs: "flex-end", sm: "space-between" },
+          px: 2,
+        }}
+      >
+        <Typography
+          variant="body1"
+          color="text.secondary"
+          sx={{
+            display: { xs: "none", sm: "block" }, // Hide on mobile to save space
+          }}
+        >
           {detailsLabel}
         </Typography>
         <Button
@@ -302,9 +378,9 @@ const ProductionCard = () => {
           size="small"
           startIcon={expanded ? <ExpandLess /> : <ExpandMore />}
           sx={{
-            whiteSpace: 'nowrap',
-            minWidth: 'auto',
-            px: 2
+            whiteSpace: "nowrap",
+            minWidth: "auto",
+            px: 2,
           }}
         >
           {expanded ? "Hide" : "Show"}
@@ -314,10 +390,10 @@ const ProductionCard = () => {
       <Collapse in={expanded} timeout="auto" unmountOnExit>
         <CardContent sx={{ pt: 0 }}>
           {tableData && (
-            <ProductionDataTable 
+            <ProductionDataTable
               title={tableTitle}
               data={tableData}
-              timeUnit={monthlyData ? 'month' : 'year'}
+              timeUnit={monthlyData ? "month" : "year"}
             />
           )}
         </CardContent>
@@ -326,4 +402,4 @@ const ProductionCard = () => {
   );
 };
 
-export default ProductionCard; 
+export default ProductionCard;

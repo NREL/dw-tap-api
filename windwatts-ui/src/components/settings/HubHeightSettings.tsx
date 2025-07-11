@@ -4,16 +4,20 @@ import { Box, Slider, Typography } from "@mui/material";
 import { DataModel } from "../../types/Requests";
 import { Heights } from "../../types/Heights";
 
-const HUB_HEIGHTS: Record<DataModel | 'default', Heights> = {
+const HUB_HEIGHTS: Record<DataModel | "default", Heights> = {
   era5: { values: [30, 40, 50, 60, 80, 100], interpolation: null },
-  wtk: { values: [40, 60, 80, 100, 120, 140], interpolation: 10},
+  wtk: { values: [40, 60, 80, 100, 120, 140], interpolation: 10 },
   default: { values: [40, 60, 80, 100], interpolation: null },
-}
+};
 
 export function HubHeightSettings() {
-  const { hubHeight, setHubHeight, preferredModel: dataModel } = useContext(SettingsContext);
+  const {
+    hubHeight,
+    setHubHeight,
+    preferredModel: dataModel,
+  } = useContext(SettingsContext);
 
-  const { values: availableHeights, interpolation: step} = useMemo(() => {
+  const { values: availableHeights, interpolation: step } = useMemo(() => {
     if (dataModel && HUB_HEIGHTS[dataModel]) {
       return HUB_HEIGHTS[dataModel];
     }
@@ -25,7 +29,7 @@ export function HubHeightSettings() {
     if (!availableHeights.includes(hubHeight)) {
       // if current height not available, set to the closest available height
       const closestHeight = availableHeights.reduce((prev, curr) =>
-        Math.abs(curr - hubHeight) < Math.abs(prev - hubHeight) ? curr : prev
+        Math.abs(curr - hubHeight) < Math.abs(prev - hubHeight) ? curr : prev,
       );
       setHubHeight(closestHeight);
     }
@@ -38,7 +42,7 @@ export function HubHeightSettings() {
 
   const handleHubHeightChange = (
     _: Event,
-    newHubHeight: number | number[] | null
+    newHubHeight: number | number[] | null,
   ) => {
     if (newHubHeight !== null && typeof newHubHeight === "number") {
       setHubHeight(newHubHeight);
@@ -46,7 +50,7 @@ export function HubHeightSettings() {
   };
 
   return (
-     <Box sx={{ mt: 2 }}>
+    <Box sx={{ mt: 2 }}>
       <Typography variant="h6" gutterBottom>
         Hub Height
       </Typography>
