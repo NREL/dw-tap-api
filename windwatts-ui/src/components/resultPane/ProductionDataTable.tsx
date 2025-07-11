@@ -52,7 +52,7 @@ const ProductionDisplay = ({
 
   // Calculate min/max for better wind speed bar scaling
   const windSpeeds = sortedData.map(({ values }) =>
-    Number(values["Average wind speed (m/s)"]),
+    Number(values["Average wind speed (m/s)"])
   );
   const minWindSpeed = Math.min(...windSpeeds);
   const maxWindSpeed = Math.max(...windSpeeds);
@@ -60,7 +60,7 @@ const ProductionDisplay = ({
 
   // Calculate max production for energy bar scaling
   const productions = sortedData.map(({ values }) =>
-    Number(values["kWh produced"]),
+    Number(values["kWh produced"])
   );
   const maxProduction = Math.max(...productions);
 
@@ -152,7 +152,7 @@ const ProductionDisplay = ({
                     >
                       {convertWindspeed(windSpeed, units.windspeed).replace(
                         /\s\w+\/?\w*$/,
-                        "",
+                        ""
                       )}
                     </Box>
                   </Box>
@@ -204,7 +204,7 @@ const ProductionDisplay = ({
                     >
                       {convertOutput(production, units.output).replace(
                         /\s\w+$/,
-                        "",
+                        ""
                       )}
                     </Box>
                   </Box>

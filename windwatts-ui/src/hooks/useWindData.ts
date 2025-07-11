@@ -17,7 +17,7 @@ export const useWindData = () => {
 
   const { isLoading, data, error } = useSWR(
     shouldFetch ? { lat, lng, hubHeight, dataModel } : null,
-    getWindspeedByLatLong,
+    getWindspeedByLatLong
   );
 
   return {

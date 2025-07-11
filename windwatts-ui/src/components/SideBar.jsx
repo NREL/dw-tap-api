@@ -154,7 +154,7 @@ SideBar.propTypes = {
       lat: PropTypes.number.isRequired,
       lng: PropTypes.number.isRequired,
       name: PropTypes.string.isRequired,
-    }),
+    })
   ).isRequired,
   deleteSavedLocation: PropTypes.func.isRequired,
   recentSearches: PropTypes.arrayOf(
@@ -162,7 +162,7 @@ SideBar.propTypes = {
       lat: PropTypes.number.isRequired,
       lng: PropTypes.number.isRequired,
       name: PropTypes.string.isRequired,
-    }),
+    })
   ).isRequired,
   deleteRecentLocation: PropTypes.func.isRequired,
 };

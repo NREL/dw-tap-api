@@ -26,13 +26,13 @@ export function PowerCurveSettings() {
   const { data } = useSWR(
     "/api/wtk/available-powercurves",
     getAvailablePowerCurves,
-    { fallbackData: { available_power_curves: NRELPowerCurveOptions } },
+    { fallbackData: { available_power_curves: NRELPowerCurveOptions } }
   );
 
   const powerCurveOptions: string[] = data?.available_power_curves || [];
 
   const handlePowerCurveChange = (
-    event: React.ChangeEvent<HTMLInputElement>,
+    event: React.ChangeEvent<HTMLInputElement>
   ) => {
     setPowerCurve(event.target.value);
   };

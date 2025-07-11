@@ -26,7 +26,7 @@ export const convertOutput = (output = 0, units = "kWh") => {
 export const formatNumber = (
   num: number,
   decimalPlaces: number = 2,
-  locale: string = "en-US",
+  locale: string = "en-US"
 ): string => {
   if (!Number.isFinite(num)) throw new Error(`${num} is not a number`);
 
@@ -41,7 +41,7 @@ export const formatNumber = (
 export function isOutOfBounds(
   lat: number,
   lng: number,
-  model: DataModel,
+  model: DataModel
 ): boolean {
   const bounds = MODEL_COORDINATES_BOUNDS[model];
   if (!bounds) return false;
@@ -56,7 +56,7 @@ export function isOutOfBounds(
 export function getOutOfBoundsMessage(
   lat: number | undefined,
   lng: number | undefined,
-  model: DataModel,
+  model: DataModel
 ): string {
   if (lat === undefined || lng === undefined) {
     return "No location selected.";
@@ -65,7 +65,7 @@ export function getOutOfBoundsMessage(
   if (!bounds) return "No bounds defined for this model.";
   return (
     `(${lat.toFixed(3)}, ${lng.toFixed(
-      3,
+      3
     )}) is outside the supported region for ${model.toUpperCase()}:\n` +
     `Lat: [${bounds.minLat} ~ ${bounds.maxLat}], Lng: [${bounds.minLng} ~ ${bounds.maxLng}]`
   );

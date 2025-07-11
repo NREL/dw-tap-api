@@ -2,7 +2,7 @@ import { BaseTable } from "../types/Tables";
 
 export const productionConvert2Table = (
   data: Record<string, Record<string, string | number | null>>,
-  avg_type: string,
+  avg_type: string
 ): BaseTable => {
   if (!data || typeof data !== "object" || Object.keys(data).length === 0) {
     console.log("Invalid data provided for conversion:", data);

@@ -34,7 +34,7 @@ const MapView = () => {
   const defaultCenter = useMemo(() => ({ lat: 39.7392, lng: -104.9903 }), []);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(
-    null,
+    null
   );
   const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
   const [infoWindowOpen, setInfoWindowOpen] = useState(false);
@@ -73,7 +73,7 @@ const MapView = () => {
           console.error("Geolocation error:", error);
           setCurrentPosition(defaultCenter);
         },
-        { maximumAge: 60000, timeout: 5000, enableHighAccuracy: true },
+        { maximumAge: 60000, timeout: 5000, enableHighAccuracy: true }
       );
     }
   }, [defaultCenter, setCurrentPosition]);
@@ -205,7 +205,7 @@ const MapView = () => {
                   message={getOutOfBoundsMessage(
                     currentPosition.lat,
                     currentPosition.lng,
-                    preferredModel,
+                    preferredModel
                   )}
                 />
               </InfoWindow>

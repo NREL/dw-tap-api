@@ -35,7 +35,7 @@ export default function SettingsProvider({
   const [hubHeight, setHubHeight] = useState(storedSettings.hubHeight);
   const [powerCurve, setPowerCurve] = useState(storedSettings.powerCurve);
   const [preferredModel, setPreferredModel] = useState(
-    storedSettings.preferredModel,
+    storedSettings.preferredModel
   );
 
   useEffect(() => {

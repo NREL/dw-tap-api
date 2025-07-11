@@ -29,7 +29,7 @@ export function HubHeightSettings() {
     if (!availableHeights.includes(hubHeight)) {
       // if current height not available, set to the closest available height
       const closestHeight = availableHeights.reduce((prev, curr) =>
-        Math.abs(curr - hubHeight) < Math.abs(prev - hubHeight) ? curr : prev,
+        Math.abs(curr - hubHeight) < Math.abs(prev - hubHeight) ? curr : prev
       );
       setHubHeight(closestHeight);
     }
@@ -42,7 +42,7 @@ export function HubHeightSettings() {
 
   const handleHubHeightChange = (
     _: Event,
-    newHubHeight: number | number[] | null,
+    newHubHeight: number | number[] | null
   ) => {
     if (newHubHeight !== null && typeof newHubHeight === "number") {
       setHubHeight(newHubHeight);

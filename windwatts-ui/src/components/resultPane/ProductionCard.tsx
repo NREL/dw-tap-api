@@ -54,7 +54,7 @@ const ProductionCard = () => {
     shouldFetch
       ? { lat, lng, hubHeight, powerCurve, dataModel, time_period: "all" }
       : null,
-    getEnergyProduction,
+    getEnergyProduction
   );
 
   const handleExpandClick = () => {
@@ -293,7 +293,7 @@ const ProductionCard = () => {
             <Typography variant="h5" sx={{ fontWeight: "bold", mt: 0.5 }}>
               {convertOutput(Number(avgProduction), units.output).replace(
                 /\s\w+$/,
-                "",
+                ""
               )}
             </Typography>
             <Typography variant="caption">{units.output}</Typography>
@@ -313,7 +313,7 @@ const ProductionCard = () => {
             <Typography variant="h6" sx={{ fontWeight: "bold", mt: 0.5 }}>
               {convertOutput(Number(highProduction), units.output).replace(
                 /\s\w+$/,
-                "",
+                ""
               )}
             </Typography>
             <Typography variant="caption">{units.output}</Typography>
@@ -333,7 +333,7 @@ const ProductionCard = () => {
             <Typography variant="h6" sx={{ fontWeight: "bold", mt: 0.5 }}>
               {convertOutput(Number(lowProduction), units.output).replace(
                 /\s\w+$/,
-                "",
+                ""
               )}
             </Typography>
             <Typography variant="caption">{units.output}</Typography>
