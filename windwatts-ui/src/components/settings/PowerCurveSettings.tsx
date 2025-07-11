@@ -1,4 +1,11 @@
-import { Box, FormControl, FormControlLabel, Radio, RadioGroup, Typography } from "@mui/material";
+import {
+  Box,
+  FormControl,
+  FormControlLabel,
+  Radio,
+  RadioGroup,
+  Typography,
+} from "@mui/material";
 import useSWR from "swr";
 import { SettingsContext } from "../../providers/SettingsContext";
 import { useContext } from "react";
@@ -13,15 +20,11 @@ const NRELPowerCurveOptions = [
 ];
 
 export function PowerCurveSettings() {
-
-  const {
-    powerCurve,
-    setPowerCurve,
-  } = useContext(SettingsContext);
+  const { powerCurve, setPowerCurve } = useContext(SettingsContext);
 
   // Fetch available power curves from the API
   const { data } = useSWR(
-    '/api/wtk/available-powercurves',
+    "/api/wtk/available-powercurves",
     getAvailablePowerCurves,
     { fallbackData: { available_power_curves: NRELPowerCurveOptions } }
   );
@@ -73,8 +76,8 @@ export function PowerCurveSettings() {
         </RadioGroup>
 
         <Typography variant="body2" marginTop={2} gutterBottom>
-          * Make sure the selected turbine class matches the hub height
-          (higher hub heights should be chosen for larger turbines).
+          * Make sure the selected turbine class matches the hub height (higher
+          hub heights should be chosen for larger turbines).
         </Typography>
       </FormControl>
     </Box>

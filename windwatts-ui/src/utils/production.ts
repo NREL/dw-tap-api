@@ -20,7 +20,7 @@ export const productionConvert2Table = (
   // Map rows from the data object
   const rows = Object.entries(data).map(([key, values]) => [
     key,
-    ...Object.values(values).map(v => v === null ? "" : v),
+    ...Object.values(values).map((v) => (v === null ? "" : v)),
   ]);
 
   // Construct the BaseTable object

@@ -64,7 +64,9 @@ export function getOutOfBoundsMessage(
   const bounds = MODEL_COORDINATES_BOUNDS[model];
   if (!bounds) return "No bounds defined for this model.";
   return (
-    `(${lat.toFixed(3)}, ${lng.toFixed(3)}) is outside the supported region for ${model.toUpperCase()}:\n` +
+    `(${lat.toFixed(3)}, ${lng.toFixed(
+      3
+    )}) is outside the supported region for ${model.toUpperCase()}:\n` +
     `Lat: [${bounds.minLat} ~ ${bounds.maxLat}], Lng: [${bounds.minLng} ~ ${bounds.maxLng}]`
   );
 }

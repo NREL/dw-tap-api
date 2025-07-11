@@ -1,9 +1,4 @@
-import {
-  Box,
-  Modal,
-  Typography,
-  IconButton,
-} from "@mui/material";
+import { Box, Modal, Typography, IconButton } from "@mui/material";
 import { Close } from "@mui/icons-material";
 import { UnitsSettings } from "./UnitsSettings";
 import { useContext } from "react";
@@ -13,10 +8,7 @@ import { PowerCurveSettings } from "./PowerCurveSettings";
 import { HubHeightSettings } from "./HubHeightSettings";
 
 const Settings = () => {
-  const {
-    settingsOpen,
-    toggleSettings,
-  } = useContext(SettingsContext);
+  const { settingsOpen, toggleSettings } = useContext(SettingsContext);
 
   return (
     <Modal

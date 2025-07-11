@@ -7,7 +7,7 @@ const AnalysisResults = () => {
   return (
     <Stack spacing={2}>
       {/* Wind Speed and Wind Resource side-by-side */}
-      <Box sx={{ display: 'flex', gap: 2 }}>
+      <Box sx={{ display: "flex", gap: 2 }}>
         <Box sx={{ flex: 1 }}>
           <WindSpeedCard />
         </Box>
@@ -15,11 +15,11 @@ const AnalysisResults = () => {
           <WindResourceCard />
         </Box>
       </Box>
-      
+
       {/* Production card separate */}
       <ProductionCard />
     </Stack>
   );
 };
 
-export default AnalysisResults; 
+export default AnalysisResults;

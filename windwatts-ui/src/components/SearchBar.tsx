@@ -4,7 +4,11 @@ import { Settings } from "@mui/icons-material";
 import { useContext, useState } from "react";
 import { SettingsContext } from "../providers/SettingsContext";
 
-function SearchBar({ onPlaceSelected }: { onPlaceSelected: Function }) {
+function SearchBar({
+  onPlaceSelected,
+}: {
+  onPlaceSelected: (place: google.maps.places.PlaceResult) => void;
+}) {
   const { toggleSettings } = useContext(SettingsContext);
   const [autocomplete, setAutocomplete] =
     useState<google.maps.places.Autocomplete | null>(null);

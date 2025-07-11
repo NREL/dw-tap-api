@@ -20,3 +20,4 @@ templates/on_map3.html
 .vscode/
 .env
 .env.*
+node_modules/
