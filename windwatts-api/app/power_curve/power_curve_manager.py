@@ -83,8 +83,8 @@ class PowerCurveManager:
         :type M2: int
 
         :return: Tuple containing:
-            - probs_new (numpy.ndarray): Uniformly spaced probabilities in [0, 1] (length M2).
             - quantiles_new (numpy.ndarray): Estimated quantile values corresponding to probs_new.
+            - probs_new (numpy.ndarray): Uniformly spaced probabilities in [0, 1] (length M2).
         :rtype: Tuple[numpy.ndarray, numpy.ndarray]
         """
 
