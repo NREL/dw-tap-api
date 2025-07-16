@@ -6,9 +6,11 @@ import {
   Link,
   Collapse,
   Chip,
+  Button,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import SettingsIcon from "@mui/icons-material/Settings";
 import AnalysisResults from "./AnalysisResults";
 import { useContext, useState } from "react";
 import { SettingsContext } from "../../providers/SettingsContext";
@@ -139,22 +141,30 @@ const RightPane = () => {
           ))}
         </Grid2>
 
-        <Link
-          component="button"
-          underline="hover"
-          sx={{
-            fontSize: "0.95em",
-            fontWeight: 400,
-            width: "fit-content",
-            padding: "0.5rem 1rem",
-            display: "inline-flex",
-            alignSelf: "flex-end",
-            marginBottom: 1,
-          }}
+        <Button
+          variant="outlined"
+          size="small"
+          startIcon={<SettingsIcon />}
           onClick={toggleSettings}
+          sx={{
+            alignSelf: "flex-end",
+            marginBottom: 2,
+            fontSize: "0.9em",
+            textTransform: "none",
+            borderRadius: 2,
+            px: 2,
+            py: 0.5,
+            borderColor: "primary.main",
+            color: "primary.main",
+            "&:hover": {
+              backgroundColor: "primary.main",
+              color: "white",
+              borderColor: "primary.main",
+            },
+          }}
         >
           Edit settings
-        </Link>
+        </Button>
 
         <AnalysisResults />
 
