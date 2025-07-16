@@ -1,12 +1,12 @@
 # Use the base image from NodeJS 18 on debian to install the NREL certs
-FROM node:20-bullseye AS certificates
+FROM node:lts-bullseye AS certificates
 
 # Install NREL root certs.
 RUN curl -fsSLk -o /usr/local/share/ca-certificates/nrel_root.crt https://raw.github.nrel.gov/TADA/nrel-certs/v20180329/certs/nrel_root.pem && \
     curl -fsSLk -o /usr/local/share/ca-certificates/nrel_xca1.crt https://raw.github.nrel.gov/TADA/nrel-certs/v20180329/certs/nrel_xca1.pem && \
     update-ca-certificates
 
-FROM node:20-alpine AS build
+FROM node:lts-alpine AS build
 
 # Copy the installed SSL certs into this image
 COPY --from=certificates /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
