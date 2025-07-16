@@ -7,7 +7,6 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        // eslint-disable-next-line no-undef
         target: process.env.VITE_API_BASE_URL,
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ""),
@@ -15,7 +14,7 @@ export default defineConfig({
     },
   },
   build: {
-    minify: 'terser',
+    minify: "terser",
     terserOptions: {
       format: {
         comments: false, // Remove license/version

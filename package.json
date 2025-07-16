@@ -1,0 +1,21 @@
+{
+  "private": true,
+  "workspaces": [
+    "windwatts-ui",
+    "windwatts-api"
+  ],
+  "scripts": {
+    "prepare": "husky",
+    "lint": "eslint",
+    "format": "prettier"
+  },
+  "lint-staged": {
+    "windwatts-ui/src/**/*.{js,jsx,ts,tsx}": [
+      "./check-format.sh"
+    ]
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.2"
+  }
+}

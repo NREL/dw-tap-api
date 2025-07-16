@@ -26,3 +26,4 @@ windwatts-ui/release.sh
 windwatts-api/release.sh
 windwatts-ui/env-vars.sh
 windwatts-api/env-vars.sh
+node_modules/

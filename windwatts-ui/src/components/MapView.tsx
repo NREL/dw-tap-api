@@ -1,5 +1,18 @@
-import { GoogleMap, InfoWindow, Libraries, Marker, useJsApiLoader } from "@react-google-maps/api";
-import { useCallback, useContext, useEffect, useState, useRef, useMemo } from "react";
+import {
+  GoogleMap,
+  InfoWindow,
+  Libraries,
+  Marker,
+  useJsApiLoader,
+} from "@react-google-maps/api";
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+  useRef,
+  useMemo,
+} from "react";
 import SearchBar from "./SearchBar";
 import { Box, Backdrop, CircularProgress } from "@mui/material";
 import { SettingsContext } from "../providers/SettingsContext";
@@ -15,19 +28,23 @@ interface RecentSearch {
 }
 
 const MapView = () => {
-  const { currentPosition, setCurrentPosition, preferredModel } = useContext(SettingsContext);
+  const { currentPosition, setCurrentPosition, preferredModel } =
+    useContext(SettingsContext);
   const [zoom, setZoom] = useState(8);
   const defaultCenter = useMemo(() => ({ lat: 39.7392, lng: -104.9903 }), []);
   const [map, setMap] = useState<google.maps.Map | null>(null);
-  const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
+  const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(
+    null
+  );
   const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
   const [infoWindowOpen, setInfoWindowOpen] = useState(false);
 
   // Out-of-bounds state
-  const outOfBounds = currentPosition && preferredModel
-    ? isOutOfBounds(currentPosition.lat, currentPosition.lng, preferredModel)
-    : false;
-  
+  const outOfBounds =
+    currentPosition && preferredModel
+      ? isOutOfBounds(currentPosition.lat, currentPosition.lng, preferredModel)
+      : false;
+
   useEffect(() => {
     if (outOfBounds) {
       setInfoWindowOpen(true);
@@ -60,7 +77,7 @@ const MapView = () => {
       );
     }
   }, [defaultCenter, setCurrentPosition]);
-  
+
   // Updated marker management
   useEffect(() => {
     if (isLoaded && map && currentPosition && window.google?.maps?.marker) {
@@ -98,7 +115,7 @@ const MapView = () => {
       console.error("Selected place does not have valid coordinates.");
       return;
     }
-    handleSetLocation({ lat, lng});
+    handleSetLocation({ lat, lng });
     setZoom(15);
     setRecentSearches([
       ...recentSearches,
@@ -177,7 +194,7 @@ const MapView = () => {
                   fillColor: "#d32f2f",
                   fillOpacity: 1,
                   strokeWeight: 2,
-                  strokeColor: "#fff"
+                  strokeColor: "#fff",
                 }}
               />
               <InfoWindow
@@ -185,7 +202,11 @@ const MapView = () => {
                 onCloseClick={() => setInfoWindowOpen(false)}
               >
                 <OutOfBoundsWarning
-                  message={getOutOfBoundsMessage(currentPosition.lat, currentPosition.lng, preferredModel)}
+                  message={getOutOfBoundsMessage(
+                    currentPosition.lat,
+                    currentPosition.lng,
+                    preferredModel
+                  )}
                 />
               </InfoWindow>
             </>

@@ -1,6 +1,16 @@
-import { Box, Typography, Paper, Grid2, Link, Collapse, Chip } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Paper,
+  Grid2,
+  Link,
+  Collapse,
+  Chip,
+  Button,
+} from "@mui/material";
 import { styled } from "@mui/material/styles";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import SettingsIcon from "@mui/icons-material/Settings";
 import AnalysisResults from "./AnalysisResults";
 import { useContext, useState } from "react";
 import { SettingsContext } from "../../providers/SettingsContext";
@@ -13,24 +23,33 @@ const Item = styled(Paper)(({ theme }) => ({
   color: theme.palette.text.secondary,
 }));
 
-const DATA_MODEL_INFO: Record<string, { label: string, source_href: string, help_href: string }> = {
+const DATA_MODEL_INFO: Record<
+  string,
+  { label: string; source_href: string; help_href: string }
+> = {
   era5: {
     label: "ERA5",
-    source_href: "https://www.ecmwf.int/en/forecasts/dataset/ecmwf-reanalysis-v5",
+    source_href:
+      "https://www.ecmwf.int/en/forecasts/dataset/ecmwf-reanalysis-v5",
     help_href: "https://github.com/NREL/dw-tap-api/blob/master/about/era5.md",
   },
   wtk: {
     label: "NREL's 20-year WTK-LED dataset",
-    source_href: "https://www.energy.gov/eere/wind/articles/new-wind-resource-database-includes-updated-wind-toolkit",
+    source_href:
+      "https://www.energy.gov/eere/wind/articles/new-wind-resource-database-includes-updated-wind-toolkit",
     help_href: "",
   },
 };
 
 const RightPane = () => {
+  const {
+    currentPosition,
+    hubHeight,
+    powerCurve,
+    preferredModel: dataModel,
+    toggleSettings,
+  } = useContext(SettingsContext);
 
-  const { currentPosition, hubHeight, powerCurve, preferredModel: dataModel } =
-    useContext(SettingsContext);
-  
   const { lat, lng } = currentPosition ?? {};
 
   const settingOptions = [
@@ -74,24 +93,29 @@ const RightPane = () => {
         <Typography variant="body1" marginBottom={2} sx={{ lineHeight: 1.7 }}>
           WindWatts is currently based on&nbsp;
           <Link
-            href={ dataModelInfo.source_href }
+            href={dataModelInfo.source_href}
             underline="hover"
             target="_blank"
             rel="noopener noreferrer"
             sx={{ fontWeight: 500 }}
           >
-            { dataModelInfo.label.toUpperCase() } reanalysis dataset
+            {dataModelInfo.label.toUpperCase()} reanalysis dataset
           </Link>
           &nbsp;provided by ECMWF.
           <br />
           <Link
-            href={ dataModelInfo.help_href }
+            href={dataModelInfo.help_href}
             underline="hover"
             target="_blank"
             rel="noopener noreferrer"
-            sx={{ fontSize: "0.95em", fontWeight: 400, display: "inline-flex", alignItems: "center" }}
+            sx={{
+              fontSize: "0.95em",
+              fontWeight: 400,
+              display: "inline-flex",
+              alignItems: "center",
+            }}
           >
-            Why { dataModelInfo.label.toUpperCase()}?
+            Why {dataModelInfo.label.toUpperCase()}?
             <InfoOutlinedIcon fontSize="small" sx={{ ml: 0.5 }} />
           </Link>
         </Typography>
@@ -117,6 +141,31 @@ const RightPane = () => {
           ))}
         </Grid2>
 
+        <Button
+          variant="outlined"
+          size="small"
+          startIcon={<SettingsIcon />}
+          onClick={toggleSettings}
+          sx={{
+            alignSelf: "flex-end",
+            marginBottom: 2,
+            fontSize: "0.9em",
+            textTransform: "none",
+            borderRadius: 2,
+            px: 2,
+            py: 0.5,
+            borderColor: "primary.main",
+            color: "primary.main",
+            "&:hover": {
+              backgroundColor: "primary.main",
+              color: "white",
+              borderColor: "primary.main",
+            },
+          }}
+        >
+          Edit settings
+        </Button>
+
         <AnalysisResults />
 
         <Box sx={{ display: "flex", alignItems: "center", mt: 2 }}>
@@ -130,8 +179,16 @@ const RightPane = () => {
           />
         </Box>
         <Collapse in={showDisclaimer}>
-          <Typography variant="body2" color="textSecondary" marginBottom={2} px={1}>
-            WindWatts offers quick, approximate wind resource estimates. For more detailed or location-specific data, consider reaching out to local wind installers who may share insights from nearby projects. To access alternative wind models, visit&nbsp;
+          <Typography
+            variant="body2"
+            color="textSecondary"
+            marginBottom={2}
+            px={1}
+          >
+            WindWatts offers quick, approximate wind resource estimates. For
+            more detailed or location-specific data, consider reaching out to
+            local wind installers who may share insights from nearby projects.
+            To access alternative wind models, visit&nbsp;
             <Link
               href="https://wrdb.nrel.gov"
               target="_blank"
@@ -139,7 +196,8 @@ const RightPane = () => {
               underline="hover"
             >
               NREL's Wind Resource Database
-            </Link>.
+            </Link>
+            .
           </Typography>
         </Collapse>
       </Box>
