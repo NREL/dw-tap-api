@@ -30,7 +30,7 @@ interface RecentSearch {
 const MapView = () => {
   const { currentPosition, setCurrentPosition, preferredModel } =
     useContext(SettingsContext);
-  const [zoom, setZoom] = useState(8);
+  // const [zoom, setZoom] = useState(8);
   const defaultCenter = useMemo(() => ({ lat: 39.7392, lng: -104.9903 }), []);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(
@@ -116,7 +116,7 @@ const MapView = () => {
       return;
     }
     handleSetLocation({ lat, lng });
-    setZoom(15);
+    // setZoom(15);
     setRecentSearches([
       ...recentSearches,
       {
@@ -132,7 +132,7 @@ const MapView = () => {
       lat: location.lat,
       lng: location.lng,
     });
-    setZoom(15);
+    // setZoom(15);
   };
 
   const handleMapClick = (e: google.maps.MapMouseEvent) => {
@@ -172,7 +172,7 @@ const MapView = () => {
       </Box>
       {currentPosition && (
         <GoogleMap
-          zoom={zoom}
+          // zoom={zoom}
           center={currentPosition || defaultCenter}
           mapContainerStyle={{ height: "100%", width: "100%" }}
           onLoad={onLoad}
@@ -182,6 +182,14 @@ const MapView = () => {
             gestureHandling: "greedy",
             draggableCursor: "default",
             draggingCursor: "grab",
+            streetViewControl: false,
+            fullscreenControl: false,
+            disableDefaultUI: true,
+            zoom: 8,
+            zoomControl: true,
+            zoomControlOptions: {
+              position: window.google.maps.ControlPosition.TOP_RIGHT,
+            },
           }}
         >
           {outOfBounds && currentPosition && infoWindowOpen && (
