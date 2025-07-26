@@ -9,14 +9,13 @@
     "lint": "eslint .",
     "test": "vitest",
     "format": "prettier --check --ignore-path .gitignore \"**/*.+(js|jsx|ts|tsx|json)\"",
-    "preview": "vite preview",
-    "prepare": "husky install"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@mui/icons-material": "^6.4.7",
-    "@mui/material": "^6.4.7",
+    "@mui/material": "^7.2.0",
     "@react-google-maps/api": "^2.20.6",
     "nrel-branding": "^1.0.4",
     "nrel-branding-react": "^1.0.40",
