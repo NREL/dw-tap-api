@@ -1,12 +1,6 @@
 import { Box, Typography, List, ListItem, ListItemText } from "@mui/material";
 import { LocationOn } from "@mui/icons-material";
-
-interface SearchResultsListProps {
-  predictions: google.maps.places.AutocompletePrediction[];
-  onPredictionClick: (
-    prediction: google.maps.places.AutocompletePrediction
-  ) => void;
-}
+import { SearchResultsListProps } from "../types";
 
 function SearchResultsList({
   predictions,

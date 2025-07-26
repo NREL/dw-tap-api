@@ -6,22 +6,18 @@ import React, {
 } from "react";
 import { Box, TextField, InputAdornment } from "@mui/material";
 import { Search } from "@mui/icons-material";
-
-interface MobileSearchBarProps {
-  onSearchPredictions: (
-    predictions: google.maps.places.AutocompletePrediction[],
-    searching: boolean
-  ) => void;
-  inputValue: string;
-  onInputChange: (value: string) => void;
-}
-
-export interface MobileSearchBarRef {
-  clearInput: () => void;
-}
+import { MobileSearchBarProps, MobileSearchBarRef } from "../types";
 
 const MobileSearchBar = forwardRef<MobileSearchBarRef, MobileSearchBarProps>(
-  ({ onSearchPredictions, inputValue, onInputChange }, ref) => {
+  (
+    {
+      onSearchPredictions,
+      inputValue,
+      onInputChange,
+      isSettingFromSelectionRef,
+    },
+    ref
+  ) => {
     const [placesService, setPlacesService] =
       useState<google.maps.places.PlacesService | null>(null);
 
@@ -54,7 +50,26 @@ const MobileSearchBar = forwardRef<MobileSearchBarRef, MobileSearchBarProps>(
 
     // Fetch predictions when input changes
     useEffect(() => {
-      if (!isGoogleMapsReady || inputValue.length < 2) {
+      const isSettingFromSelection =
+        isSettingFromSelectionRef?.current || false;
+
+      console.log("Prediction search triggered:", {
+        isGoogleMapsReady,
+        inputValueLength: inputValue.length,
+        isSettingFromSelection,
+        inputValue,
+      });
+
+      if (
+        !isGoogleMapsReady ||
+        inputValue.length < 2 ||
+        isSettingFromSelection
+      ) {
+        console.log("Skipping prediction search due to:", {
+          notReady: !isGoogleMapsReady,
+          tooShort: inputValue.length < 2,
+          settingFromSelection: isSettingFromSelection,
+        });
         onSearchPredictions([], false);
         return;
       }
@@ -95,12 +110,17 @@ const MobileSearchBar = forwardRef<MobileSearchBarRef, MobileSearchBarProps>(
             fullWidth
             value={inputValue}
             onChange={handleInputChange}
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck="false"
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
                   <Search sx={{ color: "#666" }} />
                 </InputAdornment>
               ),
+
               sx: {
                 borderRadius: 3,
                 bgcolor: "#f5f5f5",

@@ -3,23 +3,15 @@ import React, {
   useRef,
   forwardRef,
   useImperativeHandle,
+  useEffect,
 } from "react";
 import { Box, IconButton } from "@mui/material";
 import { Close } from "@mui/icons-material";
 import RightPane from "../resultPane/RightPane";
 import { Footer } from "nrel-branding-react";
-import { SearchResultsList, WelcomeMessage, MobileSearchBar } from "./";
-import { MobileSearchBarRef } from "./MobileSearchBar";
-
-interface MobileBottomSheetProps {
-  isLoaded: boolean;
-  onPlaceSelected: (place: google.maps.places.PlaceResult) => void;
-}
-
-export interface MobileBottomSheetRef {
-  clearSearchInput: () => void;
-  expandDrawer: () => void;
-}
+import { SearchResultsList, MobileSearchBar } from "./components";
+import { MobileSearchBarRef } from "./components";
+import { MobileBottomSheetProps, MobileBottomSheetRef } from "./types";
 
 const MobileBottomSheet = forwardRef<
   MobileBottomSheetRef,
@@ -32,7 +24,14 @@ const MobileBottomSheet = forwardRef<
   >([]);
   const [isSearching, setIsSearching] = useState(false);
   const [inputValue, setInputValue] = useState("");
+  const [hasInitialLocation, setHasInitialLocation] = useState(false);
   const searchBarRef = useRef<MobileSearchBarRef>(null);
+  const isSettingFromSelectionRef = useRef(false);
+
+  // Set initial location flag when component mounts (like desktop behavior)
+  useEffect(() => {
+    setHasInitialLocation(true);
+  }, []);
 
   // Expose clearSearchInput method to parent
   useImperativeHandle(ref, () => ({
@@ -40,6 +39,7 @@ const MobileBottomSheet = forwardRef<
       setInputValue("");
       setSearchPredictions([]);
       setIsSearching(false);
+      setHasInitialLocation(true);
     },
     expandDrawer: () => {
       setIsExpanded(true);
@@ -47,10 +47,24 @@ const MobileBottomSheet = forwardRef<
   }));
 
   const handlePlaceSelected = (place: google.maps.places.PlaceResult) => {
+    console.log("Place selected:", place);
     onPlaceSelected(place);
     setHasSelectedPlace(true);
+    setHasInitialLocation(true);
     setIsSearching(false);
     setSearchPredictions([]);
+    // Set flag to prevent prediction search when updating input value
+    console.log("Setting isSettingFromSelection to true");
+    isSettingFromSelectionRef.current = true;
+    // Update input value to show the selected place (consistent with desktop)
+    const newValue = place.formatted_address || place.name || "";
+    console.log("Setting input value to:", newValue);
+    setInputValue(newValue);
+    // Reset flag after a short delay to allow the input update to complete
+    setTimeout(() => {
+      console.log("Setting isSettingFromSelection to false");
+      isSettingFromSelectionRef.current = false;
+    }, 100);
   };
 
   const handleSearchPredictions = (
@@ -63,6 +77,25 @@ const MobileBottomSheet = forwardRef<
 
   const handleInputChange = (value: string) => {
     setInputValue(value);
+  };
+
+  const handleClear = () => {
+    setInputValue("");
+    setSearchPredictions([]);
+    setIsSearching(false);
+    setHasSelectedPlace(false);
+    // Show results when clearing (like desktop behavior)
+    setHasInitialLocation(true);
+
+    // Focus the search input after clearing
+    setTimeout(() => {
+      const searchInput = document.querySelector(
+        "#mobile-search-input"
+      ) as HTMLInputElement;
+      if (searchInput) {
+        searchInput.focus();
+      }
+    }, 100);
   };
 
   const handlePredictionClick = (
@@ -219,6 +252,7 @@ const MobileBottomSheet = forwardRef<
                 onSearchPredictions={handleSearchPredictions}
                 onInputChange={handleInputChange}
                 inputValue={inputValue}
+                isSettingFromSelectionRef={isSettingFromSelectionRef}
               />
             </Box>
           )}
@@ -226,7 +260,13 @@ const MobileBottomSheet = forwardRef<
             <IconButton
               onClick={(e) => {
                 e.stopPropagation();
-                collapseDrawer();
+                if (inputValue || hasSelectedPlace) {
+                  // First click: clear the search and focus input
+                  handleClear();
+                } else {
+                  // Second click: collapse the drawer
+                  collapseDrawer();
+                }
               }}
               sx={{
                 bgcolor: "#f5f5f5",
@@ -258,14 +298,12 @@ const MobileBottomSheet = forwardRef<
               predictions={searchPredictions}
               onPredictionClick={handlePredictionClick}
             />
-          ) : hasSelectedPlace ? (
+          ) : hasSelectedPlace || hasInitialLocation ? (
             <>
               <RightPane />
               <Footer />
             </>
-          ) : (
-            <WelcomeMessage />
-          )}
+          ) : null}
         </Box>
       )}
     </Box>
