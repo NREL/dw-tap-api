@@ -2,7 +2,7 @@ import {
   Box,
   Typography,
   Paper,
-  Grid2,
+  Grid,
   Link,
   Collapse,
   Chip,
@@ -119,7 +119,7 @@ const RightPane = () => {
             <InfoOutlinedIcon fontSize="small" sx={{ ml: 0.5 }} />
           </Link>
         </Typography>
-        <Grid2
+        <Grid
           container
           direction="row"
           spacing={1}
@@ -139,7 +139,7 @@ const RightPane = () => {
               </Typography>
             </Item>
           ))}
-        </Grid2>
+        </Grid>
 
         <Button
           variant="outlined"
