@@ -34,12 +34,10 @@ export const MobileBottomSheetProvider: React.FC<
   }, []);
 
   const clearSearchInput = () => {
-    console.log("clearSearchInput called");
     bottomSheetRef.current?.clearSearchInput();
   };
 
   const expandDrawer = () => {
-    console.log("expandDrawer called");
     bottomSheetRef.current?.expandDrawer();
   };
 
