@@ -10,7 +10,7 @@ import {
   Paper,
 } from "@mui/material";
 import { LocationOn, Clear, Settings } from "@mui/icons-material";
-import { useGoogleMaps } from "../../hooks/useGoogleMaps";
+import { useGoogleMaps } from "../../hooks";
 
 interface SearchBarProps {
   onPlaceSelected?: (place: google.maps.places.PlaceResult) => void;

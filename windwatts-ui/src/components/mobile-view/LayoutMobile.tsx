@@ -8,7 +8,7 @@ import {
   MobileBottomSheetProvider,
   useMobileBottomSheet,
 } from "../../providers/MobileBottomSheetProvider";
-import { useGoogleMaps } from "../../hooks/useGoogleMaps";
+import { useGoogleMaps } from "../../hooks";
 
 const LayoutMobileContent = () => {
   const APP_TITLE = import.meta.env.VITE_APP_TITLE || "Wind Watts";

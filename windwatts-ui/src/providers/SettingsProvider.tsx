@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import useToggle from "../hooks/useToggle";
+import { useToggle } from "../hooks";
 import {
   SettingsContext,
   defaultValues,
