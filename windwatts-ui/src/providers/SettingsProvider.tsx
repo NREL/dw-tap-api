@@ -1,61 +1,51 @@
-import { useState, useEffect } from "react";
-import { useToggle } from "../hooks";
+import { useToggle, useLocalStorage } from "../hooks";
 import {
   SettingsContext,
   defaultValues,
   CurrentPosition,
   StoredSettings,
 } from "./SettingsContext";
-
-function getStoredSettings(): StoredSettings {
-  const storedSettings = localStorage.getItem("settings");
-  const retrievedSettings = storedSettings ? JSON.parse(storedSettings) : {};
-  return {
-    ...defaultValues, // default values
-    ...retrievedSettings, // override with stored values
-  };
-}
+import { DataModel } from "../types";
 
 export default function SettingsProvider({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const storedSettings = getStoredSettings();
-
-  // setting modal states
-  const [settingsOpen, toggleSettings] = useToggle(storedSettings.settingsOpen);
-
-  // Results modal states
-  const [resultsOpen, toggleResults] = useToggle(storedSettings.resultsOpen);
-
-  // main app inputs
-  const [currentPosition, setCurrentPosition] =
-    useState<CurrentPosition | null>(storedSettings.currentPosition);
-  const [hubHeight, setHubHeight] = useState(storedSettings.hubHeight);
-  const [powerCurve, setPowerCurve] = useState(storedSettings.powerCurve);
-  const [preferredModel, setPreferredModel] = useState(
-    storedSettings.preferredModel
+  // Use the useLocalStorage hook to manage settings
+  const [settings, setSettings] = useLocalStorage<StoredSettings>(
+    "settings",
+    defaultValues
   );
 
-  useEffect(() => {
-    const settings = {
-      settingsOpen,
-      resultsOpen,
-      currentPosition,
-      hubHeight,
-      powerCurve,
-      preferredModel,
-    };
-    localStorage.setItem("settings", JSON.stringify(settings));
-  }, [
-    settingsOpen,
-    resultsOpen,
-    currentPosition,
-    hubHeight,
-    powerCurve,
-    preferredModel,
-  ]);
+  // setting modal states
+  const [settingsOpen, toggleSettings] = useToggle(settings.settingsOpen);
+
+  // Results modal states
+  const [resultsOpen, toggleResults] = useToggle(settings.resultsOpen);
+
+  // Update localStorage whenever any setting changes
+  const updateSettings = (updates: Partial<StoredSettings>) => {
+    const newSettings = { ...settings, ...updates };
+    setSettings(newSettings);
+  };
+
+  // Create setters that update localStorage
+  const setCurrentPosition = (position: CurrentPosition | null) => {
+    updateSettings({ currentPosition: position });
+  };
+
+  const setHubHeight = (height: number) => {
+    updateSettings({ hubHeight: height });
+  };
+
+  const setPowerCurve = (curve: string) => {
+    updateSettings({ powerCurve: curve });
+  };
+
+  const setPreferredModel = (model: DataModel) => {
+    updateSettings({ preferredModel: model });
+  };
 
   return (
     <SettingsContext.Provider
@@ -64,13 +54,13 @@ export default function SettingsProvider({
         toggleSettings,
         resultsOpen,
         toggleResults,
-        currentPosition,
+        currentPosition: settings.currentPosition,
         setCurrentPosition,
-        hubHeight,
+        hubHeight: settings.hubHeight,
         setHubHeight,
-        powerCurve,
+        powerCurve: settings.powerCurve,
         setPowerCurve,
-        preferredModel,
+        preferredModel: settings.preferredModel,
         setPreferredModel,
       }}
     >

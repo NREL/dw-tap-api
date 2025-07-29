@@ -1,29 +1,16 @@
-import { useState, useEffect } from "react";
 import { UnitsContext, defaultUnitValues } from "./UnitsContext";
 import { StoredUnits } from "../types/Units";
+import { useLocalStorage } from "../hooks";
 
 export default function UnitsProvider({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [units, setUnits] = useState<StoredUnits>(() => {
-    try {
-      const stored = localStorage.getItem("units");
-      return stored ? JSON.parse(stored) : defaultUnitValues;
-    } catch (error) {
-      console.error("Error reading from localStorage:", error);
-      return defaultUnitValues;
-    }
-  });
-
-  useEffect(() => {
-    try {
-      localStorage.setItem("units", JSON.stringify(units));
-    } catch (error) {
-      console.error("Error writing to localStorage:", error);
-    }
-  }, [units]);
+  const [units, setUnits] = useLocalStorage<StoredUnits>(
+    "units",
+    defaultUnitValues
+  );
 
   const updateUnit = (key: string, value: string) => {
     setUnits((prev) => ({
