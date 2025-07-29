@@ -47,22 +47,18 @@ const MobileBottomSheet = forwardRef<
   }));
 
   const handlePlaceSelected = (place: google.maps.places.PlaceResult) => {
-    console.log("Place selected:", place);
     onPlaceSelected(place);
     setHasSelectedPlace(true);
     setHasInitialLocation(true);
     setIsSearching(false);
     setSearchPredictions([]);
     // Set flag to prevent prediction search when updating input value
-    console.log("Setting isSettingFromSelection to true");
     isSettingFromSelectionRef.current = true;
     // Update input value to show the selected place (consistent with desktop)
     const newValue = place.formatted_address || place.name || "";
-    console.log("Setting input value to:", newValue);
     setInputValue(newValue);
     // Reset flag after a short delay to allow the input update to complete
     setTimeout(() => {
-      console.log("Setting isSettingFromSelection to false");
       isSettingFromSelectionRef.current = false;
     }, 100);
   };
@@ -116,7 +112,6 @@ const MobileBottomSheet = forwardRef<
         status === window.google.maps.places.PlacesServiceStatus.OK &&
         place
       ) {
-        console.log("Place details:", place);
         handlePlaceSelected(place);
       }
     });

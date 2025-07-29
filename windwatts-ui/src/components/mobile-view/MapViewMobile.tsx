@@ -101,14 +101,12 @@ const MapViewMobile = () => {
   const handleMapClick = (e: google.maps.MapMouseEvent) => {
     const lat: number = e.latLng?.lat() ?? 0;
     const lng: number = e.latLng?.lng() ?? 0;
-    console.log("Map clicked at:", { lat, lng });
     handleSetLocation({
       lat,
       lng,
     });
 
     // Clear search input and expand drawer on mobile when map is tapped
-    console.log("Mobile detected, clearing search and expanding drawer");
     clearSearchInput();
     expandDrawer();
   };

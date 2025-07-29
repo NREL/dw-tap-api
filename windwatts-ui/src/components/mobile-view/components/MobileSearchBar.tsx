@@ -43,8 +43,6 @@ const MobileSearchBar = forwardRef<MobileSearchBarRef, MobileSearchBarProps>(
         const mapDiv = document.createElement("div");
         const map = new window.google.maps.Map(mapDiv);
         setPlacesService(new window.google.maps.places.PlacesService(map));
-
-        console.log("Places service initialized");
       }
     }, [isGoogleMapsReady, placesService]);
 
@@ -53,23 +51,11 @@ const MobileSearchBar = forwardRef<MobileSearchBarRef, MobileSearchBarProps>(
       const isSettingFromSelection =
         isSettingFromSelectionRef?.current || false;
 
-      console.log("Prediction search triggered:", {
-        isGoogleMapsReady,
-        inputValueLength: inputValue.length,
-        isSettingFromSelection,
-        inputValue,
-      });
-
       if (
         !isGoogleMapsReady ||
         inputValue.length < 2 ||
         isSettingFromSelection
       ) {
-        console.log("Skipping prediction search due to:", {
-          notReady: !isGoogleMapsReady,
-          tooShort: inputValue.length < 2,
-          settingFromSelection: isSettingFromSelection,
-        });
         onSearchPredictions([], false);
         return;
       }
@@ -87,7 +73,6 @@ const MobileSearchBar = forwardRef<MobileSearchBarRef, MobileSearchBarProps>(
           results
         ) {
           onSearchPredictions(results, true);
-          console.log("Predictions:", results);
         } else {
           onSearchPredictions([], false);
         }
