@@ -6,6 +6,10 @@ import { SettingsContext } from "../../providers/SettingsContext";
 // import { ModelSettings } from "./ModelSettings";
 import { PowerCurveSettings } from "./PowerCurveSettings";
 import { HubHeightSettings } from "./HubHeightSettings";
+import {
+  SETTINGS_MODAL_WIDTH,
+  SETTINGS_MODAL_MAX_HEIGHT,
+} from "../../constants";
 
 const Settings = () => {
   const { settingsOpen, toggleSettings } = useContext(SettingsContext);
@@ -29,9 +33,9 @@ const Settings = () => {
           top: "50%",
           left: "50%",
           transform: "translate(-50%, -50%)",
-          width: 400,
+          width: SETTINGS_MODAL_WIDTH,
           bgcolor: "background.paper",
-          maxHeight: "80vh",
+          maxHeight: SETTINGS_MODAL_MAX_HEIGHT,
           display: "flex",
           flexDirection: "column",
           borderRadius: 2,

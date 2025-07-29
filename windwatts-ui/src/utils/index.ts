@@ -1,4 +1,4 @@
-import { MODEL_COORDINATES_BOUNDS } from "../constants/coordinates";
+import { MODEL_COORDINATES_BOUNDS } from "../constants";
 import { DataModel } from "../types/Requests";
 
 export const getWindResource = (speed: number) => {

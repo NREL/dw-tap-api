@@ -12,6 +12,11 @@ import { Footer } from "nrel-branding-react";
 import { SearchResultsList, MobileSearchBar } from "./components";
 import { MobileSearchBarRef } from "./components";
 import { MobileBottomSheetProps, MobileBottomSheetRef } from "./types";
+import {
+  MOBILE_BOTTOM_SHEET_HEIGHT,
+  MOBILE_BOTTOM_SHEET_COLLAPSED_HEIGHT,
+  FLAG_RESET_DELAY,
+} from "../../constants";
 
 const MobileBottomSheet = forwardRef<
   MobileBottomSheetRef,
@@ -60,7 +65,7 @@ const MobileBottomSheet = forwardRef<
     // Reset flag after a short delay to allow the input update to complete
     setTimeout(() => {
       isSettingFromSelectionRef.current = false;
-    }, 100);
+    }, FLAG_RESET_DELAY);
   };
 
   const handleSearchPredictions = (
@@ -208,7 +213,9 @@ const MobileBottomSheet = forwardRef<
         bottom: 0,
         left: 0,
         right: 0,
-        height: isExpanded ? "90vh" : "120px", // Always show search bar
+        height: isExpanded
+          ? MOBILE_BOTTOM_SHEET_HEIGHT
+          : MOBILE_BOTTOM_SHEET_COLLAPSED_HEIGHT, // Always show search bar
         bgcolor: "white",
         borderTopLeftRadius: 16,
         borderTopRightRadius: 16,

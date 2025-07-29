@@ -7,6 +7,7 @@ import React, {
 import { Box, TextField, InputAdornment } from "@mui/material";
 import { Search } from "@mui/icons-material";
 import { MobileSearchBarProps, MobileSearchBarRef } from "../types";
+import { SEARCH_MIN_LENGTH } from "../../../constants";
 
 const MobileSearchBar = forwardRef<MobileSearchBarRef, MobileSearchBarProps>(
   (
@@ -53,7 +54,7 @@ const MobileSearchBar = forwardRef<MobileSearchBarRef, MobileSearchBarProps>(
 
       if (
         !isGoogleMapsReady ||
-        inputValue.length < 2 ||
+        inputValue.length < SEARCH_MIN_LENGTH ||
         isSettingFromSelection
       ) {
         onSearchPredictions([], false);

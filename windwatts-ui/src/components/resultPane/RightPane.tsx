@@ -14,7 +14,7 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import AnalysisResults from "./AnalysisResults";
 import { useContext, useState } from "react";
 import { SettingsContext } from "../../providers/SettingsContext";
-import { POWER_CURVE_LABEL } from "../../constants/powerCurves";
+import { POWER_CURVE_LABEL } from "../../constants";
 
 const Item = styled(Paper)(({ theme }) => ({
   ...theme.typography.body2,
