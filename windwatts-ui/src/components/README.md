@@ -21,9 +21,7 @@ components/
 │   ├── types.ts
 │   ├── index.ts
 │   └── README.md
-├── legacy/                 # Legacy/deprecated components
-│   ├── SideBar.jsx
-│   └── InfoPopup.jsx
+
 ├── resultPane/             # Results display components
 │   ├── AnalysisResults.tsx
 │   ├── ProductionCard.tsx
@@ -72,13 +70,6 @@ Components specifically designed for mobile experience:
 - **MobileBottomSheet**: Bottom drawer for search and results
 - **MobileSearchBar**: Mobile-optimized search input
 - **SearchResultsList**: Mobile search results display
-
-### Legacy Components (`legacy/`)
-
-Older components that may not be actively used:
-
-- **SideBar**: Legacy sidebar navigation
-- **InfoPopup**: Legacy info window component
 
 ### Results Components (`resultPane/`)
 
@@ -131,5 +122,5 @@ import { Settings } from "../components/settings";
 - **Modular Organization**: Components grouped by functionality
 - **Type Safety**: TypeScript throughout with centralized type definitions
 - **Consistent Exports**: Clean public API through index files
-- **Legacy Isolation**: Old components preserved but isolated
+
 - **Shared Components**: Reusable components across platforms
