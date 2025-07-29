@@ -1,10 +1,4 @@
-import {
-  GoogleMap,
-  InfoWindow,
-  Libraries,
-  Marker,
-  useJsApiLoader,
-} from "@react-google-maps/api";
+import { GoogleMap, InfoWindow, Marker } from "@react-google-maps/api";
 import {
   useCallback,
   useContext,
@@ -13,29 +7,25 @@ import {
   useRef,
   useMemo,
 } from "react";
-import SearchBar from "./SearchBar";
+import { SearchBar } from "../core";
 import { Box, Backdrop, CircularProgress } from "@mui/material";
-import { SettingsContext } from "../providers/SettingsContext";
-import { isOutOfBounds, getOutOfBoundsMessage } from "../utils";
-import OutOfBoundsWarning from "./shared/OutOfBoundsWarning";
-
-const libraries = ["places", "marker"];
-
-interface RecentSearch {
-  name: string;
-  lat: number;
-  lng: number;
-}
+import { SettingsContext } from "../../providers/SettingsContext";
+import { isOutOfBounds, getOutOfBoundsMessage } from "../../utils";
+import OutOfBoundsWarning from "../shared/OutOfBoundsWarning";
+import { useGoogleMaps } from "../../hooks";
 
 const MapViewDesktop = () => {
-  const { currentPosition, setCurrentPosition, preferredModel } =
-    useContext(SettingsContext);
+  const {
+    currentPosition,
+    setCurrentPosition,
+    preferredModel,
+    toggleSettings,
+  } = useContext(SettingsContext);
   const defaultCenter = useMemo(() => ({ lat: 39.7392, lng: -104.9903 }), []);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(
     null
   );
-  const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
   const [infoWindowOpen, setInfoWindowOpen] = useState(false);
 
   // Out-of-bounds state
@@ -53,10 +43,7 @@ const MapViewDesktop = () => {
   }, [currentPosition, outOfBounds]);
 
   // Load Google Maps API
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: import.meta.env.VITE_MAP_API_KEY,
-    libraries: libraries as Libraries,
-  });
+  const { isLoaded } = useGoogleMaps();
 
   // Get Device Current Location
   useEffect(() => {
@@ -115,15 +102,6 @@ const MapViewDesktop = () => {
       return;
     }
     handleSetLocation({ lat, lng });
-    // setZoom(15);
-    setRecentSearches([
-      ...recentSearches,
-      {
-        name: place.name!,
-        lat,
-        lng,
-      },
-    ]);
   };
 
   const handleSetLocation = (location: { lat: number; lng: number }) => {
@@ -163,13 +141,28 @@ const MapViewDesktop = () => {
           position: "absolute",
           width: "100%",
           justifyContent: "center",
-          top: 0,
+          top: 20,
+          zIndex: 1000,
+          px: 2,
         }}
       >
-        <SearchBar
-          useGoogleAutocomplete={true}
-          onPlaceSelected={handlePlaceSelected}
-        />
+        <Box
+          sx={{
+            width: "100%",
+            maxWidth: 500,
+            bgcolor: "rgba(255, 255, 255, 0.98)",
+            borderRadius: 2,
+            p: 1.5,
+            boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
+            backdropFilter: "blur(10px)",
+          }}
+        >
+          <SearchBar
+            useGoogleAutocomplete={true}
+            onPlaceSelected={handlePlaceSelected}
+            onSettingsClick={toggleSettings}
+          />
+        </Box>
       </Box>
       {currentPosition && (
         <GoogleMap
@@ -182,7 +175,6 @@ const MapViewDesktop = () => {
             gestureHandling: "greedy",
             draggableCursor: "default",
             draggingCursor: "grab",
-            clickableIcons: false,
             streetViewControl: false,
             fullscreenControl: false,
             disableDefaultUI: true,

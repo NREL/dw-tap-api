@@ -1,6 +1,6 @@
 import { useMediaQuery } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import LayoutDesktop from "./LayoutDesktop";
+import { LayoutDesktop } from "./desktop-view";
 import { LayoutMobile } from "./mobile-view";
 
 const Layout = () => {

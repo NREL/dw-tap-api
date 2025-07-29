@@ -104,7 +104,6 @@ function SideBar({
               </IconButton>
             </ListItemButton>
           ))}
-          <Divider />
 
           {/* Recent Searches */}
           <ListItemButton>
@@ -151,17 +150,17 @@ SideBar.propTypes = {
   setLocation: PropTypes.func.isRequired,
   savedLocations: PropTypes.arrayOf(
     PropTypes.shape({
+      name: PropTypes.string.isRequired,
       lat: PropTypes.number.isRequired,
       lng: PropTypes.number.isRequired,
-      name: PropTypes.string.isRequired,
     })
   ).isRequired,
   deleteSavedLocation: PropTypes.func.isRequired,
   recentSearches: PropTypes.arrayOf(
     PropTypes.shape({
+      name: PropTypes.string.isRequired,
       lat: PropTypes.number.isRequired,
       lng: PropTypes.number.isRequired,
-      name: PropTypes.string.isRequired,
     })
   ).isRequired,
   deleteRecentLocation: PropTypes.func.isRequired,

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import {
   Paper,
   Typography,
@@ -11,10 +11,10 @@ import {
 } from "@mui/material";
 import { InfoOutlined } from "@mui/icons-material";
 import { getWindResource, getOutOfBoundsMessage } from "../../utils";
-import { useWindData } from "../../hooks/useWindData";
+import { useWindData } from "../../hooks";
 import OutOfBoundsWarning from "../shared/OutOfBoundsWarning";
 
-const WindResourceCard = () => {
+const WindResourceCard = memo(() => {
   const [expanded, setExpanded] = useState(false);
   const {
     windData,
@@ -229,6 +229,6 @@ const WindResourceCard = () => {
       )}
     </Paper>
   );
-};
+});
 
 export default WindResourceCard;

@@ -1,7 +1,7 @@
 import { Box, Modal, Typography, IconButton } from "@mui/material";
 import { Close } from "@mui/icons-material";
 import { UnitsSettings } from "./UnitsSettings";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { SettingsContext } from "../../providers/SettingsContext";
 // import { ModelSettings } from "./ModelSettings";
 import { PowerCurveSettings } from "./PowerCurveSettings";
@@ -9,6 +9,11 @@ import { HubHeightSettings } from "./HubHeightSettings";
 
 const Settings = () => {
   const { settingsOpen, toggleSettings } = useContext(SettingsContext);
+  const [hasScrolled, setHasScrolled] = useState(false);
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    setHasScrolled(e.currentTarget.scrollTop > 0);
+  };
 
   return (
     <Modal
@@ -26,33 +31,60 @@ const Settings = () => {
           transform: "translate(-50%, -50%)",
           width: 400,
           bgcolor: "background.paper",
-          p: 4,
           maxHeight: "80vh",
-          overflowY: "auto",
+          display: "flex",
+          flexDirection: "column",
+          borderRadius: 2,
+          overflow: "hidden",
         }}
       >
-        <IconButton
-          aria-label="close"
-          onClick={toggleSettings}
+        {/* Sticky Header */}
+        <Box
           sx={{
-            position: "absolute",
-            right: 8,
-            top: 8,
+            position: "sticky",
+            top: 0,
+            bgcolor: "background.paper",
+            p: 3,
+            pb: 2,
+            borderBottom: hasScrolled
+              ? "1px solid rgba(0,0,0,0.12)"
+              : "1px solid transparent",
+            boxShadow: hasScrolled ? "0 2px 8px rgba(0,0,0,0.1)" : "none",
+            transition: "all 0.2s ease",
+            zIndex: 1,
           }}
         >
-          <Close />
-        </IconButton>
-        <Typography id="settings-modal-title" variant="h5" component="h2">
-          Settings
-        </Typography>
+          <IconButton
+            aria-label="close"
+            onClick={toggleSettings}
+            sx={{
+              position: "absolute",
+              right: 8,
+              top: 8,
+            }}
+          >
+            <Close />
+          </IconButton>
+          <Typography id="settings-modal-title" variant="h5" component="h2">
+            Settings
+          </Typography>
+        </Box>
 
-        <HubHeightSettings />
-
-        <PowerCurveSettings />
-
-        <UnitsSettings />
-
-        {/* <ModelSettings /> */}
+        {/* Scrollable Content */}
+        <Box
+          sx={{
+            flex: 1,
+            overflowY: "auto",
+            p: 3,
+            pt: 1,
+          }}
+          onScroll={handleScroll}
+        >
+          <HubHeightSettings />
+          <PowerCurveSettings />
+          <UnitsSettings />
+          {/* <ModelSettings /> */}
+        </Box>
       </Box>
     </Modal>
   );

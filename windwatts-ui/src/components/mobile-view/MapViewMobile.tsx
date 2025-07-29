@@ -1,10 +1,4 @@
-import {
-  GoogleMap,
-  InfoWindow,
-  Libraries,
-  Marker,
-  useJsApiLoader,
-} from "@react-google-maps/api";
+import { GoogleMap, InfoWindow, Marker } from "@react-google-maps/api";
 import {
   useCallback,
   useContext,
@@ -18,8 +12,7 @@ import { SettingsContext } from "../../providers/SettingsContext";
 import { isOutOfBounds, getOutOfBoundsMessage } from "../../utils";
 import OutOfBoundsWarning from "../shared/OutOfBoundsWarning";
 import { useMobileBottomSheet } from "../../providers/MobileBottomSheetProvider";
-
-const libraries = ["places", "marker"];
+import { useGoogleMaps } from "../../hooks";
 
 const MapViewMobile = () => {
   const { currentPosition, setCurrentPosition, preferredModel } =
@@ -47,10 +40,7 @@ const MapViewMobile = () => {
   }, [currentPosition, outOfBounds]);
 
   // Load Google Maps API
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: import.meta.env.VITE_MAP_API_KEY,
-    libraries: libraries as Libraries,
-  });
+  const { isLoaded } = useGoogleMaps();
 
   // Get Device Current Location
   useEffect(() => {

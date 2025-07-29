@@ -1,6 +1,6 @@
 import { useMediaQuery } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import MapViewDesktop from "./MapViewDesktop";
+import { MapViewDesktop } from "./desktop-view";
 import { MapViewMobile } from "./mobile-view";
 
 const MapView = () => {

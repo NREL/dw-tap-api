@@ -1,11 +1,11 @@
-import { useContext } from "react";
+import { useContext, memo } from "react";
 import { Paper, Typography, Skeleton } from "@mui/material";
 import { UnitsContext } from "../../providers/UnitsContext";
 import { convertWindspeed, getOutOfBoundsMessage } from "../../utils";
-import { useWindData } from "../../hooks/useWindData";
+import { useWindData } from "../../hooks";
 import OutOfBoundsWarning from "../shared/OutOfBoundsWarning";
 
-const WindSpeedCard = () => {
+const WindSpeedCard = memo(() => {
   const { units } = useContext(UnitsContext);
   const {
     windData,
@@ -123,6 +123,6 @@ const WindSpeedCard = () => {
       </Typography>
     </Paper>
   );
-};
+});
 
 export default WindSpeedCard;

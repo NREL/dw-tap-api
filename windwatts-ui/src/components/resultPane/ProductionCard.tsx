@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext, useState, memo } from "react";
 import {
   Card,
   CardHeader,
@@ -13,49 +13,32 @@ import {
   Paper,
   Skeleton,
 } from "@mui/material";
-import useSWR from "swr";
-import { SettingsContext } from "../../providers/SettingsContext";
 import { UnitsContext } from "../../providers/UnitsContext";
 import ProductionDataTable from "./ProductionDataTable";
-import { getEnergyProduction } from "../../services/api";
-import {
-  convertOutput,
-  getOutOfBoundsMessage,
-  isOutOfBounds,
-} from "../../utils";
+import { convertOutput, getOutOfBoundsMessage } from "../../utils";
 import { ExpandMore, ExpandLess } from "@mui/icons-material";
 import OutOfBoundsWarning from "../shared/OutOfBoundsWarning";
+import { useProductionData } from "../../hooks";
 
-const ProductionCard = () => {
+const ProductionCard = memo(() => {
   const [expanded, setExpanded] = useState(false);
-  const {
-    currentPosition,
-    hubHeight,
-    powerCurve,
-    preferredModel: dataModel,
-  } = useContext(SettingsContext);
   const { units } = useContext(UnitsContext);
-  const { lat, lng } = currentPosition || {};
-  const outOfBounds =
-    lat && lng && dataModel ? isOutOfBounds(lat, lng, dataModel) : false;
+  const {
+    productionData,
+    isLoading,
+    error,
+    hasData,
+    outOfBounds,
+    dataModel,
+    lat,
+    lng,
+  } = useProductionData();
 
   const title = "Production";
   const subheader = "Estimated annual production potential";
   const details = [
     "Wind energy production can vary significantly from year to year. Understanding both the average resource and its variability is key to setting realistic expectations.",
   ];
-
-  const shouldFetch = lat && lng && hubHeight && powerCurve && dataModel;
-  const {
-    isLoading,
-    data: productionData,
-    error,
-  } = useSWR(
-    shouldFetch
-      ? { lat, lng, hubHeight, powerCurve, dataModel, time_period: "all" }
-      : null,
-    getEnergyProduction
-  );
 
   const handleExpandClick = () => {
     setExpanded(!expanded);
@@ -196,7 +179,7 @@ const ProductionCard = () => {
   }
 
   // No data state
-  if (!productionData) {
+  if (!hasData) {
     return (
       <Card>
         <CardHeader
@@ -400,6 +383,6 @@ const ProductionCard = () => {
       </Collapse>
     </Card>
   );
-};
+});
 
 export default ProductionCard;

@@ -148,12 +148,16 @@ const MobileBottomSheet = forwardRef<
 
       // Only handle swipe up when collapsed, or swipe down when expanded
       if (!isExpanded && deltaY > 50) {
-        e.preventDefault();
-        e.stopPropagation();
+        if (e.cancelable) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
         expandDrawer();
       } else if (isExpanded && deltaY < -50) {
-        e.preventDefault();
-        e.stopPropagation();
+        if (e.cancelable) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
         collapseDrawer();
       }
     };
@@ -164,7 +168,7 @@ const MobileBottomSheet = forwardRef<
     };
 
     document.addEventListener("touchmove", handleTouchMove, { passive: false });
-    document.addEventListener("touchend", handleTouchEnd);
+    document.addEventListener("touchend", handleTouchEnd, { passive: true });
   };
 
   // Handle swipe down when expanded - this should work on the entire drawer
@@ -185,8 +189,10 @@ const MobileBottomSheet = forwardRef<
 
       // Only handle significant downward swipes
       if (deltaY < -50) {
-        e.preventDefault();
-        e.stopPropagation();
+        if (e.cancelable) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
         collapseDrawer();
       }
     };
@@ -197,7 +203,7 @@ const MobileBottomSheet = forwardRef<
     };
 
     document.addEventListener("touchmove", handleTouchMove, { passive: false });
-    document.addEventListener("touchend", handleTouchEnd);
+    document.addEventListener("touchend", handleTouchEnd, { passive: true });
   };
 
   return (
@@ -285,27 +291,26 @@ const MobileBottomSheet = forwardRef<
       </Box>
 
       {/* Content area */}
-      {isExpanded && (
-        <Box
-          data-scrollable="true"
-          sx={{
-            flex: 1,
-            overflow: "auto",
-          }}
-        >
-          {isSearching && searchPredictions.length > 0 ? (
-            <SearchResultsList
-              predictions={searchPredictions}
-              onPredictionClick={handlePredictionClick}
-            />
-          ) : hasSelectedPlace || hasInitialLocation ? (
-            <>
-              <RightPane />
-              <Footer />
-            </>
-          ) : null}
-        </Box>
-      )}
+      <Box
+        data-scrollable="true"
+        sx={{
+          flex: 1,
+          overflow: "auto",
+          display: isExpanded ? "block" : "none",
+        }}
+      >
+        {isSearching && searchPredictions.length > 0 ? (
+          <SearchResultsList
+            predictions={searchPredictions}
+            onPredictionClick={handlePredictionClick}
+          />
+        ) : hasSelectedPlace || hasInitialLocation ? (
+          <>
+            <RightPane />
+            <Footer />
+          </>
+        ) : null}
+      </Box>
     </Box>
   );
 });

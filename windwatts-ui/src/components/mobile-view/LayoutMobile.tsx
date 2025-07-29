@@ -1,6 +1,5 @@
 import { Outlet, Link as RouterLink } from "react-router-dom";
 import { Link, Box, AppBar, Toolbar } from "@mui/material";
-import { useJsApiLoader, Libraries } from "@react-google-maps/api";
 import Settings from "../settings";
 import { useContext } from "react";
 import { SettingsContext } from "../../providers/SettingsContext";
@@ -9,8 +8,7 @@ import {
   MobileBottomSheetProvider,
   useMobileBottomSheet,
 } from "../../providers/MobileBottomSheetProvider";
-
-const libraries = ["places", "marker"];
+import { useGoogleMaps } from "../../hooks/useGoogleMaps";
 
 const LayoutMobileContent = () => {
   const APP_TITLE = import.meta.env.VITE_APP_TITLE || "Wind Watts";
@@ -18,10 +16,7 @@ const LayoutMobileContent = () => {
   const { setBottomSheetRef } = useMobileBottomSheet();
 
   // Load Google Maps API for SearchBar
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: import.meta.env.VITE_MAP_API_KEY,
-    libraries: libraries as Libraries,
-  });
+  const { isLoaded } = useGoogleMaps();
 
   const handlePlaceSelected = (place: google.maps.places.PlaceResult) => {
     const lat = place.geometry?.location?.lat();
