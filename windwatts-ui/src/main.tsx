@@ -4,8 +4,7 @@ import "./index.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Layout from "./components/Layout";
 import MapView from "./components/MapView";
-import SettingsProvider from "./providers/SettingsProvider";
-import UnitsProvider from "./providers/UnitsProvider";
+import AppProviders from "./providers/AppProviders";
 
 const router = createBrowserRouter([
   {
@@ -17,10 +16,8 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <SettingsProvider>
-      <UnitsProvider>
-        <RouterProvider router={router} />
-      </UnitsProvider>
-    </SettingsProvider>
+    <AppProviders>
+      <RouterProvider router={router} />
+    </AppProviders>
   </StrictMode>
 );
