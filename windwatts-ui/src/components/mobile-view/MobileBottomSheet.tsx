@@ -7,18 +7,21 @@ import React, {
 } from "react";
 import { Box, IconButton } from "@mui/material";
 import { Close } from "@mui/icons-material";
-import RightPane from "../resultPane/RightPane";
+import { RightPane } from "../resultPane/RightPane";
 import { Footer } from "nrel-branding-react";
 import { SearchResultsList, MobileSearchBar } from "./components";
-import { MobileSearchBarRef } from "./components";
-import { MobileBottomSheetProps, MobileBottomSheetRef } from "./types";
+import {
+  MobileBottomSheetProps,
+  MobileBottomSheetRef,
+  MobileSearchBarRef,
+} from "./types";
 import {
   MOBILE_BOTTOM_SHEET_HEIGHT,
   MOBILE_BOTTOM_SHEET_COLLAPSED_HEIGHT,
   FLAG_RESET_DELAY,
 } from "../../constants";
 
-const MobileBottomSheet = forwardRef<
+export const MobileBottomSheet = forwardRef<
   MobileBottomSheetRef,
   MobileBottomSheetProps
 >(({ isLoaded, onPlaceSelected }, ref) => {
@@ -318,5 +321,3 @@ const MobileBottomSheet = forwardRef<
 });
 
 MobileBottomSheet.displayName = "MobileBottomSheet";
-
-export default MobileBottomSheet;

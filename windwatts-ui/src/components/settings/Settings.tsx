@@ -11,7 +11,7 @@ import {
   SETTINGS_MODAL_MAX_HEIGHT,
 } from "../../constants";
 
-const Settings = () => {
+export const Settings = () => {
   const { settingsOpen, toggleSettings } = useContext(SettingsContext);
   const [hasScrolled, setHasScrolled] = useState(false);
 
@@ -93,5 +93,3 @@ const Settings = () => {
     </Modal>
   );
 };
-
-export default Settings;

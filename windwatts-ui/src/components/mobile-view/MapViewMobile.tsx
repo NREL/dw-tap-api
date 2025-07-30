@@ -1,95 +1,27 @@
 import { GoogleMap, InfoWindow, Marker } from "@react-google-maps/api";
-import {
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-  useRef,
-  useMemo,
-} from "react";
+import { useContext } from "react";
 import { Box, Backdrop, CircularProgress } from "@mui/material";
 import { SettingsContext } from "../../providers/SettingsContext";
-import { isOutOfBounds, getOutOfBoundsMessage } from "../../utils";
-import OutOfBoundsWarning from "../shared/OutOfBoundsWarning";
+import { getOutOfBoundsMessage } from "../../utils";
+import { OutOfBoundsWarning } from "../shared";
 import { useMobileBottomSheet } from "../../providers/MobileBottomSheetProvider";
-import { useGoogleMaps } from "../../hooks";
+import { useGeolocation, useOutOfBounds, useMapView } from "../../hooks";
+import { DEFAULT_MAP_CENTER, MOBILE_MAP_ZOOM } from "../../constants";
 
-const MapViewMobile = () => {
-  const { currentPosition, setCurrentPosition, preferredModel } =
-    useContext(SettingsContext);
-  const defaultCenter = useMemo(() => ({ lat: 39.7392, lng: -104.9903 }), []);
-  const [map, setMap] = useState<google.maps.Map | null>(null);
-  const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(
-    null
-  );
+export const MapViewMobile = () => {
+  const { setCurrentPosition } = useContext(SettingsContext);
+  const {
+    outOfBounds,
+    infoWindowOpen,
+    setInfoWindowOpen,
+    currentPosition,
+    preferredModel,
+  } = useOutOfBounds();
+  const { isLoaded, onLoad } = useMapView(currentPosition);
   const { clearSearchInput, expandDrawer } = useMobileBottomSheet();
-  const [infoWindowOpen, setInfoWindowOpen] = useState(false);
-
-  // Out-of-bounds state
-  const outOfBounds =
-    currentPosition && preferredModel
-      ? isOutOfBounds(currentPosition.lat, currentPosition.lng, preferredModel)
-      : false;
-
-  useEffect(() => {
-    if (outOfBounds) {
-      setInfoWindowOpen(true);
-    } else {
-      setInfoWindowOpen(false);
-    }
-  }, [currentPosition, outOfBounds]);
-
-  // Load Google Maps API
-  const { isLoaded } = useGoogleMaps();
 
   // Get Device Current Location
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setCurrentPosition({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          });
-        },
-        (error) => {
-          console.error("Geolocation error:", error);
-          setCurrentPosition(defaultCenter);
-        },
-        { maximumAge: 60000, timeout: 5000, enableHighAccuracy: true }
-      );
-    }
-  }, [defaultCenter, setCurrentPosition]);
-
-  // Updated marker management
-  useEffect(() => {
-    if (isLoaded && map && currentPosition && window.google?.maps?.marker) {
-      // Remove existing marker if there is one
-      if (markerRef.current) {
-        markerRef.current.map = null;
-      }
-
-      // Create new marker
-      const { AdvancedMarkerElement } = window.google.maps.marker;
-      const advancedMarker = new AdvancedMarkerElement({
-        position: currentPosition,
-        map: map,
-        title: "Selected Location",
-      });
-
-      // Save reference to the new marker
-      markerRef.current = advancedMarker;
-    }
-  }, [isLoaded, map, currentPosition]);
-
-  // Clean up marker on unmount
-  useEffect(() => {
-    return () => {
-      if (markerRef.current) {
-        markerRef.current.map = null;
-      }
-    };
-  }, []);
+  useGeolocation();
 
   const handleSetLocation = (location: { lat: number; lng: number }) => {
     setCurrentPosition({
@@ -111,8 +43,6 @@ const MapViewMobile = () => {
     expandDrawer();
   };
 
-  const onLoad = useCallback((map: google.maps.Map) => setMap(map), []);
-
   if (!isLoaded) {
     return (
       <Backdrop
@@ -128,7 +58,7 @@ const MapViewMobile = () => {
     <Box sx={{ height: "100%", width: "100%", position: "relative" }}>
       {currentPosition && (
         <GoogleMap
-          center={currentPosition || defaultCenter}
+          center={currentPosition || DEFAULT_MAP_CENTER}
           mapContainerStyle={{ height: "100%", width: "100%" }}
           onLoad={onLoad}
           onClick={handleMapClick}
@@ -141,7 +71,7 @@ const MapViewMobile = () => {
             streetViewControl: false,
             fullscreenControl: false,
             disableDefaultUI: true,
-            zoom: 12,
+            zoom: MOBILE_MAP_ZOOM,
             zoomControl: true,
             zoomControlOptions: {
               position: window.google.maps.ControlPosition.TOP_RIGHT,
@@ -180,5 +110,3 @@ const MapViewMobile = () => {
     </Box>
   );
 };
-
-export default MapViewMobile;

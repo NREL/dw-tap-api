@@ -1,12 +1,8 @@
 import { UnitsContext, defaultUnitValues } from "./UnitsContext";
-import { StoredUnits } from "../types/Units";
+import { StoredUnits } from "../types";
 import { useLocalStorage } from "../hooks";
 
-export default function UnitsProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export function UnitsProvider({ children }: { children: React.ReactNode }) {
   const [units, setUnits] = useLocalStorage<StoredUnits>(
     "units",
     defaultUnitValues

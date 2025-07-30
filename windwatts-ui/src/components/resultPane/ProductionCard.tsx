@@ -14,13 +14,13 @@ import {
   Skeleton,
 } from "@mui/material";
 import { UnitsContext } from "../../providers/UnitsContext";
-import ProductionDataTable from "./ProductionDataTable";
+import { ProductionDataTable } from "./ProductionDataTable";
 import { convertOutput, getOutOfBoundsMessage } from "../../utils";
 import { ExpandMore, ExpandLess } from "@mui/icons-material";
-import OutOfBoundsWarning from "../shared/OutOfBoundsWarning";
+import { OutOfBoundsWarning } from "../shared";
 import { useProductionData } from "../../hooks";
 
-const ProductionCard = memo(() => {
+export const ProductionCard = memo(() => {
   const [expanded, setExpanded] = useState(false);
   const { units } = useContext(UnitsContext);
   const {
@@ -384,5 +384,3 @@ const ProductionCard = memo(() => {
     </Card>
   );
 });
-
-export default ProductionCard;

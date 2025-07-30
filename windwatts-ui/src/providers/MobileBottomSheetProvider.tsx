@@ -10,6 +10,7 @@ interface MobileBottomSheetContextType {
 const MobileBottomSheetContext =
   createContext<MobileBottomSheetContextType | null>(null);
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useMobileBottomSheet = () => {
   const context = useContext(MobileBottomSheetContext);
   if (!context) {
@@ -49,5 +50,3 @@ export const MobileBottomSheetProvider: React.FC<
     </MobileBottomSheetContext.Provider>
   );
 };
-
-export default MobileBottomSheetProvider;

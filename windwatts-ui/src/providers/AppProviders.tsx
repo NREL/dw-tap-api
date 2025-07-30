@@ -1,6 +1,6 @@
 import React from "react";
-import SettingsProvider from "./SettingsProvider";
-import UnitsProvider from "./UnitsProvider";
+import { SettingsProvider } from "./SettingsProvider";
+import { UnitsProvider } from "./UnitsProvider";
 
 interface AppProvidersProps {
   children: React.ReactNode;
@@ -13,5 +13,3 @@ export const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
     </SettingsProvider>
   );
 };
-
-export default AppProviders;

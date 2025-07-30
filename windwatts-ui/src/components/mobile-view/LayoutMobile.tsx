@@ -1,6 +1,6 @@
 import { Outlet, Link as RouterLink } from "react-router-dom";
 import { Link, Box, AppBar, Toolbar } from "@mui/material";
-import Settings from "../settings";
+import { Settings } from "../settings";
 import { useContext } from "react";
 import { SettingsContext } from "../../providers/SettingsContext";
 import { MobileBottomSheet } from "./";
@@ -83,12 +83,10 @@ const LayoutMobileContent = () => {
   );
 };
 
-const LayoutMobile = () => {
+export const LayoutMobile = () => {
   return (
     <MobileBottomSheetProvider>
       <LayoutMobileContent />
     </MobileBottomSheetProvider>
   );
 };
-
-export default LayoutMobile;

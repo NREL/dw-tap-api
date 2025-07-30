@@ -18,7 +18,7 @@ interface SearchBarProps {
   onSettingsClick?: () => void;
 }
 
-const SearchBar: React.FC<SearchBarProps> = ({
+export const SearchBar: React.FC<SearchBarProps> = ({
   onPlaceSelected,
   useGoogleAutocomplete = false,
   onSettingsClick,
@@ -291,5 +291,3 @@ const SearchBar: React.FC<SearchBarProps> = ({
     </Box>
   );
 };
-
-export default SearchBar;

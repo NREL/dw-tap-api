@@ -8,11 +8,7 @@ import {
 } from "./SettingsContext";
 import { DataModel } from "../types";
 
-export default function SettingsProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export function SettingsProvider({ children }: { children: React.ReactNode }) {
   // Use the useLocalStorage hook to manage settings
   const [settings, setSettings] = useLocalStorage<StoredSettings>(
     "settings",

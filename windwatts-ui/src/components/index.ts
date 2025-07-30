@@ -1,6 +1,6 @@
 // Main components
-export { default as Layout } from "./Layout";
-export { default as MapView } from "./MapView";
+export { Layout } from "./Layout";
+export { MapView } from "./MapView";
 
 // Desktop components - all exported from desktop-view
 export { LayoutDesktop, MapViewDesktop } from "./desktop-view";
@@ -12,4 +12,4 @@ export { LayoutMobile, MapViewMobile } from "./mobile-view";
 export * from "./core";
 
 // Shared components
-export { default as OutOfBoundsWarning } from "./shared/OutOfBoundsWarning";
+export { OutOfBoundsWarning } from "./shared";

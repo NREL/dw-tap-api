@@ -12,9 +12,9 @@ import {
 import { InfoOutlined } from "@mui/icons-material";
 import { getWindResource, getOutOfBoundsMessage } from "../../utils";
 import { useWindData } from "../../hooks";
-import OutOfBoundsWarning from "../shared/OutOfBoundsWarning";
+import { OutOfBoundsWarning } from "../shared";
 
-const WindResourceCard = memo(() => {
+export const WindResourceCard = memo(() => {
   const [expanded, setExpanded] = useState(false);
   const {
     windData,
@@ -230,5 +230,3 @@ const WindResourceCard = memo(() => {
     </Paper>
   );
 });
-
-export default WindResourceCard;

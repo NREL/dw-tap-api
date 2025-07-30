@@ -11,7 +11,7 @@ import {
 import { styled } from "@mui/material/styles";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import SettingsIcon from "@mui/icons-material/Settings";
-import AnalysisResults from "./AnalysisResults";
+import { AnalysisResults } from "./AnalysisResults";
 import { useContext, useState } from "react";
 import { SettingsContext } from "../../providers/SettingsContext";
 import { POWER_CURVE_LABEL } from "../../constants";
@@ -41,7 +41,7 @@ const DATA_MODEL_INFO: Record<
   },
 };
 
-const RightPane = () => {
+export const RightPane = () => {
   const {
     currentPosition,
     hubHeight,
@@ -204,5 +204,3 @@ const RightPane = () => {
     </Box>
   );
 };
-
-export default RightPane;

@@ -9,7 +9,10 @@ import { Search } from "@mui/icons-material";
 import { MobileSearchBarProps, MobileSearchBarRef } from "../types";
 import { SEARCH_MIN_LENGTH } from "../../../constants";
 
-const MobileSearchBar = forwardRef<MobileSearchBarRef, MobileSearchBarProps>(
+export const MobileSearchBar = forwardRef<
+  MobileSearchBarRef,
+  MobileSearchBarProps
+>(
   (
     {
       onSearchPredictions,
@@ -165,5 +168,3 @@ const MobileSearchBar = forwardRef<MobileSearchBarRef, MobileSearchBarProps>(
 );
 
 MobileSearchBar.displayName = "MobileSearchBar";
-
-export default MobileSearchBar;

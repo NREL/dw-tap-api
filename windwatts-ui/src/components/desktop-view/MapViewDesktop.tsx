@@ -1,98 +1,26 @@
 import { GoogleMap, InfoWindow, Marker } from "@react-google-maps/api";
-import {
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-  useRef,
-  useMemo,
-} from "react";
+import { useContext } from "react";
 import { SearchBar } from "../core";
 import { Box, Backdrop, CircularProgress } from "@mui/material";
 import { SettingsContext } from "../../providers/SettingsContext";
-import { isOutOfBounds, getOutOfBoundsMessage } from "../../utils";
-import OutOfBoundsWarning from "../shared/OutOfBoundsWarning";
-import { useGoogleMaps } from "../../hooks";
+import { getOutOfBoundsMessage } from "../../utils";
+import { OutOfBoundsWarning } from "../shared";
+import { useGeolocation, useOutOfBounds, useMapView } from "../../hooks";
+import { DEFAULT_MAP_CENTER, DESKTOP_MAP_ZOOM } from "../../constants";
 
-const MapViewDesktop = () => {
+export const MapViewDesktop = () => {
+  const { toggleSettings, setCurrentPosition } = useContext(SettingsContext);
   const {
+    outOfBounds,
+    infoWindowOpen,
+    setInfoWindowOpen,
     currentPosition,
-    setCurrentPosition,
     preferredModel,
-    toggleSettings,
-  } = useContext(SettingsContext);
-  const defaultCenter = useMemo(() => ({ lat: 39.7392, lng: -104.9903 }), []);
-  const [map, setMap] = useState<google.maps.Map | null>(null);
-  const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(
-    null
-  );
-  const [infoWindowOpen, setInfoWindowOpen] = useState(false);
-
-  // Out-of-bounds state
-  const outOfBounds =
-    currentPosition && preferredModel
-      ? isOutOfBounds(currentPosition.lat, currentPosition.lng, preferredModel)
-      : false;
-
-  useEffect(() => {
-    if (outOfBounds) {
-      setInfoWindowOpen(true);
-    } else {
-      setInfoWindowOpen(false);
-    }
-  }, [currentPosition, outOfBounds]);
-
-  // Load Google Maps API
-  const { isLoaded } = useGoogleMaps();
+  } = useOutOfBounds();
+  const { isLoaded, onLoad } = useMapView(currentPosition);
 
   // Get Device Current Location
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setCurrentPosition({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          });
-        },
-        (error) => {
-          console.error("Geolocation error:", error);
-          setCurrentPosition(defaultCenter);
-        },
-        { maximumAge: 60000, timeout: 5000, enableHighAccuracy: true }
-      );
-    }
-  }, [defaultCenter, setCurrentPosition]);
-
-  // Updated marker management
-  useEffect(() => {
-    if (isLoaded && map && currentPosition && window.google?.maps?.marker) {
-      // Remove existing marker if there is one
-      if (markerRef.current) {
-        markerRef.current.map = null;
-      }
-
-      // Create new marker
-      const { AdvancedMarkerElement } = window.google.maps.marker;
-      const advancedMarker = new AdvancedMarkerElement({
-        position: currentPosition,
-        map: map,
-        title: "Selected Location",
-      });
-
-      // Save reference to the new marker
-      markerRef.current = advancedMarker;
-    }
-  }, [isLoaded, map, currentPosition]);
-
-  // Clean up marker on unmount
-  useEffect(() => {
-    return () => {
-      if (markerRef.current) {
-        markerRef.current.map = null;
-      }
-    };
-  }, []);
+  useGeolocation();
 
   const handlePlaceSelected = (place: google.maps.places.PlaceResult) => {
     const lat = place.geometry?.location?.lat();
@@ -119,8 +47,6 @@ const MapViewDesktop = () => {
       lng,
     });
   };
-
-  const onLoad = useCallback((map: google.maps.Map) => setMap(map), []);
 
   if (!isLoaded) {
     return (
@@ -166,7 +92,7 @@ const MapViewDesktop = () => {
       </Box>
       {currentPosition && (
         <GoogleMap
-          center={currentPosition || defaultCenter}
+          center={currentPosition || DEFAULT_MAP_CENTER}
           mapContainerStyle={{ height: "100%", width: "100%" }}
           onLoad={onLoad}
           onClick={handleMapClick}
@@ -178,7 +104,7 @@ const MapViewDesktop = () => {
             streetViewControl: false,
             fullscreenControl: false,
             disableDefaultUI: true,
-            zoom: 8,
+            zoom: DESKTOP_MAP_ZOOM,
             zoomControl: true,
             zoomControlOptions: {
               position: window.google.maps.ControlPosition.TOP_RIGHT,
@@ -217,5 +143,3 @@ const MapViewDesktop = () => {
     </Box>
   );
 };
-
-export default MapViewDesktop;

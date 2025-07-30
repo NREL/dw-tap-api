@@ -2,10 +2,10 @@ import { Box, Typography, List, ListItem, ListItemText } from "@mui/material";
 import { LocationOn } from "@mui/icons-material";
 import { SearchResultsListProps } from "../types";
 
-function SearchResultsList({
+export const SearchResultsList = ({
   predictions,
   onPredictionClick,
-}: SearchResultsListProps) {
+}: SearchResultsListProps) => {
   return (
     <Box>
       <Typography
@@ -94,6 +94,4 @@ function SearchResultsList({
       </List>
     </Box>
   );
-}
-
-export default SearchResultsList;
+};

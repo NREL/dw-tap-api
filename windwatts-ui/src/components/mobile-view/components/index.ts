@@ -1,3 +1,2 @@
-export { default as MobileSearchBar } from "./MobileSearchBar";
-export { default as SearchResultsList } from "./SearchResultsList";
-export type { MobileSearchBarRef } from "../types";
+export { MobileSearchBar } from "./MobileSearchBar";
+export { SearchResultsList } from "./SearchResultsList";
