@@ -6,7 +6,7 @@ import { getOutOfBoundsMessage } from "../../utils";
 import { OutOfBoundsWarning } from "../shared";
 import { useMobileBottomSheet } from "../../providers/MobileBottomSheetProvider";
 import { useGeolocation, useOutOfBounds, useMapView } from "../../hooks";
-import { DEFAULT_MAP_CENTER, MOBILE_MAP_ZOOM } from "../../constants";
+import { DEFAULT_MAP_CENTER } from "../../constants";
 
 export const MapViewMobile = () => {
   const { setCurrentPosition } = useContext(SettingsContext);
@@ -71,7 +71,6 @@ export const MapViewMobile = () => {
             streetViewControl: false,
             fullscreenControl: false,
             disableDefaultUI: true,
-            zoom: MOBILE_MAP_ZOOM,
             zoomControl: true,
             zoomControlOptions: {
               position: window.google.maps.ControlPosition.TOP_RIGHT,

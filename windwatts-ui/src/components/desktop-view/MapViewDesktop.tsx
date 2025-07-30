@@ -6,7 +6,7 @@ import { SettingsContext } from "../../providers/SettingsContext";
 import { getOutOfBoundsMessage } from "../../utils";
 import { OutOfBoundsWarning } from "../shared";
 import { useGeolocation, useOutOfBounds, useMapView } from "../../hooks";
-import { DEFAULT_MAP_CENTER, DESKTOP_MAP_ZOOM } from "../../constants";
+import { DEFAULT_MAP_CENTER } from "../../constants";
 
 export const MapViewDesktop = () => {
   const { toggleSettings, setCurrentPosition } = useContext(SettingsContext);
@@ -104,7 +104,6 @@ export const MapViewDesktop = () => {
             streetViewControl: false,
             fullscreenControl: false,
             disableDefaultUI: true,
-            zoom: DESKTOP_MAP_ZOOM,
             zoomControl: true,
             zoomControlOptions: {
               position: window.google.maps.ControlPosition.TOP_RIGHT,

@@ -13,10 +13,8 @@ export const SETTINGS_MODAL_WIDTH = 400;
 export const SETTINGS_MODAL_MAX_HEIGHT = "80vh";
 
 // Map configuration
-export const DEFAULT_MAP_ZOOM = 12;
 export const DEFAULT_MAP_CENTER = { lat: 39.7392, lng: -104.9903 };
-export const MOBILE_MAP_ZOOM = DEFAULT_MAP_ZOOM;
-export const DESKTOP_MAP_ZOOM = DEFAULT_MAP_ZOOM;
+export const INITIAL_MAP_ZOOM = 12; // Only used for initial zoom, then user controls it
 
 // Breakpoints (should match theme breakpoints)
 export const MOBILE_BREAKPOINT = "sm";
