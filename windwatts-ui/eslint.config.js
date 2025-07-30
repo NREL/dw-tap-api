@@ -5,12 +5,15 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 import { globalIgnores } from "eslint/config";
 import prettier from "eslint-config-prettier";
+import importPlugin from "eslint-plugin-import";
 
 export default tseslint.config(globalIgnores(["dist"]), {
   files: ["**/*.{ts,tsx}"],
   extends: [
     js.configs.recommended,
-    tseslint.configs.recommended,
+    ...tseslint.configs.recommended,
+    importPlugin.flatConfigs.recommended,
+    importPlugin.flatConfigs.typescript,
     reactHooks.configs["recommended-latest"],
     reactRefresh.configs.vite,
     prettier,
@@ -25,5 +28,7 @@ export default tseslint.config(globalIgnores(["dist"]), {
       "warn",
       { allowConstantExport: true },
     ],
+    // Enforce named exports for consistency and maintainability
+    "import/no-default-export": "error",
   },
 });

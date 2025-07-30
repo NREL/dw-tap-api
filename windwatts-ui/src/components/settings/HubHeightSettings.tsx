@@ -1,8 +1,7 @@
 import { useContext, useEffect, useMemo } from "react";
 import { SettingsContext } from "../../providers/SettingsContext";
 import { Box, Slider, Typography } from "@mui/material";
-import { DataModel } from "../../types/Requests";
-import { Heights } from "../../types/Heights";
+import { DataModel, Heights } from "../../types";
 
 const HUB_HEIGHTS: Record<DataModel | "default", Heights> = {
   era5: { values: [30, 40, 50, 60, 80, 100], interpolation: null },

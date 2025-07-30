@@ -2,7 +2,7 @@ import {
   Box,
   Typography,
   Paper,
-  Grid2,
+  Grid,
   Link,
   Collapse,
   Chip,
@@ -11,10 +11,10 @@ import {
 import { styled } from "@mui/material/styles";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import SettingsIcon from "@mui/icons-material/Settings";
-import AnalysisResults from "./AnalysisResults";
+import { AnalysisResults } from "./AnalysisResults";
 import { useContext, useState } from "react";
 import { SettingsContext } from "../../providers/SettingsContext";
-import { POWER_CURVE_LABEL } from "../../constants/powerCurves";
+import { POWER_CURVE_LABEL } from "../../constants";
 
 const Item = styled(Paper)(({ theme }) => ({
   ...theme.typography.body2,
@@ -41,7 +41,7 @@ const DATA_MODEL_INFO: Record<
   },
 };
 
-const RightPane = () => {
+export const RightPane = () => {
   const {
     currentPosition,
     hubHeight,
@@ -119,7 +119,7 @@ const RightPane = () => {
             <InfoOutlinedIcon fontSize="small" sx={{ ml: 0.5 }} />
           </Link>
         </Typography>
-        <Grid2
+        <Grid
           container
           direction="row"
           spacing={1}
@@ -139,7 +139,7 @@ const RightPane = () => {
               </Typography>
             </Item>
           ))}
-        </Grid2>
+        </Grid>
 
         <Button
           variant="outlined"
@@ -204,5 +204,3 @@ const RightPane = () => {
     </Box>
   );
 };
-
-export default RightPane;

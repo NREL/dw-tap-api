@@ -218,7 +218,7 @@ const ProductionDisplay = ({
   );
 };
 
-const ProductionDataTable = ({
+export const ProductionDataTable = ({
   title,
   data,
   timeUnit = "month",
@@ -245,5 +245,3 @@ const ProductionDataTable = ({
     </>
   );
 };
-
-export default ProductionDataTable;
