@@ -10,7 +10,7 @@ import useSWR from "swr";
 import { SettingsContext } from "../../providers/SettingsContext";
 import { useContext } from "react";
 import { getAvailablePowerCurves } from "../../services/api";
-import { POWER_CURVE_LABEL } from "../../constants/powerCurves";
+import { POWER_CURVE_LABEL } from "../../constants";
 
 const NRELPowerCurveOptions = [
   "nrel-reference-2.5kW",

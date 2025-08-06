@@ -1,7 +1,7 @@
 import { Box, Typography, ToggleButton } from "@mui/material";
 import { useContext } from "react";
 import { UnitsContext } from "../../providers/UnitsContext";
-import SettingToggleButtonGroup from "./SettingToggleButtonGroup";
+import { SettingToggleButtonGroup } from "./SettingToggleButtonGroup";
 
 export function UnitsSettings() {
   const { units, updateUnit } = useContext(UnitsContext);
