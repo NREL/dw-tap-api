@@ -31,4 +31,12 @@ export default tseslint.config(globalIgnores(["dist"]), {
     // Enforce named exports for consistency and maintainability
     "import/no-default-export": "error",
   },
+  overrides: [
+    {
+      files: ["vite.config.{ts,js}"],
+      rules: {
+        "import/no-default-export": "off",
+      },
+    },
+  ],
 });
