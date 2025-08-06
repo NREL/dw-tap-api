@@ -7,36 +7,37 @@ import { globalIgnores } from "eslint/config";
 import prettier from "eslint-config-prettier";
 import importPlugin from "eslint-plugin-import";
 
-export default tseslint.config(globalIgnores(["dist"]), {
-  files: ["**/*.{ts,tsx}"],
-  extends: [
-    js.configs.recommended,
-    ...tseslint.configs.recommended,
-    importPlugin.flatConfigs.recommended,
-    importPlugin.flatConfigs.typescript,
-    reactHooks.configs["recommended-latest"],
-    reactRefresh.configs.vite,
-    prettier,
-  ],
-  languageOptions: {
-    ecmaVersion: 2023,
-    globals: globals.browser,
-  },
-  rules: {
-    ...reactHooks.configs.recommended.rules,
-    "react-refresh/only-export-components": [
-      "warn",
-      { allowConstantExport: true },
+export default tseslint.config(
+  globalIgnores(["dist"]),
+  {
+    files: ["**/*.{ts,tsx}"],
+    extends: [
+      js.configs.recommended,
+      ...tseslint.configs.recommended,
+      importPlugin.flatConfigs.recommended,
+      importPlugin.flatConfigs.typescript,
+      reactHooks.configs["recommended-latest"],
+      reactRefresh.configs.vite,
+      prettier,
     ],
-    // Enforce named exports for consistency and maintainability
-    "import/no-default-export": "error",
-  },
-  overrides: [
-    {
-      files: ["vite.config.{ts,js}"],
-      rules: {
-        "import/no-default-export": "off",
-      },
+    languageOptions: {
+      ecmaVersion: 2023,
+      globals: globals.browser,
     },
-  ],
-});
+    rules: {
+      ...reactHooks.configs.recommended.rules,
+      "react-refresh/only-export-components": [
+        "warn",
+        { allowConstantExport: true },
+      ],
+      // Enforce named exports for consistency and maintainability
+      "import/no-default-export": "error",
+    },
+  },
+  {
+    files: ["vite.config.{ts,js}"],
+    rules: {
+      "import/no-default-export": "off",
+    },
+  }
+);

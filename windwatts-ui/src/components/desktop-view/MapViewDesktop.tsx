@@ -98,6 +98,7 @@ export const MapViewDesktop = () => {
           onClick={handleMapClick}
           options={{
             mapId: import.meta.env.VITE_MAP_ID,
+            clickableIcons: false,
             gestureHandling: "greedy",
             draggableCursor: "default",
             draggingCursor: "grab",
