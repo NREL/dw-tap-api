@@ -2,6 +2,7 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, Path, Query
 import re
 import time
+import os
 # commented out the data functions until I can get local athena_config working
 from app.config_manager import ConfigManager
 # from app.data_fetchers.s3_data_fetcher import S3DataFetcher
@@ -11,26 +12,34 @@ from app.data_fetchers.data_fetcher_router import DataFetcherRouter
 # from app.database_manager import DatabaseManager
 
 from app.power_curve.global_power_curve_manager import power_curve_manager
+from app.schemas import (
+    WindSpeedResponse,
+    AvailablePowerCurvesResponse,
+    EnergyProductionResponse,
+)
 
 router = APIRouter()
 
-# Initialize ConfigManager
-config_manager = ConfigManager(
-    secret_arn_env_var="WINDWATTS_DATA_CONFIG_SECRET_ARN",
-    local_config_path="./app/config/windwatts_data_config.json") # replace with YOUR local config path
-athena_config = config_manager.get_config()
-
-# Initialize DataFetchers
-# s3_data_fetcher = S3DataFetcher("WINDWATTS_S3_BUCKET_NAME")
-athena_data_fetcher_era5 = AthenaDataFetcher(athena_config=athena_config, data_type='era5')
-# db_manager = DatabaseManager()
-# db_data_fetcher = DatabaseDataFetcher(db_manager=db_manager)
-
-# # Initialize DataFetcherRouter and register fetchers
+# Create router first, then optionally initialize heavy dependencies unless skipped
 data_fetcher_router = DataFetcherRouter()
-# data_fetcher_router.register_fetcher("database", db_data_fetcher)
-# data_fetcher_router.register_fetcher("s3", s3_data_fetcher)
-data_fetcher_router.register_fetcher("athena_era5", athena_data_fetcher_era5)
+_skip_data_init = os.environ.get("SKIP_DATA_INIT", "0") == "1"
+if not _skip_data_init:
+    # Initialize ConfigManager
+    config_manager = ConfigManager(
+        secret_arn_env_var="WINDWATTS_DATA_CONFIG_SECRET_ARN",
+        local_config_path="./app/config/windwatts_data_config.json")  # replace with YOUR local config path
+    athena_config = config_manager.get_config()
+
+    # Initialize DataFetchers
+    # s3_data_fetcher = S3DataFetcher("WINDWATTS_S3_BUCKET_NAME")
+    athena_data_fetcher_era5 = AthenaDataFetcher(athena_config=athena_config, data_type='era5')
+    # db_manager = DatabaseManager()
+    # db_data_fetcher = DatabaseDataFetcher(db_manager=db_manager)
+
+    # Register fetchers
+    # data_fetcher_router.register_fetcher("database", db_data_fetcher)
+    # data_fetcher_router.register_fetcher("s3", s3_data_fetcher)
+    data_fetcher_router.register_fetcher("athena_era5", athena_data_fetcher_era5)
 
 # Multiple average types for wind speed
 wind_speed_avg_types = ["global", "yearly"]
@@ -110,7 +119,18 @@ def _get_windspeed_core(
         raise HTTPException(status_code=404, detail="Data not found")
     return data
 
-@router.get("/windspeed/{avg_type}", summary="Retrieve wind speed with avg type - era5 data")
+@router.get(
+    "/windspeed/{avg_type}",
+    summary="Retrieve wind speed with avg type - era5 data",
+    response_model=WindSpeedResponse,
+    responses={
+        200: {
+            "description": "Wind speed data retrieved successfully",
+            "model": WindSpeedResponse
+        },
+        500: {"description": "Internal server error"},
+    }
+)
 def get_windspeed_with_avg_type(
     avg_type: str = Path(..., description="Type of average to retrieve."),
     lat: float = Query(..., description="Latitude of the location."),
@@ -120,12 +140,21 @@ def get_windspeed_with_avg_type(
 ):
     try:
         return _get_windspeed_core(lat, lng, height, avg_type, source)
-    except HTTPException as he:
-        raise he
     except Exception:
         raise HTTPException(status_code=500, detail="Internal server error.")
 
-@router.get("/windspeed", summary="Retrieve wind speed with default global avg - era5 data")
+@router.get(
+    "/windspeed",
+    summary="Retrieve wind speed with default global avg - era5 data",
+    response_model=WindSpeedResponse,
+    responses={
+        200: {
+            "description": "Wind speed data retrieved successfully",
+            "model": WindSpeedResponse
+        },
+        500: {"description": "Internal server error"},
+    }
+)
 def get_windspeed(
     lat: float = Query(..., description="Latitude of the location."),
     lng: float = Query(..., description="Longitude of the location."),
@@ -134,12 +163,20 @@ def get_windspeed(
 ):
     try:
         return _get_windspeed_core(lat, lng, height, "global", source)
-    except HTTPException as he:
-        raise he
     except Exception:
         raise HTTPException(status_code=500, detail="Internal server error.")
 
-@router.get("/available-powercurves", summary="Fetch all available power curves")
+@router.get(
+        "/available-powercurves",
+        summary="Fetch all available power curves",
+        response_model=AvailablePowerCurvesResponse,
+        responses={
+        200: {
+            "description": "Available power curves retrieved successfully",
+            "model": AvailablePowerCurvesResponse
+        },
+        500: {"description": "Internal server error"},
+    })
 def fetch_available_powercurves():
     '''
     returns available power curves
@@ -220,7 +257,18 @@ def _get_energy_production_core(
     else:
         raise HTTPException(status_code=400, detail=f"production avg_type must be one of: {production_avg_types} for {data_type} data.")
 
-@router.get("/energy-production/{time_period}", summary="Get yearly and monthly energy production estimate and average windspeed for a location at a height with a selected power curve")
+@router.get(
+        "/energy-production/{time_period}",
+        summary="Get yearly and monthly energy production estimate and average windspeed for a location at a height with a selected power curve",
+        response_model=EnergyProductionResponse,
+        responses={
+            200: {
+                "description": "Energy production data retrieved successfully",
+                "model": EnergyProductionResponse
+            },
+            500: {"description": "Internal server error"},
+        }
+    )
 def energy_production_with_period(
     time_period: str = Path(..., description="Time period for production estimate."),
     lat: float = Query(..., description="Latitude of the location."),
@@ -231,12 +279,21 @@ def energy_production_with_period(
 ):
     try:
         return _get_energy_production_core(lat, lng, height, selected_powercurve, time_period, source)
-    except HTTPException as he:
-        raise he
     except Exception:
         raise HTTPException(status_code=500, detail="Internal server error.")
 
-@router.get("/energy-production", summary="Get global energy production estimate for a location at a height with a selected power curve")
+@router.get(
+    "/energy-production",
+    summary="Get global energy production estimate for a location at a height with a selected power curve",
+    response_model=EnergyProductionResponse,
+    responses={
+        200: {
+            "description": "Energy production data retrieved successfully",
+            "model": EnergyProductionResponse
+        },
+        500: {"description": "Internal server error"},
+    }
+)
 def energy_production(
     lat: float = Query(..., description="Latitude of the location."),
     lng: float = Query(..., description="Longitude of the location."),
@@ -246,7 +303,5 @@ def energy_production(
 ):
     try:
         return _get_energy_production_core(lat, lng, height, selected_powercurve, "all", source)
-    except HTTPException as he:
-        raise he
     except Exception:
         raise HTTPException(status_code=500, detail="Internal server error.")
