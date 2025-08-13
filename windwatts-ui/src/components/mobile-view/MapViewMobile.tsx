@@ -71,10 +71,6 @@ export const MapViewMobile = () => {
             streetViewControl: false,
             fullscreenControl: false,
             disableDefaultUI: true,
-            zoomControl: true,
-            zoomControlOptions: {
-              position: window.google.maps.ControlPosition.TOP_RIGHT,
-            },
           }}
         >
           {outOfBounds && currentPosition && infoWindowOpen && (
