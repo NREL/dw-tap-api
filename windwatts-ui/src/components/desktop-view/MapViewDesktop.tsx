@@ -70,6 +70,8 @@ export const MapViewDesktop = () => {
           top: 20,
           zIndex: 1000,
           px: 2,
+          // Allow clicks to pass through the full-width centering wrapper
+          pointerEvents: "none",
         }}
       >
         <Box
@@ -81,6 +83,8 @@ export const MapViewDesktop = () => {
             p: 1.5,
             boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
             backdropFilter: "blur(10px)",
+            // Re-enable interactions for the actual search bar container
+            pointerEvents: "auto",
           }}
         >
           <SearchBar
