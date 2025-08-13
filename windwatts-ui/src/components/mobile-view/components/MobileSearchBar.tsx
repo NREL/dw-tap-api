@@ -66,7 +66,7 @@ export const MobileSearchBar = forwardRef<
 
       const request = {
         input: inputValue,
-        types: ["geocode"], // Focus on places/addresses
+        types: ["geocode", "establishment"],
       };
 
       const autocompleteService =
