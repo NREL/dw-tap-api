@@ -3,10 +3,12 @@ import {
   Typography,
   Paper,
   Grid,
-  Link,
   Collapse,
   Chip,
   Button,
+  Stack,
+  Divider,
+  Link,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
@@ -15,6 +17,7 @@ import { AnalysisResults } from "./AnalysisResults";
 import { useContext, useState } from "react";
 import { SettingsContext } from "../../providers/SettingsContext";
 import { POWER_CURVE_LABEL } from "../../constants";
+import { DataSourceLinks } from "./DataSourceLinks";
 
 const Item = styled(Paper)(({ theme }) => ({
   ...theme.typography.body2,
@@ -23,31 +26,13 @@ const Item = styled(Paper)(({ theme }) => ({
   color: theme.palette.text.secondary,
 }));
 
-const DATA_MODEL_INFO: Record<
-  string,
-  { label: string; source_href: string; help_href: string }
-> = {
-  era5: {
-    label: "ERA5",
-    source_href:
-      "https://www.ecmwf.int/en/forecasts/dataset/ecmwf-reanalysis-v5",
-    help_href: "https://github.com/NREL/dw-tap-api/blob/master/about/era5.md",
-  },
-  wtk: {
-    label: "NREL's 20-year WTK-LED dataset",
-    source_href:
-      "https://www.energy.gov/eere/wind/articles/new-wind-resource-database-includes-updated-wind-toolkit",
-    help_href: "",
-  },
-};
-
 export const RightPane = () => {
   const {
     currentPosition,
     hubHeight,
     powerCurve,
-    preferredModel: dataModel,
     toggleSettings,
+    preferredModel,
   } = useContext(SettingsContext);
 
   const { lat, lng } = currentPosition ?? {};
@@ -70,8 +55,6 @@ export const RightPane = () => {
     },
   ];
 
-  const dataModelInfo = DATA_MODEL_INFO[dataModel] || DATA_MODEL_INFO.era5;
-
   const [showDisclaimer, setShowDisclaimer] = useState(false);
 
   return (
@@ -90,35 +73,13 @@ export const RightPane = () => {
           flexDirection: "column",
         }}
       >
-        <Typography variant="body1" marginBottom={2} sx={{ lineHeight: 1.7 }}>
-          WindWatts is currently based on&nbsp;
-          <Link
-            href={dataModelInfo.source_href}
-            underline="hover"
-            target="_blank"
-            rel="noopener noreferrer"
-            sx={{ fontWeight: 500 }}
-          >
-            {dataModelInfo.label.toUpperCase()} reanalysis dataset
-          </Link>
-          &nbsp;provided by ECMWF.
-          <br />
-          <Link
-            href={dataModelInfo.help_href}
-            underline="hover"
-            target="_blank"
-            rel="noopener noreferrer"
-            sx={{
-              fontSize: "0.95em",
-              fontWeight: 400,
-              display: "inline-flex",
-              alignItems: "center",
-            }}
-          >
-            Why {dataModelInfo.label.toUpperCase()}?
-            <InfoOutlinedIcon fontSize="small" sx={{ ml: 0.5 }} />
-          </Link>
-        </Typography>
+        {/* Subheader to separate from app header */}
+        <Divider
+          textAlign="center"
+          sx={{ my: 2, fontWeight: 600, color: "text.secondary" }}
+        >
+          Summary Results Based on
+        </Divider>
         <Grid
           container
           direction="row"
@@ -168,16 +129,19 @@ export const RightPane = () => {
 
         <AnalysisResults />
 
-        <Box sx={{ display: "flex", alignItems: "center", mt: 2 }}>
-          <Chip
-            label="Disclaimer"
-            color="info"
-            variant="outlined"
-            sx={{ border: "none", fontSize: "0.95rem" }}
-            onClick={() => setShowDisclaimer((v) => !v)}
-            icon={<InfoOutlinedIcon sx={{ fontSize: "1.1rem" }} />}
-          />
-        </Box>
+        <Stack spacing={1} sx={{ mt: 2 }}>
+          <DataSourceLinks preferredModel={preferredModel} />
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <Chip
+              label="Disclaimer"
+              color="info"
+              variant="outlined"
+              sx={{ border: "none", fontSize: "0.95rem" }}
+              onClick={() => setShowDisclaimer((v) => !v)}
+              icon={<InfoOutlinedIcon sx={{ fontSize: "1.1rem" }} />}
+            />
+          </Box>
+        </Stack>
         <Collapse in={showDisclaimer}>
           <Typography
             variant="body2"

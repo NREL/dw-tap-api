@@ -24,7 +24,7 @@ export const WindSpeedCard = memo(() => {
     lng,
   } = useWindData();
 
-  const title = "Average Wind Speed";
+  const title = "Average Wind Speed *";
   const subheader = "Average wind speed at selected height";
 
   if (outOfBounds) {
