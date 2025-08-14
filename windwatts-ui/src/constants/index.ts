@@ -3,3 +3,4 @@ export * from "./coordinates";
 export * from "./powerCurves";
 export * from "./ui";
 export * from "./dataModelInfo";
+export * from "./hubSettings";

@@ -1,5 +1,5 @@
 import { createContext } from "react";
-import { DataModel } from "../types/Requests";
+import { DataModel } from "../types";
 
 export interface CurrentPosition {
   lat: number;
