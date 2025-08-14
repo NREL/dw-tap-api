@@ -1,6 +1,6 @@
 // Export all types from this directory
+export type { DataModel, DataModelInfo } from "./DataModel";
 export type {
-  DataModel,
   WindspeedByLatLngRequest,
   EnergyProductionRequest,
 } from "./Requests";

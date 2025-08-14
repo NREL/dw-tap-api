@@ -1,5 +1,5 @@
 import { MODEL_COORDINATES_BOUNDS } from "../constants";
-import { DataModel } from "../types/Requests";
+import { DataModel } from "../types";
 
 export const getWindResource = (speed: number) => {
   return speed > 5 ? "High" : speed >= 3 ? "Moderate" : "Low";
