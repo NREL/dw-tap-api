@@ -1,79 +1,98 @@
-import { useState, useEffect } from "react";
-import useToggle from "../hooks/useToggle";
+import { useLocalStorage } from "../hooks";
+import { useMemo, useCallback } from "react";
 import {
   SettingsContext,
   defaultValues,
   CurrentPosition,
   StoredSettings,
 } from "./SettingsContext";
+import { DataModel } from "../types";
 
-function getStoredSettings(): StoredSettings {
-  const storedSettings = localStorage.getItem("settings");
-  const retrievedSettings = storedSettings ? JSON.parse(storedSettings) : {};
-  return {
-    ...defaultValues, // default values
-    ...retrievedSettings, // override with stored values
-  };
-}
-
-export default function SettingsProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const storedSettings = getStoredSettings();
-
-  // setting modal states
-  const [settingsOpen, toggleSettings] = useToggle(storedSettings.settingsOpen);
-
-  // Results modal states
-  const [resultsOpen, toggleResults] = useToggle(storedSettings.resultsOpen);
-
-  // main app inputs
-  const [currentPosition, setCurrentPosition] =
-    useState<CurrentPosition | null>(storedSettings.currentPosition);
-  const [hubHeight, setHubHeight] = useState(storedSettings.hubHeight);
-  const [powerCurve, setPowerCurve] = useState(storedSettings.powerCurve);
-  const [preferredModel, setPreferredModel] = useState(
-    storedSettings.preferredModel
+export function SettingsProvider({ children }: { children: React.ReactNode }) {
+  // Use the useLocalStorage hook to manage settings
+  const [settings, setSettings] = useLocalStorage<StoredSettings>(
+    "settings",
+    defaultValues
   );
 
-  useEffect(() => {
-    const settings = {
-      settingsOpen,
-      resultsOpen,
-      currentPosition,
-      hubHeight,
-      powerCurve,
-      preferredModel,
-    };
-    localStorage.setItem("settings", JSON.stringify(settings));
-  }, [
-    settingsOpen,
-    resultsOpen,
-    currentPosition,
-    hubHeight,
-    powerCurve,
-    preferredModel,
-  ]);
+  // Create setters that update localStorage
+  const setCurrentPosition = useCallback(
+    (position: CurrentPosition | null) => {
+      setSettings((current) => ({ ...current, currentPosition: position }));
+    },
+    [setSettings]
+  );
+
+  const setHubHeight = useCallback(
+    (height: number) => {
+      setSettings((current) => ({ ...current, hubHeight: height }));
+    },
+    [setSettings]
+  );
+
+  const setPowerCurve = useCallback(
+    (curve: string) => {
+      setSettings((current) => ({ ...current, powerCurve: curve }));
+    },
+    [setSettings]
+  );
+
+  const setPreferredModel = useCallback(
+    (model: DataModel) => {
+      setSettings((current) => ({ ...current, preferredModel: model }));
+    },
+    [setSettings]
+  );
+
+  // Toggle functions that update the settings directly
+  const toggleSettings = useCallback(() => {
+    setSettings((current) => ({
+      ...current,
+      settingsOpen: !current.settingsOpen,
+    }));
+  }, [setSettings]);
+
+  const toggleResults = useCallback(() => {
+    setSettings((current) => ({
+      ...current,
+      resultsOpen: !current.resultsOpen,
+    }));
+  }, [setSettings]);
+
+  // Memoize the provider value to prevent unnecessary re-renders
+  const contextValue = useMemo(
+    () => ({
+      settingsOpen: settings.settingsOpen,
+      toggleSettings,
+      resultsOpen: settings.resultsOpen,
+      toggleResults,
+      currentPosition: settings.currentPosition,
+      setCurrentPosition,
+      hubHeight: settings.hubHeight,
+      setHubHeight,
+      powerCurve: settings.powerCurve,
+      setPowerCurve,
+      preferredModel: settings.preferredModel,
+      setPreferredModel,
+    }),
+    [
+      settings.settingsOpen,
+      settings.resultsOpen,
+      settings.currentPosition,
+      settings.hubHeight,
+      settings.powerCurve,
+      settings.preferredModel,
+      toggleSettings,
+      toggleResults,
+      setCurrentPosition,
+      setHubHeight,
+      setPowerCurve,
+      setPreferredModel,
+    ]
+  );
 
   return (
-    <SettingsContext.Provider
-      value={{
-        settingsOpen,
-        toggleSettings,
-        resultsOpen,
-        toggleResults,
-        currentPosition,
-        setCurrentPosition,
-        hubHeight,
-        setHubHeight,
-        powerCurve,
-        setPowerCurve,
-        preferredModel,
-        setPreferredModel,
-      }}
-    >
+    <SettingsContext.Provider value={contextValue}>
       {children}
     </SettingsContext.Provider>
   );

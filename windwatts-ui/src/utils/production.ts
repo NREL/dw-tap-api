@@ -1,4 +1,4 @@
-import { BaseTable } from "../types/Tables";
+import { BaseTable } from "../types";
 
 export const productionConvert2Table = (
   data: Record<string, Record<string, string | number | null>>,

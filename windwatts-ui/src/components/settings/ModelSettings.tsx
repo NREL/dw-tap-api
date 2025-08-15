@@ -1,8 +1,8 @@
 import { Box, ToggleButton, Typography } from "@mui/material";
-import SettingToggleButtonGroup from "./SettingToggleButtonGroup";
+import { SettingToggleButtonGroup } from "./SettingToggleButtonGroup";
 import { useContext } from "react";
 import { SettingsContext } from "../../providers/SettingsContext";
-import { DataModel } from "../../types/Requests";
+import { DataModel } from "../../types";
 
 export function ModelSettings() {
   const { preferredModel, setPreferredModel } = useContext(SettingsContext);

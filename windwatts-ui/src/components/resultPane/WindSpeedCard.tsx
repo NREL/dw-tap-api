@@ -1,11 +1,17 @@
-import { useContext } from "react";
-import { Paper, Typography, Skeleton } from "@mui/material";
+import { useContext, memo } from "react";
+import { Typography } from "@mui/material";
 import { UnitsContext } from "../../providers/UnitsContext";
 import { convertWindspeed, getOutOfBoundsMessage } from "../../utils";
-import { useWindData } from "../../hooks/useWindData";
-import OutOfBoundsWarning from "../shared/OutOfBoundsWarning";
+import { useWindData } from "../../hooks";
+import {
+  OutOfBoundsCard,
+  ErrorCard,
+  LoadingCard,
+  EmptyCard,
+  DataCard,
+} from "../shared/CardStates";
 
-const WindSpeedCard = () => {
+export const WindSpeedCard = memo(() => {
   const { units } = useContext(UnitsContext);
   const {
     windData,
@@ -18,111 +24,37 @@ const WindSpeedCard = () => {
     lng,
   } = useWindData();
 
-  const title = "Average Wind Speed";
+  const title = "Average Wind Speed *";
   const subheader = "Average wind speed at selected height";
 
   if (outOfBounds) {
     return (
-      <Paper
-        sx={{
-          p: 2,
-          minHeight: 100,
-          bgcolor: "warning.light",
-        }}
-      >
-        <OutOfBoundsWarning
-          message={getOutOfBoundsMessage(lat, lng, dataModel)}
-        />
-      </Paper>
+      <OutOfBoundsCard message={getOutOfBoundsMessage(lat, lng, dataModel)} />
     );
   }
 
   if (error) {
-    return (
-      <Paper
-        sx={{
-          p: 2,
-          minHeight: 100,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          bgcolor: "error.light",
-          color: "error.contrastText",
-        }}
-      >
-        <Typography variant="subtitle2" gutterBottom>
-          {title}
-        </Typography>
-        <Typography variant="body2">Error loading data</Typography>
-      </Paper>
-    );
+    return <ErrorCard title={title} />;
   }
 
   if (isLoading) {
-    return (
-      <Paper
-        sx={{
-          p: 2,
-          minHeight: 100,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-        }}
-      >
-        <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-          {title}
-        </Typography>
-        <Skeleton variant="text" width="60%" height={40} />
-        <Skeleton variant="text" width="40%" height={20} />
-      </Paper>
-    );
+    return <LoadingCard title={title} />;
   }
 
   if (!hasData) {
-    return (
-      <Paper
-        sx={{
-          p: 2,
-          minHeight: 100,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          bgcolor: "grey.100",
-        }}
-      >
-        <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-          {title}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          No data available
-        </Typography>
-      </Paper>
-    );
+    return <EmptyCard title={title} />;
   }
 
   const windSpeedData = convertWindspeed(windData.global_avg, units.windspeed);
 
   return (
-    <Paper
-      sx={{
-        p: 2,
-        minHeight: 100,
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-      }}
-    >
-      <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-        {title}
-      </Typography>
+    <DataCard title={title}>
       <Typography variant="h5" color="primary" sx={{ fontWeight: "bold" }}>
         {windSpeedData}
       </Typography>
       <Typography variant="caption" color="text.secondary">
         {subheader}
       </Typography>
-    </Paper>
+    </DataCard>
   );
-};
-
-export default WindSpeedCard;
+});

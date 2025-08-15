@@ -1,7 +1,7 @@
 import { Box, Link, Typography } from "@mui/material";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 
-export default function OutOfBoundsWarning({ message }: { message: string }) {
+export function OutOfBoundsWarning({ message }: { message: string }) {
   return (
     <Box
       sx={{

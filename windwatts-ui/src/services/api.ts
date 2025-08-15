@@ -1,7 +1,4 @@
-import {
-  EnergyProductionRequest,
-  WindspeedByLatLngRequest,
-} from "../types/Requests";
+import { EnergyProductionRequest, WindspeedByLatLngRequest } from "../types";
 
 export const fetchWrapper = async (url: string, options: RequestInit) => {
   const response = await fetch(url, options);
