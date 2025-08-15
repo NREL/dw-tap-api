@@ -111,7 +111,7 @@ export const MapViewDesktop = () => {
             disableDefaultUI: true,
             zoomControl: true,
             zoomControlOptions: {
-              position: window.google.maps.ControlPosition.TOP_RIGHT,
+              position: window.google.maps.ControlPosition.BOTTOM_RIGHT,
             },
           }}
         >
