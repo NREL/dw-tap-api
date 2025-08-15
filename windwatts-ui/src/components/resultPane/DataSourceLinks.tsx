@@ -20,18 +20,18 @@ export const DataSourceLinks = ({
         underline="hover"
       >
         {DATA_MODEL_INFO[preferredModel]?.label || DATA_MODEL_INFO.era5.label}{" "}
-        data
-      </Link>
+        reanalysis data
+      </Link>{" "}
+      &mdash;{" "}
       {DATA_MODEL_INFO[preferredModel]?.help_href && (
         <>
-          {" - "}
           <Link
             href={DATA_MODEL_INFO[preferredModel]!.help_href}
             target="_blank"
             rel="noopener noreferrer"
             underline="hover"
           >
-            learn more
+            Learn more
           </Link>
         </>
       )}
