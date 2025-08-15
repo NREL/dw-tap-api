@@ -36,9 +36,15 @@ import threading
 import queue
 import matplotlib
 matplotlib.use('agg')
+import time
 import os
+import pandas as pd
+import h5pyd
+import sys
+import pickle
 import xarray as xr
 import traceback
+from rex.resource_extraction import MultiYearWindX
 
 from windspeed import *
 from winddirection import *
@@ -73,6 +79,70 @@ if development_mode:
 else:
     host = config["production"]["host"]
     port = config["production"]["port"]
+
+# To cut down overhead, prepare dataframe with time indices
+# if config["hsds"]["endpoint"] == "https://developer.nrel.gov/api/hsds":
+#     # Proceed with credentials for the developer instance of HSDS
+#     hsds_f = h5pyd.File(domain=config["hsds"]["domain"],
+#                         endpoint=config["hsds"]["endpoint"],
+#                         username=config["hsds"]["username"],
+#                         password=config["hsds"]["password"],
+#                         api_key=config["hsds"]["api_key"],
+#                         mode='r')
+# else:
+#     # Assume dedicated HSDS instance that does not need credentials
+#     hsds_f = h5pyd.File(domain=config["hsds"]["domain"],
+#                         endpoint=config["hsds"]["endpoint"],
+#                         mode='r')
+# time_df = time_indices_all(hsds_f)
+# # Value is what converts HDF5 file to numpy array
+# # This operation is a bit slow but saves time down the road, for each request
+# coords_df = hsds_f['coordinates'].value
+
+# To cut down overhead, create/load structures that will be used for all queries
+try:
+    wind_r = MultiYearWindX(config["hsds"]["domain"], hsds=True)
+except OSError:
+    raise InvalidUsage(("Failed to access specified HSDS resource (using MultiYearWindX class)."),
+                       status_code=403)
+
+# Get heights -- either find saved or get the list from HSDS and save to file
+heights_file = "saved/heights.pickle"
+if os.path.exists(heights_file):
+    heights = pickle.load(open(heights_file, 'rb'))
+else:
+    heights = sorted([int(attr.replace("windspeed_", "").rstrip("m")) for attr in list(wind_r) if "windspeed_" in attr])
+
+    # It is important to use binary mode
+    pickle_file = open(heights_file, 'ab')
+    pickle.dump(heights, pickle_file)
+    pickle_file.close()
+
+# Get datasets -- either find saved or get the list from HSDS and save to file
+datasets_file = "saved/datasets.pickle"
+if os.path.exists(datasets_file):
+    datasets = pickle.load(open(datasets_file, 'rb'))
+else:
+    datasets = sorted(list(wind_r))
+
+    # It is important to use binary mode
+    pickle_file = open(datasets_file, 'ab')
+    pickle.dump(datasets, pickle_file)
+    pickle_file.close()
+
+# Get time_index -- either find saved or get the list from HSDS and save to file
+time_index_file = "saved/time_index.pickle"
+if os.path.exists(time_index_file):
+    time_index = pickle.load(open(time_index_file, 'rb'))
+else:
+    time_index = wind_r.time_index
+
+    # It is important to use binary mode
+    pickle_file = open(time_index_file, 'ab')
+    pickle.dump(time_index, pickle_file)
+    pickle_file.close()
+
+print("Done loading/creating: wind_r, heights, datasets, time_index")
 
 app = flask.Flask(__name__)
 app.config["DEBUG"] = False
@@ -127,7 +197,7 @@ def docs_file(filename):
 
 
 # Fully functional route for windspeed
-@app.route('/v1/timeseries/windspeed', methods=['GET'])
+@app.route('/v1/timeseries/windspeed', methods=['GET', 'POST'])
 def v1_ws():
     """
     @api {get} /timeseries/windspeed Request windspeed estimates
@@ -171,30 +241,85 @@ def v1_ws():
     If one of `username`, `password`, and `api_key` is specified, all three
     of these attributes should be specified. Alternatively, if none of these
     is specified, the default values will be use for rate-limited, demo access
+    @apiParam {File} [obstacles] Optional file to be uploaded.
+    This geojson file should have obstacle description for the specific studied site.
+    The file upload needs to happen as part of the `POST` http request,
+    as demonstrated in the [notebook](https://github.com/NREL/dw-tap-api/blob/develop/test/geojson-upload.ipynb).
     """
 
-    print("v1_ws")
+    if request.method == 'POST':
+        if 'obstacles' in request.files.keys():
+            obstacles_file = request.files['obstacles']
+            obstacles_json = obstacles_file.read()
 
     height, lat, lon,\
         start_date, stop_date,\
         spatial_interpolation,\
-        vertical_interpolation = validated_params_windspeed(request)
-    hsds_f = connected_hsds_file(request, config)
+        vertical_interpolation, output = validated_params_windspeed(request)
 
-    finalized_df, debug_info = prepare_windpseed(
-                                   height, lat, lon,
-                                   start_date, stop_date,
-                                   spatial_interpolation,
-                                   vertical_interpolation,
-                                   hsds_f, DEBUG_OUTPUT)
+    if 'perfbench' not in request.args:
+        #hsds_f = connected_hsds_file(request, config)
 
-    if DEBUG_OUTPUT:
-        return "<br>".join(debug_info)
+        finalized_df, debug_info = prepare_windspeed(
+                                       height, lat, lon,
+                                       start_date, stop_date,
+                                       spatial_interpolation,
+                                       vertical_interpolation,
+                                       wind_r, heights, datasets, time_index,
+                                       DEBUG_OUTPUT)
+
+        if DEBUG_OUTPUT:
+            return "<br>".join(debug_info)
+        else:
+            if output == "csv":
+                finalized_df.timestamp = \
+                    pd.to_datetime(finalized_df.timestamp).\
+                    dt.tz_localize("UTC").dt.strftime('%Y-%m-%d %H:%M:%S %Z')
+                finalized_df.windspeed = finalized_df.windspeed.round(2)
+                return finalized_df.set_index("timestamp", drop=True).to_csv(header=False)
+            else:
+                return finalized_df.to_json()
     else:
-        return finalized_df.to_json()
+        # Implementing convenient benchmarking with repetition;
+        # it includes loading/updating/saving dataframe with all bench results
+        perfbench = int(request.args['perfbench'])
+        if 'reps' in request.args:
+            reps = int(request.args['reps'])
+        else:
+            reps = 1
+
+        all_results_dest = "perfbench_results.csv"
+        if os.path.exists(all_results_dest):
+            timing_df = pd.read_csv(all_results_dest)
+        else:
+            timing_df = pd.DataFrame(columns=[
+                "timestamp", "endpoint", "perfbench", "time"])
+
+        for i in range(reps):
+            ts = time.time()
+            hsds_f = connected_hsds_file(request, config)
+
+            finalized_df, debug_info = prepare_windspeed(
+                                           height, lat, lon,
+                                           start_date, stop_date,
+                                           spatial_interpolation,
+                                           vertical_interpolation,
+                                           hsds_f,
+                                           time_df,
+                                           coords_df,
+                                           DEBUG_OUTPUT)
+            te = time.time()
+            print("*** Timed one rep in perfbench, api.py:", te - ts)
+            timing_df.loc[len(timing_df)] = [time.ctime(),
+                                             config["hsds"]["endpoint"],
+                                             perfbench,
+                                             te - ts]
+            timing_df.to_csv(all_results_dest, index=False)
+        return timing_df.to_csv().replace("\n", "<br>")
+
 
 # Fully functional route for winddirection
-@app.route('/v1/timeseries/winddirection', methods=['GET'])
+@app.route('/v1/timeseries/winddirection', methods=['GET', 'POST'])
 def v1_wd():
     """
     @api {get} /timeseries/winddirection Request winddirection estimates
@@ -233,10 +358,17 @@ def v1_wd():
     If one of `username`, `password`, and `api_key` is specified,
     all three of these attributes should be specified. Alternatively,
     if none of these is specified, the default values will be use for
-    rate-limited, demo access
+    rate-limited, demo access.
+    @apiParam {File} [obstacles] Optional file to be uploaded.
+    This geojson file should have obstacle description for the specific studied site.
+    The file upload needs to happen as part of the `POST` http request,
+    as demonstrated in the [notebook](https://github.com/NREL/dw-tap-api/blob/develop/test/geojson-upload.ipynb).
     """
 
-    print("v1_wd")
+    if request.method == 'POST':
+        if 'obstacles' in request.files.keys():
+            obstacles_file = request.files['obstacles']
+            obstacles_json = obstacles_file.read()
 
     height, lat, lon,\
         start_date, stop_date = validated_params_winddirection(request)
@@ -245,7 +377,9 @@ def v1_wd():
     finalized_df, debug_info = prepare_winddirection(
                                    height, lat, lon,
                                    start_date, stop_date,
-                                   hsds_f, DEBUG_OUTPUT)
+                                   hsds_f,
+                                   time_df,
+                                   DEBUG_OUTPUT)
 
     if DEBUG_OUTPUT:
         return "<br>".join(debug_info)
@@ -253,7 +387,7 @@ def v1_wd():
         return finalized_df.to_json()
 
 # Fully functional route for windrose
-@app.route('/v1/windrose', methods=['GET'])
+@app.route('/v1/windrose', methods=['GET', 'POST'])
 @timeit
 def v1_wr():
     """
@@ -301,9 +435,18 @@ vertical_interpolation=linear&spatial_interpolation=idw
     @apiParam {String} [api_key] Optional attribute of the HSDS credentials.
     If one of `username`, `password`, and `api_key` is specified, all three
     of these attributes should be specified. Alternatively, if none of these
-    is specified, the default values will be use for rate-limited, demo access
+    is specified, the default values will be use for rate-limited, demo access.
+    @apiParam {File} [obstacles] Optional file to be uploaded.
+    This geojson file should have obstacle description for the specific studied site.
+    The file upload needs to happen as part of the `POST` http request,
+    as demonstrated in the [notebook](https://github.com/NREL/dw-tap-api/blob/develop/test/geojson-upload.ipynb).
     """
-    print("v1_wr")
+
+    if request.method == 'POST':
+        if 'obstacles' in request.files.keys():
+            obstacles_file = request.files['obstacles']
+            obstacles_json = obstacles_file.read()
+
     hsds_f = connected_hsds_file(request, config)
 
     height, lat, lon, \
@@ -317,15 +460,15 @@ vertical_interpolation=linear&spatial_interpolation=idw
     wd_th = threading.Thread(
         target=lambda q, arglist: q.put(prepare_winddirection(*arglist)),
         args=(wd_que, [height, lat, lon, start_date, stop_date,
-                       hsds_f, DEBUG_OUTPUT]),
+                       hsds_f, time_df, DEBUG_OUTPUT]),
         daemon=True)
     wd_th.start()
 
     ws_th = threading.Thread(
-        target=lambda q, arglist: q.put(prepare_windpseed(*arglist)),
+        target=lambda q, arglist: q.put(prepare_windspeed(*arglist)),
         args=(ws_que, [height, lat, lon, start_date, stop_date,
                        spatial_interpolation, vertical_interpolation,
-                       hsds_f, DEBUG_OUTPUT]),
+                       hsds_f, time_df, coords_df, DEBUG_OUTPUT]),
         daemon=True)
     ws_th.start()
 

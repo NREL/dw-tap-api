@@ -1,16 +1,17 @@
 name: dw-tap-api
 channels:
-- defaults
-- conda-forge
+  - nrel
+  - defaults
 dependencies:
 - python=3.9
 - pip
 - scipy
 - pandas
+- pyproj
 - numpy
 - requests
 - cartopy
-- pyproj
+- nrel-rex
 - pip:
   - h5pyd 
   - flask-cors

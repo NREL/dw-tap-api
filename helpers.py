@@ -9,6 +9,7 @@ related to handling Pandas dataframes.
 import datetime
 from invalid_usage import InvalidUsage
 import numpy as np
+import pandas as pd
 
 
 def heights_below_and_above(all_heights, selected_height):
@@ -35,7 +36,8 @@ def validated_dt(date_str):
     If the string is inappropriate, raise an error with helpful message.
     """
     try:
-        return datetime.datetime.strptime(date_str, '%Y%m%d')
+        #return datetime.datetime.strptime(date_str, '%Y%m%d')
+        return pd.to_datetime(date_str, format='%Y%m%d').tz_localize('UTC')
     except ValueError:
         raise InvalidUsage("Incorrect date format, should be: YYYYMMDD")
 

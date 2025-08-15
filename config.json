@@ -8,15 +8,18 @@
   },
   "development":
   {
-    "__info__": "This config is good for runnin the app natively, without a container",
+    "__info__": "This config is good for running the app natively, without a container",
     "port": 8080,
     "host": "127.0.0.1"
   },
   "hsds_PUBLIC":
   {
-    "__info__": "These credentials are for demo, rate-limited usage.",
+    "__info__": "These credentials (OFFICIAL) are for demo, rate-limited usage.",
+    "endpoint_OFFICIAL": "https://developer.nrel.gov/api/hsds",
+    "endpoint_DEDICATED": "https://tap-hsds.ace.nrel.gov",
     "endpoint": "https://developer.nrel.gov/api/hsds",
-    "domain": "/nrel/wtk-us.h5",
+    "domain_old_not_optimized_for_long_queries": "/nrel/wtk-us.h5",
+    "domain": "/nrel/wtk/conus/wtk_conus_*.h5",
     "username": null,
     "password": null,
     "api_key": "nE4gGfqUYyW6vg2oRg2tggpc9mzYNDkhBS1hgleP"

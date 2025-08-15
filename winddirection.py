@@ -16,7 +16,7 @@ from hsds_helpers import *
 
 
 def prepare_winddirection(height, lat, lon,
-                          start_date, stop_date, hsds_f, debug=False):
+                          start_date, stop_date, hsds_f, time_df, debug=False):
     debug_info = []
     heights = available_heights(hsds_f, prefix="winddirection")
     datasets = available_datasets(hsds_f)
@@ -26,7 +26,7 @@ def prepare_winddirection(height, lat, lon,
                             "of allowed range: [%.2f, %.2f]" %
                             (np.min(heights), np.max(heights))))
 
-    tidx, timestamps = time_indices(hsds_f, start_date, stop_date)
+    tidx, timestamps = time_indices_select(time_df, start_date, stop_date)
 
     if debug:
         debug_info.append("Specified height: %f" % height)
