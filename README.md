@@ -29,6 +29,91 @@ http://localhost:8080/status
 
 ## How To Use
 
+### Local Deployment of New Windwatts App using Docker (Docker required)
+
+#### Prerequisites
+1. **Install and Start Docker**: Ensure Docker is installed and running on your machine.
+2. **AWS Credentials**: Obtain AWS credentials with access to the Windwatts Data package.
+3. **Google Maps API Key**: Create an API key and map ID by following the [Google Maps API Documentation](https://developers.google.com/maps/documentation/javascript).
+
+#### Steps to Deploy Locally
+1. **Clone the repository**: The new Windwatts app is hosted on the development branch
+   ```shell
+   git clone https://github.com/NREL/dw-tap-api.git
+   cd dw-tap-api/
+   git checkout development # Switch to the development branch where the new app resides
+   ```
+
+2. **Configure environment files**:
+   - **Root directory (`dw-tap-api/`)**:
+     - Create or update a `.env` file with the following variables:
+       ```plaintext
+       WINDWATTS_DATA_URL=https://windwatts-era5.s3.us-west-2.amazonaws.com/
+       AWS_ACCESS_KEY_ID="YOUR_AWS_ACCESS_KEY_ID"
+       AWS_SECRET_ACCESS_KEY="YOUR_AWS_SECRET_ACCESS_KEY"
+       AWS_SESSION_TOKEN="YOUR_AWS_SESSION_TOKEN"
+       ```
+       - `WINDWATTS_DATA_URL`: URL for the Windwatts Data package.
+       - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN`: AWS credentials for accessing resources.
+
+   - **Frontend directory (windwatts-ui)**:
+     - Create or update a `.env.development` file:
+       ```plaintext
+       VITE_API_BASE_URL=http://windwatts-proxy:80
+       VITE_MAP_API_KEY=YOUR_MAP_API_KEY
+       VITE_MAP_ID=YOUR_MAP_ID
+       ```
+       - `VITE_API_BASE_URL`: Base URL for the Windwatts API.
+       - `VITE_MAP_API_KEY`, `VITE_MAP_ID`: Google Maps API key and map ID.
+
+   - **Backend directory (windwatts-api)**:
+     - Create or update `windwatts_data_config.json` under `config/`:
+       ```json
+        {
+          "region_name": "us-west-2",
+          "output_location": "S3_BUCKET_URI_FOR_ATHENA_RESULTS",
+          "output_bucket": "NAME_OF_S3_BUCKET_FOR_ATHENA_RESULTS",
+          "database": "NAME_OF_THE_GLUE_DATABASE",
+          "athena_workgroup": "NAME_OF_THE_ATHENA_WORKGROUP",
+          "sources": {
+            "wtk": {
+              "bucket_name": "NAME_OF_THE_WTK_S3_BUCKET",
+              "athena_table_name": "NAME_OF_THE_ATHENA_TABLE_FOR_WTK",
+              "alt_athena_table_name": ""
+            },
+            "era5": {
+              "bucket_name": "NAME_OF_THE_ERA5_S3_BUCKET",
+              "athena_table_name": "NAME_OF_THE_ATHENA_TABLE_FOR_ERA5",
+              "alt_athena_table_name": ""
+            }
+          }
+        }
+       ```
+      - Parameter Description
+          -  **region_name** : AWS region where your S3 buckets and Athena services are hosted.
+          - **output_location** : S3 bucket URI where Athena will store query results (e.g., s3://bucket-name/).
+          - **output_bucket**	: Name of the bucket used above.
+          - **database** : AWS Glue database name in which athena tables are created.
+          - **athena_workgroup** : Name of the Athena workgroup to use for querying.
+          - **sources**.*wtk*	: Configuration specific to WTK-Led Climate dataset.
+          - **sources**.*era5* : Configuration specific to ERA5 dataset.
+          - **athena_table_name**	: Primary Athena table name for the dataset. This table is used for location specific queries.
+          - **alt_athena_table_name** : Optional alternate Athena table name for non-location specific queries.
+
+
+3. **Deploy the app**:
+   - Start Docker containers:
+     ```shell
+     docker compose up --build
+     ```
+   - If needed, clean up previous containers and volumes:
+     ```shell
+     docker compose down --volumes --remove-orphans
+     ```
+
+4. **Access the app**:
+   - Open your browser and navigate to: `http://localhost:5173/`.
+
 ### Deploy as a Container (requires Docker on the host)
 
 Build:
