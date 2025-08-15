@@ -5,3 +5,7 @@ setup:
 
 run:
 	. .venv/bin/activate; gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app
+
+.PHONY: openapi
+openapi:
+	. .venv/bin/activate; PYTHONPATH=. SKIP_DATA_INIT=1 python scripts/generate_openapi.py
