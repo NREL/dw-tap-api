@@ -1,5 +1,5 @@
 import { createContext } from "react";
-import { StoredUnits } from "../types/Units";
+import { StoredUnits } from "../types";
 
 export interface Units {
   units: StoredUnits;

@@ -5,6 +5,7 @@ FROM python:3.13-slim
 ENV PYTHONUNBUFFERED=1
 ENV APP_HOME=/app
 ENV PROJ_LIB=/usr/share/proj
+ENV PYTHONPATH=/app
 
 # Set the working directory
 WORKDIR $APP_HOME
@@ -29,6 +30,9 @@ RUN curl -o /tmp/windwatts_data-${WINDWATTS_DATA_VERSION}-py3-none-any.whl ${WIN
 
 # Copy the FastAPI application
 COPY . .
+
+# Generate OpenAPI spec at build-time
+RUN python scripts/generate_openapi.py || true
 
 # Expose the port
 EXPOSE 8000
