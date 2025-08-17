@@ -1,0 +1,12 @@
+fastapi[standard]
+mangum
+requests
+boto3
+pandas
+scipy
+gunicorn
+sqlalchemy
+psycopg2-binary
+python-dotenv
+pydantic-settings
+alembic

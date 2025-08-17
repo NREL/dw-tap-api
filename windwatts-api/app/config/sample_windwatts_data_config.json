@@ -1,0 +1,10 @@
+{
+  "region_name": "us-east-1",
+  "bucket_name": "sample-bucket",
+  "database": "sample_database",
+  "output_location": "s3://sample-output-location/",
+  "output_bucket": "sample-output-bucket",
+  "athena_table_name": "sample_table",
+  "alt_athena_table_name": "sample_alt_table",
+  "athena_workgroup": "sample_workgroup"
+}

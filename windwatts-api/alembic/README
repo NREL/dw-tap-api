@@ -1,0 +1,7 @@
+Generic single-database configuration.
+
+##### Set up
+
+after installing requirements and running `docker compose up`, run `alembic upgrade head` to load the schema to your local database
+
+will have a makefile command for this eventually
