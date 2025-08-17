@@ -17,6 +17,12 @@ templates/monthly_index.html
 static/plots/*
 static/completed/*
 templates/on_map3.html
+awscodebuild/.aws/
+awscodebuild/imageDetail.json
+misc/.ipynb_checkpoints/
+data.csv.gz
+location_index.csv
+perfbench_results.csv
 .vscode/
 .env
 .env.*

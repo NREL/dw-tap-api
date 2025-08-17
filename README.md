@@ -123,6 +123,11 @@ docker build -t tap-api:latest .
 
 Run:
 ```shell
+docker run -p 8080:80 -it tap-api:latest python proto.py --production
+```
+
+For troubleshooting inside the container, run (and you will have the prompt change and try the following commands inside the container):
+```shell
 docker run -p 8080:80 -it tap-api:latest /bin/bash
 ```
 
