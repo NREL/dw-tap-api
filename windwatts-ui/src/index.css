@@ -3,7 +3,7 @@
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
+  color-scheme: light;
   color: rgba(255, 255, 255, 0.87);
   background-color: #242424;
 
@@ -25,6 +25,30 @@
 #root {
   .nrel-footer-wrapper {
     height: unset;
+
+    footer {
+      .container {
+        padding: 0;
+      }
+
+      .row {
+        display: flex;
+        flex-wrap: wrap !important;
+        align-items: flex-start;
+        margin-left: 0;
+        margin-right: 0;
+      }
+
+      .col-sm-5,
+      .col-sm-7 {
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+      }
+
+      .nrel-footer-logos-container a {
+        height: 95%;
+      }
+    }
   }
 
   /* 
@@ -34,6 +58,11 @@
   @media (min-width: 900px) {
     .right-pane {
       width: 530px;
+    }
+
+    .nrel-footer-wrapper footer .nrel-footer-logos-container {
+      width: 100%;
+      margin-bottom: 32px;
     }
   }
 

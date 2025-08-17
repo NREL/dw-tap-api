@@ -1,4 +1,4 @@
-export type DataModel = "wtk" | "era5";
+import { DataModel } from "./DataModel";
 
 export interface WindspeedByLatLngRequest {
   lat: number;

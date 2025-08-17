@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useMemo } from "react";
 import useSWR from "swr";
 import { SettingsContext } from "../providers/SettingsContext";
 import { getWindspeedByLatLong } from "../services/api";
@@ -15,9 +15,21 @@ export const useWindData = () => {
     lat && lng && dataModel ? isOutOfBounds(lat, lng, dataModel) : false;
   const shouldFetch = lat && lng && hubHeight && dataModel && !outOfBounds;
 
+  // Memoize the SWR key to prevent unnecessary re-renders
+  const swrKey = useMemo(() => {
+    if (!shouldFetch) return null;
+    return JSON.stringify({ lat, lng, hubHeight, dataModel });
+  }, [shouldFetch, lat, lng, hubHeight, dataModel]);
+
   const { isLoading, data, error } = useSWR(
-    shouldFetch ? { lat, lng, hubHeight, dataModel } : null,
-    getWindspeedByLatLong
+    swrKey,
+    () => getWindspeedByLatLong({ lat: lat!, lng: lng!, hubHeight, dataModel }),
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      revalidateIfStale: false,
+      dedupingInterval: 0,
+    }
   );
 
   return {

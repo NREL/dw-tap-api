@@ -1,1 +1,1 @@
-export { default } from "./RightPane";
+export { RightPane } from "./RightPane";
