@@ -2,28 +2,54 @@ from typing import Dict, List, Optional, Union, Literal
 from pydantic import BaseModel, Field
 
 Numeric = Union[int, float]
-ValueMap = Dict[str, Numeric]
-ValueSeries = List[Numeric]
-WindSpeedData = Union[Numeric, ValueMap, ValueSeries]
+AlphaNumeric = Union[str, Numeric]
+AlphaNumericNone = Union[str, Numeric, None]
+ValueMapNumeric = Dict[str, Numeric]
+ValueMapAlphaNumeric = Dict[str, AlphaNumeric]
+ValueMapAlphaNumericNone = Dict[str, AlphaNumericNone]
+ValueMapNumericList = List[ValueMapNumeric]
 
-class WindSpeedResponse(BaseModel):
-    avg_type: Literal["global", "monthly", "yearly", "hourly"]
-    units: str = "m/s"
-    data: WindSpeedData
+# Wind speed response models for different avg_types
+class GlobalWindSpeedResponse(BaseModel):
+    global_avg: float
 
     model_config = {
         "json_schema_extra": {
-            "examples": [
-                {"avg_type": "global", "units": "m/s", "data": 6.2},
-                {
-                    "avg_type": "monthly",
-                    "units": "m/s",
-                    "data": {"Jan": 6.1, "Feb": 6.0, "Mar": 6.3},
-                },
-                {"avg_type": "yearly", "units": "m/s", "data": [6.0, 6.2, 6.3]},
-            ]
+            "example": {"global_avg": 2.1}
         }
     }
+
+class YearlyWindSpeedResponse(BaseModel):
+    yearly_avg: ValueMapNumericList
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "yearly_avg": [
+                    {"year": 2020, "windspeed_100m": 5.23},
+                    {"year": 2021, "windspeed_100m": 5.34}
+                ]
+            }
+        }
+    }
+
+class MonthlyWindSpeedResponse(BaseModel):
+    monthly_avg: ValueMapNumericList
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "monthly_avg": [
+                    {"month": 1, "windspeed_100m": 5.12},
+                    {"month": 2, "windspeed_100m": 5.45},
+                    {"month": 12, "windspeed_100m": 6.10}
+                ]
+            }
+        }
+    }
+
+# Union type for wind speed responses - FastAPI will show all examples
+WindSpeedResponse = Union[GlobalWindSpeedResponse, YearlyWindSpeedResponse, MonthlyWindSpeedResponse]
 
 class AvailablePowerCurvesResponse(BaseModel):
     available_power_curves: List[str]
@@ -39,30 +65,67 @@ class AvailablePowerCurvesResponse(BaseModel):
         }
     }
 
-class EnergyProductionResponse(BaseModel):
-    energy_production: Optional[Numeric] = Field(
-        default=None, description="kWh produced for the summary case"
-    )
-    summary_avg_energy_production: Optional[Dict[str, Dict[str, Numeric]]] = None
-    yearly_avg_energy_production: Optional[Dict[str, Dict[str, Numeric]]] = None
+# Energy production response models for different time_periods
+class SummaryEnergyProductionResponse(BaseModel):
+    energy_production: Numeric = Field(description="global-averaged kWh produced")
 
     model_config = {
         "json_schema_extra": {
-            "examples": [
-                {"energy_production": 12345.67},
-                {
-                    "energy_production": 12345.67,
-                    "summary_avg_energy_production": {
-                        "Average year": {"kWh produced": 12345.67}
-                    },
-                    "yearly_avg_energy_production": {
-                        "2015": {"kWh produced": 1000.0},
-                        "2016": {"kWh produced": 1100.0},
-                    },
-                },
-            ]
+            "example": {"energy_production": 12345.67}
         }
     }
+
+class YearlyEnergyProductionResponse(BaseModel):
+    yearly_avg_energy_production: Dict[str, ValueMapAlphaNumeric]
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "yearly_avg_energy_production": {
+                    "2001": {"Average wind speed (m/s)": "5.65", "kWh produced": 250117},
+                    "2002": {"Average wind speed (m/s)": "5.72", "kWh produced": 264044}
+                }
+            }
+        }
+    }
+
+class AllEnergyProductionResponse(BaseModel):
+    energy_production: Numeric = Field(description="global-averaged kWh produced")
+    summary_avg_energy_production: Dict[str, ValueMapAlphaNumericNone]
+    yearly_avg_energy_production: Dict[str, ValueMapAlphaNumeric]
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "energy_production": 500,
+                "summary_avg_energy_production": {
+                    "Lowest year": {"year": 2015, "Average wind speed (m/s)": "5.36", "kWh produced": 202791},
+                    "Average year": {"year": None, "Average wind speed (m/s)": "5.86", "kWh produced": 267712},
+                    "Highest year": {"year": 2014, "Average wind speed (m/s)": "6.32", "kWh produced": 326354}
+                },
+                "yearly_avg_energy_production": {
+                    "2001": {"Average wind speed (m/s)": "5.65", "kWh produced": 250117}
+                }
+            }
+        }
+    }
+
+class MonthlyEnergyProductionResponse(BaseModel):
+    monthly_avg_energy_production: Dict[str, ValueMapAlphaNumeric]
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "monthly_avg_energy_production": {
+                    "Jan": {"Average wind speed, m/s": "3.80", "kWh produced": "5,934"},
+                    "Feb": {"Average wind speed, m/s": "3.92", "kWh produced": "6,357"}
+                }
+            }
+        }
+    }
+
+# Union type for energy production responses
+EnergyProductionResponse = Union[SummaryEnergyProductionResponse, YearlyEnergyProductionResponse, AllEnergyProductionResponse, MonthlyEnergyProductionResponse]
 
 class HealthCheckResponse(BaseModel):
     status: Literal["up"] = "up"
