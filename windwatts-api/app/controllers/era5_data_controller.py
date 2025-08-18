@@ -244,7 +244,7 @@ def _get_energy_production_core(
         return {"energy_production": summary_avg_energy_production['Average year']['kWh produced']}
     elif time_period == 'yearly':
         yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(df, height, selected_powercurve, data_type)
-        return {yearly_avg_energy_production}
+        return {"yearly_avg_energy_production": yearly_avg_energy_production}
     
     elif time_period == 'all':
         summary_avg_energy_production = power_curve_manager.fetch_avg_energy_production_summary(df, height, selected_powercurve, data_type)
