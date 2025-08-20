@@ -253,7 +253,8 @@ class PowerCurveManager:
 
         # Final formatting
         res_summary = pd.concat([yearly_prod_df.iloc[[0]], res_avg, yearly_prod_df.iloc[[-1]]])
-        res_summary["year"] = res_summary["year"].astype("Int64")
+        # Handle None year for average row - convert to proper None instead of pandas NA
+        res_summary["year"] = res_summary["year"].astype("Int64").where(res_summary["year"].notna(), None)
         res_summary["kWh produced"] = round(res_summary["kWh produced"].astype(float))
         res_summary["Average wind speed (m/s)"] = res_summary["Average wind speed (m/s)"].astype(float).map('{:,.2f}'.format)
 
