@@ -30,11 +30,11 @@ if not _skip_data_init:
         local_config_path="./app/config/windwatts_data_config.json")  # replace with YOUR local config path
     athena_config = config_manager.get_config()
 
-    # Initialize DataFetchers
-    # s3_data_fetcher = S3DataFetcher("WINDWATTS_S3_BUCKET_NAME")
-    athena_data_fetcher_wtk = AthenaDataFetcher(athena_config=athena_config, data_type='wtk')
-    # db_manager = DatabaseManager()
-    # db_data_fetcher = DatabaseDataFetcher(db_manager=db_manager)
+# Initialize DataFetchers
+# s3_data_fetcher = S3DataFetcher("WINDWATTS_S3_BUCKET_NAME")
+athena_data_fetcher_wtk = AthenaDataFetcher(athena_config=athena_config, data_type='wtk', source_key='wtk')
+# db_manager = DatabaseManager()
+# db_data_fetcher = DatabaseDataFetcher(db_manager=db_manager)
 
     # Register fetchers
     # data_fetcher_router.register_fetcher("database", db_data_fetcher)

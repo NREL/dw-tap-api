@@ -300,3 +300,70 @@ class PowerCurveManager:
         res["Average wind speed (m/s)"] = res["Average wind speed (m/s)"].astype(float).map('{:,.2f}'.format)
 
         return res.to_dict(orient="index")
+    
+    def fetch_global_energy_production(self, df: pd.DataFrame, height: int, selected_powercurve: str, data_type: str = "era5_bc") -> dict:
+        """
+        Computes global average energy production from an ERA5-like quantile DataFrame
+        that does not contain a 'year' column.
+
+        Expected input:
+            - df has columns:
+                * 'probability' (ascending in [0,1], may be unsorted in the frame)
+                * f'windspeed_{height}m' (quantile values at those probabilities)
+
+        Method:
+            1) Sort by probability
+            2) Smooth via SWI (CubicSpline on CDF, then invert)
+            3) Compute midpoints between adjacent quantiles
+            4) Convert midpoints to kW via the selected power curve
+            5) Approximate expected annual energy: mean(power) * 8760
+
+        Args:
+            df (pd.DataFrame): ERA5-like quantile dataframe with 'probability' and windspeed columns.
+            height (int): Height in meters (used to select the windspeed column).
+            selected_powercurve (str): Name of the power curve to use.
+            data_type (str): Defaults to 'era5_bc'. Only this path is supported here.
+
+        Returns:
+            dict: {
+                "Average wind speed (m/s)": "<float formatted to 2dp>",
+                "kWh produced": <int rounded>
+            }
+        """
+        if data_type != "era5_bc":
+            raise ValueError(f"Unsupported data_type '{data_type}'. This function expects 'era5_bc' style quantiles (no 'year').")
+
+        ws_col = f"windspeed_{height}m"
+        if "probability" not in df.columns or ws_col not in df.columns:
+            raise KeyError(f"Input df must contain 'probability' and '{ws_col}' columns.")
+
+        # Ensure monotone probabilities
+        g = df.sort_values("probability").reset_index(drop=True)
+
+        # Smooth CDF and invert to a dense, uniform probability grid
+        quantiles_smooth, probs_uniform = self.estimation_quantiles_SWI(
+            g[ws_col].to_numpy(dtype=float),
+            g["probability"].to_numpy(dtype=float)
+        )
+
+        # Midpoint method (approximate integral over the PDF via equal-probability bins)
+        qs = pd.Series(quantiles_smooth, dtype=float)
+        midpoints = (qs.shift(-1) + qs) / 2
+        midpoints = midpoints.iloc[:-1]  # drop last NaN
+
+        # Convert windspeed midpoints to kW using the selected power curve
+        power_curve = self.get_curve(selected_powercurve)
+        kw_values = power_curve.windspeed_to_kw(pd.DataFrame({"ws": midpoints}), "ws")
+
+        # Expected annual energy: average power * hours per year
+        # (equivalently sum(kw)/N * 8760 for N equal-width probability bins)
+        avg_power_kw = float(np.mean(kw_values)) if len(kw_values) else 0.0
+        kwh_annual = avg_power_kw * 8760.0
+
+        # Average wind speed from the same midpoints
+        avg_ws = float(midpoints.mean()) if len(midpoints) else 0.0
+
+        return {
+            "Average wind speed (m/s)": f"{avg_ws:.2f}",
+            "kWh produced": int(round(kwh_annual))
+        }
