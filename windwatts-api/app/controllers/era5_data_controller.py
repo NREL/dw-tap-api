@@ -131,7 +131,7 @@ def _get_windspeed_core(
         "avg_type": avg_type
     }
     data = data_fetcher_router.fetch_data(params, source=source)
-    print(f"Average Winspeed for {source} is: ", data)
+    print(f"Average Windspeed for {source} is: ", data)
     if data is None:
         raise HTTPException(status_code=404, detail="Data not found")
     return data
@@ -276,6 +276,7 @@ def _get_energy_production_core(
     elif source == 'athena_era5_bc':
         if time_period == 'global':
             global_energy_production = power_curve_manager.fetch_global_energy_production(df, height, selected_powercurve, data_type='era5_bc')
+            print(f"EP for {source} is: ",global_energy_production)
             return {
                 "global_energy_production" : global_energy_production["kWh produced"]
             }
@@ -327,7 +328,7 @@ def energy_production(
     source: str = Query(DEFAULT_SOURCE, description="Source of the data.")
 ):
     try:
-        # return _get_energy_production_core(lat, lng, height, selected_powercurve, "all", source)
+        # return _get_energy_production_core(lat, lng, height, selected_powercurve, "global", source)
         return _get_energy_production_core(lat, lng, height, selected_powercurve, "all", source)
     except Exception:
         raise HTTPException(status_code=500, detail="Internal server error.")

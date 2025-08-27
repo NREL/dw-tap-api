@@ -36,10 +36,10 @@ athena_data_fetcher_wtk = AthenaDataFetcher(athena_config=athena_config, data_ty
 # db_manager = DatabaseManager()
 # db_data_fetcher = DatabaseDataFetcher(db_manager=db_manager)
 
-    # Register fetchers
-    # data_fetcher_router.register_fetcher("database", db_data_fetcher)
-    # data_fetcher_router.register_fetcher("s3", s3_data_fetcher)
-    data_fetcher_router.register_fetcher("athena_wtk", athena_data_fetcher_wtk)
+# Register fetchers
+# data_fetcher_router.register_fetcher("database", db_data_fetcher)
+# data_fetcher_router.register_fetcher("s3", s3_data_fetcher)
+data_fetcher_router.register_fetcher("athena_wtk", athena_data_fetcher_wtk)
 
 # Multiple average types for wind speed
 wind_speed_avg_types = ["global", "monthly", "yearly", "hourly"]
