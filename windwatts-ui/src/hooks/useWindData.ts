@@ -9,6 +9,7 @@ export const useWindData = () => {
     currentPosition,
     hubHeight,
     preferredModel: dataModel,
+    biasCorrection,
   } = useContext(SettingsContext);
   const { lat, lng } = currentPosition || {};
   const outOfBounds =
@@ -18,12 +19,19 @@ export const useWindData = () => {
   // Memoize the SWR key to prevent unnecessary re-renders
   const swrKey = useMemo(() => {
     if (!shouldFetch) return null;
-    return JSON.stringify({ lat, lng, hubHeight, dataModel });
-  }, [shouldFetch, lat, lng, hubHeight, dataModel]);
+    return JSON.stringify({ lat, lng, hubHeight, dataModel, biasCorrection });
+  }, [shouldFetch, lat, lng, hubHeight, dataModel, biasCorrection]);
 
   const { isLoading, data, error } = useSWR(
     swrKey,
-    () => getWindspeedByLatLong({ lat: lat!, lng: lng!, hubHeight, dataModel }),
+    () =>
+      getWindspeedByLatLong({
+        lat: lat!,
+        lng: lng!,
+        hubHeight,
+        dataModel,
+        biasCorrection,
+      }),
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
