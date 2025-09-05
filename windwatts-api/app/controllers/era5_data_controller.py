@@ -32,8 +32,8 @@ if not _skip_data_init:
 
 # Initialize DataFetchers
 # s3_data_fetcher = S3DataFetcher("WINDWATTS_S3_BUCKET_NAME")
-athena_data_fetcher_era5 = AthenaDataFetcher(athena_config=athena_config, data_type='era5', source_key='era5')
-athena_data_fetcher_era5_bc = AthenaDataFetcher(athena_config=athena_config, data_type='era5_bc', source_key='era5_bc')
+athena_data_fetcher_era5 = AthenaDataFetcher(athena_config=athena_config, source_key='era5')
+athena_data_fetcher_era5_bc = AthenaDataFetcher(athena_config=athena_config, source_key='era5_bc')
 # db_manager = DatabaseManager()
 # db_data_fetcher = DatabaseDataFetcher(db_manager=db_manager)
 
@@ -44,15 +44,28 @@ data_fetcher_router = DataFetcherRouter()
 data_fetcher_router.register_fetcher("athena_era5", athena_data_fetcher_era5)
 data_fetcher_router.register_fetcher("athena_era5_bc", athena_data_fetcher_era5_bc)
 
-# Multiple average types for wind speed and production for era5 and bias corrected era5
-era5_wind_speed_avg_types = ["global", "yearly"]
-era5_production_avg_types = ["summary", "yearly", "all"]
+# # Multiple average types for wind speed and production for era5 and bias corrected era5
+# era5_wind_speed_avg_types = ["global", "yearly"]
+# era5_production_avg_types = ["summary", "yearly", "all"]
 
-era5_bc_wind_speed_avg_types = ["global"]
-era5_bc_production_avg_types = ["global"]
+# era5_bc_wind_speed_avg_types = ["global"]
+# era5_bc_production_avg_types = ["global"]
+
+# Centralized valid avg types dictionary
+VALID_AVG_TYPES = {
+    "athena_era5": {
+        "wind_speed": ["global", "yearly", "none"],
+        "production": ["global", "summary", "yearly", "all", "none"],
+    },
+    "athena_era5_bc": {
+        "wind_speed": ["global", "none"],
+        "production": ["global", "none"],
+    },
+}
+
 # data_type='era5'
 # data_source = "athena_era5"
-VALID_SOURCES = {"athena_era5", "athena_era5_bc"}  # <-- new
+VALID_SOURCES = ("athena_era5", "athena_era5_bc")  # <-- new
 DEFAULT_SOURCE = "athena_era5"
 
 # Helper validation functions
@@ -72,21 +85,21 @@ def validate_height(height: int) -> int:
     return height
 
 def validate_avg_type(avg_type: str, source: str) -> str:
-    if source == 'athena_era5':
-        if avg_type not in era5_wind_speed_avg_types:
-            raise HTTPException(status_code=400, detail=f"Invalid avg_type. Must be one of: {era5_wind_speed_avg_types}")
-    elif source == "athena_era5_bc":
-        if avg_type not in era5_bc_wind_speed_avg_types:
-            raise HTTPException(status_code=400, detail=f"Invalid avg_type. Must be one of: {era5_bc_wind_speed_avg_types}")
+    allowed = VALID_AVG_TYPES[source]["wind_speed"]
+    if avg_type not in allowed:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid avg_type. Must be one of: {allowed} for {source}."
+        )
     return avg_type
 
 def validate_production_avg_type(avg_type: str, source: str) -> str:
-    if source == 'athena_era5':
-        if avg_type not in era5_production_avg_types:
-            raise HTTPException(status_code=400, detail=f"Invalid time_period. Must be one of: {era5_production_avg_types}")
-    elif source == "athena_era5_bc":
-        if avg_type not in era5_bc_production_avg_types:
-            raise HTTPException(status_code=400, detail=f"Invalid time_period. Must be one of: {era5_bc_production_avg_types}")
+    allowed = VALID_AVG_TYPES[source]["production"]
+    if avg_type not in allowed:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid time_period. Must be one of: {allowed} for {source}."
+        )
     return avg_type
 
 def validate_selected_powercurve(selected_powercurve: str) -> str:
@@ -131,7 +144,6 @@ def _get_windspeed_core(
         "avg_type": avg_type
     }
     data = data_fetcher_router.fetch_data(params, source=source)
-    print(f"Average Windspeed for {source} is: ", data)
     if data is None:
         raise HTTPException(status_code=404, detail="Data not found")
     return data
@@ -255,33 +267,31 @@ def _get_energy_production_core(
     df = data_fetcher_router.fetch_data(params, source=source)
     if df is None:
         raise HTTPException(status_code=404, detail="Data not found")
-    if source == 'athena_era5':
-        if time_period == 'summary':
-            summary_avg_energy_production = power_curve_manager.fetch_avg_energy_production_summary(df, height, selected_powercurve, data_type='era5')
-            return {"energy_production": summary_avg_energy_production['Average year']['kWh produced']}
-        elif time_period == 'yearly':
-            yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(df, height, selected_powercurve, data_type='era5')
-            return {yearly_avg_energy_production}
-        
-        elif time_period == 'all':
-            summary_avg_energy_production = power_curve_manager.fetch_avg_energy_production_summary(df, height, selected_powercurve, data_type='era5')
-            yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(df, height, selected_powercurve, data_type='era5')
-            return {
-                "energy_production": summary_avg_energy_production['Average year']['kWh produced'],
-                "summary_avg_energy_production": summary_avg_energy_production,
-                "yearly_avg_energy_production": yearly_avg_energy_production
-            }
-        else:
-            raise HTTPException(status_code=400, detail=f"production avg_type must be one of: {era5_production_avg_types} for ERA5 data.")
-    elif source == 'athena_era5_bc':
-        if time_period == 'global':
-            global_energy_production = power_curve_manager.fetch_global_energy_production(df, height, selected_powercurve, data_type='era5_bc')
-            print(f"EP for {source} is: ",global_energy_production)
-            return {
-                "global_energy_production" : global_energy_production["kWh produced"]
-            }
-        else:
-            raise HTTPException(status_code=400, detail=f"production avg_type must be one of: {era5_bc_production_avg_types} for ERA5 Bias Corrected data.")
+    
+    if time_period == 'global':
+        summary_avg_energy_production = power_curve_manager.fetch_avg_energy_production_summary(df, height, selected_powercurve)
+        print("Global\n",summary_avg_energy_production['Average year']['kWh produced'])
+        return {"global_energy_production": summary_avg_energy_production['Average year']['kWh produced']}
+    
+    elif time_period == 'summary':
+        summary_avg_energy_production = power_curve_manager.fetch_avg_energy_production_summary(df, height, selected_powercurve)
+        return {"summary_avg_energy_production": summary_avg_energy_production}
+    
+    elif time_period == 'yearly':
+        yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(df, height, selected_powercurve)
+        return {"yearly_avg_energy_production": yearly_avg_energy_production}
+    
+    elif time_period == 'all':
+        summary_avg_energy_production = power_curve_manager.fetch_avg_energy_production_summary(df, height, selected_powercurve)
+        yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(df, height, selected_powercurve)
+        # print("Global\n",summary_avg_energy_production['Average year']['kWh produced'])
+        # print("Summary\n",summary_avg_energy_production)
+        # print("Yearly\n",yearly_avg_energy_production)
+        return {
+            "global_energy_production": summary_avg_energy_production['Average year']['kWh produced'],
+            "summary_avg_energy_production": summary_avg_energy_production,
+            "yearly_avg_energy_production": yearly_avg_energy_production
+        }
 
 @router.get(
         "/energy-production/{time_period}",
@@ -325,10 +335,12 @@ def energy_production(
     lng: float = Query(..., description="Longitude of the location."),
     height: int = Query(..., description="Height in meters."),
     selected_powercurve: str = Query(..., description="Selected power curve name."),
+    time_period: str = Query(..., description="Time period for production estimate."),
     source: str = Query(DEFAULT_SOURCE, description="Source of the data.")
 ):
     try:
-        # return _get_energy_production_core(lat, lng, height, selected_powercurve, "global", source)
-        return _get_energy_production_core(lat, lng, height, selected_powercurve, "all", source)
+        # For era5 -> time_period = all and source = athena_era5
+        # For era5_bc -> time_period = global and source = athena_era5_bc
+        return _get_energy_production_core(lat, lng, height, selected_powercurve, time_period, source)
     except Exception:
         raise HTTPException(status_code=500, detail="Internal server error.")
