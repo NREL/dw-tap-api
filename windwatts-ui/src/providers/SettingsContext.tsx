@@ -13,6 +13,7 @@ export interface StoredSettings {
   hubHeight: number;
   powerCurve: string;
   preferredModel: DataModel;
+  biasCorrection: boolean;
 }
 
 export interface Settings extends StoredSettings {
@@ -22,6 +23,7 @@ export interface Settings extends StoredSettings {
   setHubHeight: (hubHeight: number) => void;
   setPowerCurve: (curve: string) => void;
   setPreferredModel: (preferredModel: DataModel) => void;
+  setBiasCorrection: (biasCorrection: boolean) => void;
 }
 
 export const defaultValues: StoredSettings = {
@@ -31,6 +33,7 @@ export const defaultValues: StoredSettings = {
   hubHeight: 40, // default hub height in meters
   powerCurve: "nrel-reference-100kW", // default power curve
   preferredModel: "era5", // default to era5 model
+  biasCorrection: false,
 };
 
 export const SettingsContext = createContext<Settings>({
@@ -41,4 +44,5 @@ export const SettingsContext = createContext<Settings>({
   setHubHeight: () => {},
   setPowerCurve: () => {},
   setPreferredModel: () => {},
+  setBiasCorrection: () => {},
 });

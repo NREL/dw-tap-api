@@ -1,11 +1,5 @@
-import {
-  Box,
-  FormControl,
-  FormControlLabel,
-  Radio,
-  RadioGroup,
-  Typography,
-} from "@mui/material";
+import { Box, FormControl, Typography, Select, MenuItem } from "@mui/material";
+import { SelectChangeEvent } from "@mui/material/Select";
 import useSWR from "swr";
 import { SettingsContext } from "../../providers/SettingsContext";
 import { useContext } from "react";
@@ -31,10 +25,8 @@ export function PowerCurveSettings() {
 
   const powerCurveOptions: string[] = data?.available_power_curves || [];
 
-  const handlePowerCurveChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setPowerCurve(event.target.value);
+  const handlePowerCurveChange = (event: SelectChangeEvent<string>) => {
+    setPowerCurve(event.target.value as string);
   };
 
   return (
@@ -47,33 +39,30 @@ export function PowerCurveSettings() {
       </Typography>
 
       <FormControl component="fieldset" sx={{ width: "100%" }}>
-        <RadioGroup
-          aria-label="power-curve"
-          name="power-curve"
-          value={powerCurve}
-          onChange={handlePowerCurveChange}
-        >
-          {powerCurveOptions.length > 0 ? (
-            powerCurveOptions.map((option, idx) => (
-              <FormControlLabel
-                key={"power_curve_option_" + idx}
-                value={option}
-                control={
-                  <Radio sx={{ "& .MuiSvgIcon-root": { fontSize: 20 } }} />
-                }
-                label={
-                  <Typography variant="body2">
-                    {POWER_CURVE_LABEL[option] || option}
-                  </Typography>
-                }
-              />
-            ))
-          ) : (
-            <Typography variant="body2">
-              Loading power curve options...
-            </Typography>
-          )}
-        </RadioGroup>
+        {powerCurveOptions.length > 0 ? (
+          <>
+            {/* <InputLabel id="power-curve-label">Power Curve</InputLabel> */}
+            <Select
+              labelId="power-curve-label"
+              id="power-curve-select"
+              value={powerCurve}
+              // label="Power Curve"
+              onChange={handlePowerCurveChange}
+              fullWidth
+              size="small"
+            >
+              {powerCurveOptions.map((option, idx) => (
+                <MenuItem key={"power_curve_option_" + idx} value={option}>
+                  {POWER_CURVE_LABEL[option] || option}
+                </MenuItem>
+              ))}
+            </Select>
+          </>
+        ) : (
+          <Typography variant="body2">
+            Loading power curve options...
+          </Typography>
+        )}
 
         <Typography variant="body2" marginTop={2} gutterBottom>
           * Make sure the selected turbine class matches the hub height (higher

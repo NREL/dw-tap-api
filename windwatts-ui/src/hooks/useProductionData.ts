@@ -10,6 +10,7 @@ export const useProductionData = () => {
     hubHeight,
     powerCurve,
     preferredModel: dataModel,
+    biasCorrection,
   } = useContext(SettingsContext);
   const { lat, lng } = currentPosition || {};
   const outOfBounds =
@@ -27,8 +28,9 @@ export const useProductionData = () => {
       powerCurve,
       dataModel,
       time_period: "all",
+      biasCorrection,
     });
-  }, [shouldFetch, lat, lng, hubHeight, powerCurve, dataModel]);
+  }, [shouldFetch, lat, lng, hubHeight, powerCurve, dataModel, biasCorrection]);
 
   const { isLoading, data, error } = useSWR(
     swrKey,
@@ -40,6 +42,7 @@ export const useProductionData = () => {
         powerCurve,
         dataModel,
         time_period: "all",
+        biasCorrection,
       }),
     {
       revalidateOnFocus: false,

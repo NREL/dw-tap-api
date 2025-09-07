@@ -1,4 +1,13 @@
-import { Box, Modal, Typography, IconButton } from "@mui/material";
+import {
+  Box,
+  Modal,
+  Typography,
+  IconButton,
+  Divider,
+  Paper,
+  FormControlLabel,
+  Switch,
+} from "@mui/material";
 import { Close } from "@mui/icons-material";
 import { UnitsSettings } from "./UnitsSettings";
 import { useContext, useState } from "react";
@@ -12,7 +21,8 @@ import {
 } from "../../constants";
 
 export const Settings = () => {
-  const { settingsOpen, toggleSettings } = useContext(SettingsContext);
+  const { settingsOpen, toggleSettings, biasCorrection, setBiasCorrection } =
+    useContext(SettingsContext);
   const [hasScrolled, setHasScrolled] = useState(false);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -88,6 +98,22 @@ export const Settings = () => {
           <PowerCurveSettings />
           <UnitsSettings />
           {/* <ModelSettings /> */}
+
+          <Divider sx={{ my: 2 }} />
+          <Typography variant="subtitle1" gutterBottom>
+            Experimental
+          </Typography>
+          <Paper sx={{ p: 2 }} variant="outlined">
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={!!biasCorrection}
+                  onChange={(e) => setBiasCorrection(e.target.checked)}
+                />
+              }
+              label="Enable bias correction"
+            />
+          </Paper>
         </Box>
       </Box>
     </Modal>
