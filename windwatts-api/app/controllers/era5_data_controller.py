@@ -65,7 +65,7 @@ VALID_AVG_TYPES = {
 
 # data_type='era5'
 # data_source = "athena_era5"
-VALID_SOURCES = ("athena_era5", "athena_era5_bc")  # <-- new
+VALID_SOURCES = {"athena_era5", "athena_era5_bc"}  # <-- new
 DEFAULT_SOURCE = "athena_era5"
 
 # Helper validation functions
@@ -165,10 +165,14 @@ def get_windspeed_with_avg_type(
     lat: float = Query(..., description="Latitude of the location."),
     lng: float = Query(..., description="Longitude of the location."),
     height: int = Query(..., description="Height in meters."),
+    bias_correction: bool = Query(False, description="If true, use bias-corrected ERA5 (athena_era5_bc)."),
     source: str = Query(DEFAULT_SOURCE, description="Source of the data.")
 ):
     try:
-        return _get_windspeed_core(lat, lng, height, avg_type, source)
+        if bias_correction:
+            return _get_windspeed_core(lat, lng, height, avg_type, source="athena_era5_bc")
+        else:
+            return _get_windspeed_core(lat, lng, height, avg_type, source)
     except Exception:
         raise HTTPException(status_code=500, detail="Internal server error.")
 
@@ -188,10 +192,14 @@ def get_windspeed(
     lat: float = Query(..., description="Latitude of the location."),
     lng: float = Query(..., description="Longitude of the location."),
     height: int = Query(..., description="Height in meters."),
+    bias_correction: bool = Query(False, description="If true, use bias-corrected ERA5 (athena_era5_bc)."),
     source: str = Query(DEFAULT_SOURCE, description="Source of the data.")
 ):
     try:
-        return _get_windspeed_core(lat, lng, height, "global", source)
+        if bias_correction:
+            return _get_windspeed_core(lat, lng, height, "global", source="athena_era5_bc")
+        else:
+            return _get_windspeed_core(lat, lng, height, "global", source)
     except Exception:
         raise HTTPException(status_code=500, detail="Internal server error.")
 
@@ -257,7 +265,7 @@ def _get_energy_production_core(
     selected_powercurve = validate_selected_powercurve(selected_powercurve)
     source = validate_source(source)
     time_period = validate_production_avg_type(time_period, source)
-    
+    print("Inside EP Core\n")
     params = {
         "lat": lat,
         "lng": lng,
@@ -284,9 +292,9 @@ def _get_energy_production_core(
     elif time_period == 'all':
         summary_avg_energy_production = power_curve_manager.fetch_avg_energy_production_summary(df, height, selected_powercurve)
         yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(df, height, selected_powercurve)
-        # print("Global\n",summary_avg_energy_production['Average year']['kWh produced'])
-        # print("Summary\n",summary_avg_energy_production)
-        # print("Yearly\n",yearly_avg_energy_production)
+        print("global_energy_production\n",summary_avg_energy_production['Average year']['kWh produced'])
+        print("summary_avg_energy_production\n", summary_avg_energy_production)
+        print("yearly_avg_energy_production\n",yearly_avg_energy_production)
         return {
             "global_energy_production": summary_avg_energy_production['Average year']['kWh produced'],
             "summary_avg_energy_production": summary_avg_energy_production,
@@ -311,10 +319,14 @@ def energy_production_with_period(
     lng: float = Query(..., description="Longitude of the location."),
     height: int = Query(..., description="Height in meters."),
     selected_powercurve: str = Query(..., description="Selected power curve name."),
+    bias_correction: bool = Query(False, description="If true, use bias-corrected ERA5 (athena_era5_bc)."),
     source: str = Query(DEFAULT_SOURCE, description="Source of the data.")
 ):
     try:
-        return _get_energy_production_core(lat, lng, height, selected_powercurve, time_period, source)
+        if bias_correction:
+            return _get_energy_production_core(lat, lng, height, selected_powercurve, time_period, source="athena_era5_bc")
+        else:
+            return _get_energy_production_core(lat, lng, height, selected_powercurve, time_period, source)
     except Exception:
         raise HTTPException(status_code=500, detail="Internal server error.")
 
@@ -336,11 +348,14 @@ def energy_production(
     height: int = Query(..., description="Height in meters."),
     selected_powercurve: str = Query(..., description="Selected power curve name."),
     time_period: str = Query(..., description="Time period for production estimate."),
+    bias_correction: bool = Query(False, description="If true, use bias-corrected ERA5 (athena_era5_bc)."),
     source: str = Query(DEFAULT_SOURCE, description="Source of the data.")
 ):
     try:
-        # For era5 -> time_period = all and source = athena_era5
-        # For era5_bc -> time_period = global and source = athena_era5_bc
-        return _get_energy_production_core(lat, lng, height, selected_powercurve, time_period, source)
+        if bias_correction:
+            return _get_energy_production_core(lat, lng, height, selected_powercurve, time_period, source="athena_era5_bc")
+            # return _get_energy_production_core(lat, lng, height, selected_powercurve, time_period="global", source="athena_era5_bc")
+        else:
+            return _get_energy_production_core(lat, lng, height, selected_powercurve, time_period, source)
     except Exception:
         raise HTTPException(status_code=500, detail="Internal server error.")

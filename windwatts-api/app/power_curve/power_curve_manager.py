@@ -26,6 +26,32 @@ class PowerCurveManager:
     
     # ---------- NEW: schema detection ----------
     def _classify_schema(self, df: pd.DataFrame) -> DatasetSchema:
+        """
+        Classify the dataset schema based on column patterns.
+
+        This inspects the DataFrame's column names (case-insensitive) to determine
+        what kind of dataset structure it represents. The classification is used
+        later to decide which average types (global, yearly, monthly, hourly) are
+        supported.
+
+        Detection logic:
+        - If the dataset has a ``probability`` column → it's a quantile dataset.
+            - If it also has a ``year`` column → QUANTILES_WITH_YEAR
+            (separate distributions per year).
+            - Otherwise → QUANTILES_GLOBAL
+            (single global quantile distribution, no time(year, month or hour) separation).
+        - If there is no ``probability`` column → assume WTK-style time-series data.
+            - If it has a combined ``mohr`` column (month+hour encoding), or
+            separate ``month`` and ``hour`` columns → TIMESERIES.
+        - Fallback: if none of the expected markers are found, default to
+        TIMESERIES, but subsequent processing may still raise errors if critical
+        columns are missing.
+
+        :param df: Input DataFrame with schema to classify.
+        :type df: pd.DataFrame
+        :return: A DatasetSchema enum value indicating the schema type.
+        :rtype: DatasetSchema
+        """
         cols = set(df.columns.str.lower())  # robust to case
         has_prob = "probability" in cols
         has_year = "year" in cols

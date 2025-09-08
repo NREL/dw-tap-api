@@ -52,7 +52,7 @@ VALID_AVG_TYPES = {
     }
 }
 # data_type = "wtk"
-VALID_SOURCES = ("athena_wtk",)  # <-- new
+VALID_SOURCES = {"athena_wtk"}  # <-- new
 DEFAULT_SOURCE = "athena_wtk"
 
 # Helper validation functions
