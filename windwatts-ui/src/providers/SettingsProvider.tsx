@@ -44,6 +44,13 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     [setSettings]
   );
 
+  const setBiasCorrection = useCallback(
+    (biasCorrection: boolean) => {
+      setSettings((current) => ({ ...current, biasCorrection }));
+    },
+    [setSettings]
+  );
+
   // Toggle functions that update the settings directly
   const toggleSettings = useCallback(() => {
     setSettings((current) => ({
@@ -74,6 +81,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       setPowerCurve,
       preferredModel: settings.preferredModel,
       setPreferredModel,
+      biasCorrection: settings.biasCorrection,
+      setBiasCorrection,
     }),
     [
       settings.settingsOpen,
@@ -82,12 +91,14 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       settings.hubHeight,
       settings.powerCurve,
       settings.preferredModel,
+      settings.biasCorrection,
       toggleSettings,
       toggleResults,
       setCurrentPosition,
       setHubHeight,
       setPowerCurve,
       setPreferredModel,
+      setBiasCorrection,
     ]
   );
 

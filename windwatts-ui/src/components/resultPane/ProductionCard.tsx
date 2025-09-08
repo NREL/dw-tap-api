@@ -19,10 +19,12 @@ import { convertOutput, getOutOfBoundsMessage } from "../../utils";
 import { ExpandMore, ExpandLess } from "@mui/icons-material";
 import { OutOfBoundsWarning } from "../shared";
 import { useProductionData } from "../../hooks";
+import { SettingsContext } from "../../providers/SettingsContext";
 
 export const ProductionCard = memo(() => {
   const [expanded, setExpanded] = useState(false);
   const { units } = useContext(UnitsContext);
+  const { biasCorrection } = useContext(SettingsContext);
   const {
     productionData,
     isLoading,
@@ -35,7 +37,7 @@ export const ProductionCard = memo(() => {
   } = useProductionData();
 
   const title = "Production";
-  const subheader = "Estimated annual production potential";
+  const subheader = `Estimated annual production potential${biasCorrection ? " (not bias corrected)" : ""}`;
   const details = [
     "Wind energy production can vary significantly from year to year. Understanding both the average resource and its variability is key to setting realistic expectations.",
   ];

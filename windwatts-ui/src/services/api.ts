@@ -13,8 +13,9 @@ export const getWindspeedByLatLong = async ({
   lng,
   hubHeight,
   dataModel,
-}: WindspeedByLatLngRequest) => {
-  const url = `/api/${dataModel}/windspeed?lat=${lat}&lng=${lng}&height=${hubHeight}`;
+  biasCorrection,
+}: WindspeedByLatLngRequest & { biasCorrection?: boolean }) => {
+  const url = `/api/${dataModel}/windspeed?lat=${lat}&lng=${lng}&height=${hubHeight}${biasCorrection ? "&bias_correction=true" : ""}`;
   const options = {
     method: "GET",
     headers: {
@@ -32,8 +33,9 @@ export const getEnergyProduction = async ({
   powerCurve,
   dataModel,
   time_period = "all",
-}: EnergyProductionRequest) => {
-  const url = `/api/${dataModel}/energy-production?lat=${lat}&lng=${lng}&height=${hubHeight}&selected_powercurve=${powerCurve}&time_period=${time_period}`;
+  biasCorrection,
+}: EnergyProductionRequest & { biasCorrection?: boolean }) => {
+  const url = `/api/${dataModel}/energy-production?lat=${lat}&lng=${lng}&height=${hubHeight}&selected_powercurve=${powerCurve}&time_period=${time_period}${biasCorrection ? "&bias_correction=true" : ""}`;
   const options = {
     method: "GET",
     headers: {
