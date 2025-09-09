@@ -247,7 +247,6 @@ def _get_energy_production_core(
     time_period: str,
     source: str
 ):
-    
     """
     Fetches the global, yearly and monthly energy production and average windspeed for a given location, height, and power curve.
     Args:
@@ -353,8 +352,7 @@ def energy_production(
 ):
     try:
         if bias_correction:
-            return _get_energy_production_core(lat, lng, height, selected_powercurve, time_period, source="athena_era5_bc")
-            # return _get_energy_production_core(lat, lng, height, selected_powercurve, time_period="global", source="athena_era5_bc")
+            return _get_energy_production_core(lat, lng, height, selected_powercurve, time_period="global", source="athena_era5_bc")
         else:
             return _get_energy_production_core(lat, lng, height, selected_powercurve, time_period, source)
     except Exception:

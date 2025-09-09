@@ -2,7 +2,7 @@ import { memo, useContext } from "react";
 import { Box, Paper, Typography } from "@mui/material";
 import { UnitsContext } from "../../providers/UnitsContext";
 import { SettingsContext } from "../../providers/SettingsContext";
-import { useWindData, useProductionData } from "../../hooks";
+import { useBiasCorrectedTilesData } from "../../hooks";
 import { convertWindspeed, convertOutput, getWindResource } from "../../utils";
 
 // Compact, card-less variant for embedding in the top row
@@ -12,23 +12,16 @@ export const BiasCorrectedTiles = memo(() => {
 
   const {
     windData,
-    isLoading: windLoading,
-    error: windError,
-    hasData: hasWind,
-  } = useWindData();
-
-  const {
     productionData,
-    isLoading: prodLoading,
-    error: prodError,
-    hasData: hasProd,
-  } = useProductionData();
+    isLoading: isTilesLoading,
+    error,
+    hasData,
+  } = useBiasCorrectedTilesData();
 
   if (!biasCorrection) return null;
 
-  const loading = windLoading || prodLoading;
-  const error = windError || prodError;
-  const hasData = hasWind && hasProd;
+  const loading = isTilesLoading;
+  const hasDataCombined = hasData;
   const windResource = getWindResource(windData?.global_avg ?? 0);
 
   const getWindResourceInfo = (resource: string) => {
@@ -69,7 +62,7 @@ export const BiasCorrectedTiles = memo(() => {
     );
   }
 
-  if (error || !hasData) {
+  if (error || !hasDataCombined) {
     return null;
   }
 
@@ -125,11 +118,7 @@ export const BiasCorrectedTiles = memo(() => {
         </Typography>
         <Typography variant="h6" sx={{ fontWeight: 700 }}>
           {convertOutput(
-            Number(
-              productionData?.summary_avg_energy_production?.["Average year"]?.[
-                "kWh produced"
-              ] || 0
-            ),
+            Number(productionData?.energy_production || 0),
             units.output
           ).replace(/\s\w+$/, "")}
         </Typography>
