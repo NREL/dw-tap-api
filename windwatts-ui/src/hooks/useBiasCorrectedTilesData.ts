@@ -34,9 +34,9 @@ export const useBiasCorrectedTilesData = () => {
       hubHeight,
       powerCurve,
       dataModel,
-      biasCorrection: true,
+      biasCorrection,
     });
-  }, [shouldFetch, lat, lng, hubHeight, powerCurve, dataModel]);
+  }, [shouldFetch, lat, lng, hubHeight, powerCurve, dataModel, biasCorrection]);
 
   const { isLoading, data, error } = useSWR(
     swrKey,
@@ -47,7 +47,7 @@ export const useBiasCorrectedTilesData = () => {
           lng: lng!,
           hubHeight,
           dataModel,
-          biasCorrection: true,
+          biasCorrection,
         }),
         getEnergyProduction({
           lat: lat!,
@@ -56,7 +56,7 @@ export const useBiasCorrectedTilesData = () => {
           powerCurve,
           dataModel,
           time_period: "global",
-          biasCorrection: true,
+          biasCorrection,
         }),
       ]);
       return { wind, prod };
