@@ -1,5 +1,5 @@
 import { memo, useContext } from "react";
-import { Box, Paper, Typography } from "@mui/material";
+import { Box, Paper, Typography, Skeleton } from "@mui/material";
 import { UnitsContext } from "../../providers/UnitsContext";
 import { SettingsContext } from "../../providers/SettingsContext";
 import { useBiasCorrectedTilesData } from "../../hooks";
@@ -53,11 +53,28 @@ export const BiasCorrectedTiles = memo(() => {
           gap: 2,
         }}
       >
-        <Paper sx={{ p: 2 }} elevation={2}>
-          <Typography variant="body2" color="text.secondary">
-            Loading…
-          </Typography>
-        </Paper>
+        {[0, 1, 2].map((i) => (
+          <Paper key={i} sx={{ p: 2, textAlign: "center" }} elevation={2}>
+            <Skeleton
+              variant="text"
+              width="40%"
+              height={20}
+              sx={{ mx: "auto" }}
+            />
+            <Skeleton
+              variant="text"
+              width="70%"
+              height={36}
+              sx={{ mx: "auto", mt: 1 }}
+            />
+            <Skeleton
+              variant="text"
+              width="30%"
+              height={16}
+              sx={{ mx: "auto" }}
+            />
+          </Paper>
+        ))}
       </Box>
     );
   }
