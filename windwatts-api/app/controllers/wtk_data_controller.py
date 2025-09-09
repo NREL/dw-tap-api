@@ -251,7 +251,7 @@ def _get_energy_production_core(
     if time_period == 'global':
         summary_avg_energy_production = power_curve_manager.fetch_avg_energy_production_summary(df, height, selected_powercurve)
         print("Global\n",summary_avg_energy_production['Average year']['kWh produced'])
-        return {"global_energy_production": summary_avg_energy_production['Average year']['kWh produced']}
+        return {"energy_production": summary_avg_energy_production['Average year']['kWh produced']}
     
     elif time_period == 'summary':
         summary_avg_energy_production = power_curve_manager.fetch_avg_energy_production_summary(df, height, selected_powercurve)
@@ -265,7 +265,7 @@ def _get_energy_production_core(
         summary_avg_energy_production = power_curve_manager.fetch_avg_energy_production_summary(df, height, selected_powercurve)
         yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(df, height, selected_powercurve)
         return {
-            "global_energy_production": summary_avg_energy_production['Average year']['kWh produced'],
+            "energy_production": summary_avg_energy_production['Average year']['kWh produced'],
             "summary_avg_energy_production": summary_avg_energy_production,
             "yearly_avg_energy_production": yearly_avg_energy_production
         }
