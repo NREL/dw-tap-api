@@ -4,6 +4,7 @@ import { UnitsContext } from "../../providers/UnitsContext";
 import { SettingsContext } from "../../providers/SettingsContext";
 import { useBiasCorrectedTilesData } from "../../hooks";
 import { convertWindspeed, convertOutput, getWindResource } from "../../utils";
+import { KEY_AVERAGE_YEAR, KEY_KWH_PRODUCED } from "../../constants";
 
 // Compact, card-less variant for embedding in the top row
 export const BiasCorrectedTiles = memo(() => {
@@ -135,7 +136,11 @@ export const BiasCorrectedTiles = memo(() => {
         </Typography>
         <Typography variant="h6" sx={{ fontWeight: 700 }}>
           {convertOutput(
-            Number(productionData?.energy_production || 0),
+            Number(
+              productionData?.energy_production?.[
+              KEY_AVERAGE_YEAR
+              ]?.[KEY_KWH_PRODUCED] || 0
+            ),
             units.output
           ).replace(/\s\w+$/, "")}
         </Typography>

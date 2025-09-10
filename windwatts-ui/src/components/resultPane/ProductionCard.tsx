@@ -14,6 +14,12 @@ import {
   Skeleton,
 } from "@mui/material";
 import { UnitsContext } from "../../providers/UnitsContext";
+import {
+  KEY_AVERAGE_YEAR,
+  KEY_HIGHEST_YEAR,
+  KEY_KWH_PRODUCED,
+  KEY_LOWEST_YEAR,
+} from "../../constants";
 import { ProductionDataTable } from "./ProductionDataTable";
 import { convertOutput, getOutOfBoundsMessage } from "../../utils";
 import { ExpandMore, ExpandLess } from "@mui/icons-material";
@@ -214,17 +220,23 @@ export const ProductionCard = memo(() => {
   }
 
   // Data loaded successfully
-  const summaryData = productionData.summary_avg_energy_production;
-  const avgProduction = summaryData?.["Average year"]?.["kWh produced"] || 0;
-  const lowProduction = summaryData?.["Lowest year"]?.["kWh produced"] || 0;
-  const highProduction = summaryData?.["Highest year"]?.["kWh produced"] || 0;
+  const summaryData = productionData?.summary_avg_energy_production;
+  const avgProduction = Number(
+    summaryData?.[KEY_AVERAGE_YEAR]?.[KEY_KWH_PRODUCED] || 0
+  );
+  const lowProduction = Number(
+    summaryData?.[KEY_LOWEST_YEAR]?.[KEY_KWH_PRODUCED] || 0
+  );
+  const highProduction = Number(
+    summaryData?.[KEY_HIGHEST_YEAR]?.[KEY_KWH_PRODUCED] || 0
+  );
 
   // Determine data type and set up variables
   // may need something more robust here if we add more data types
   const monthlyData = "monthly_avg_energy_production" in productionData;
   const tableData = monthlyData
     ? productionData.monthly_avg_energy_production
-    : productionData.yearly_avg_energy_production;
+    : productionData?.yearly_avg_energy_production;
 
   const detailsLabel = monthlyData
     ? "Monthly Production Details"

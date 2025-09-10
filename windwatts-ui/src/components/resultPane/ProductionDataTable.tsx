@@ -11,6 +11,11 @@ import {
 import { useContext } from "react";
 import { UnitsContext } from "../../providers/UnitsContext";
 import { convertOutput, convertWindspeed } from "../../utils";
+import {
+  KEY_AVG_WIND_SPEED,
+  KEY_KWH_PRODUCED,
+  MONTH_NAMES,
+} from "../../constants";
 
 interface ProductionDataTableProps {
   title: string;
@@ -30,20 +35,7 @@ const ProductionDisplay = ({
   // Define order based on time unit
   const timeOrder =
     timeUnit === "month"
-      ? [
-          "Jan",
-          "Feb",
-          "Mar",
-          "Apr",
-          "May",
-          "Jun",
-          "Jul",
-          "Aug",
-          "Sep",
-          "Oct",
-          "Nov",
-          "Dec",
-        ]
+      ? MONTH_NAMES
       : Object.keys(data).sort((a, b) => parseInt(a) - parseInt(b));
 
   const sortedData = timeOrder
@@ -52,7 +44,7 @@ const ProductionDisplay = ({
 
   // Calculate min/max for better wind speed bar scaling
   const windSpeeds = sortedData.map(({ values }) =>
-    Number(values["Average wind speed (m/s)"])
+    Number(values[KEY_AVG_WIND_SPEED])
   );
   const minWindSpeed = Math.min(...windSpeeds);
   const maxWindSpeed = Math.max(...windSpeeds);
@@ -60,7 +52,7 @@ const ProductionDisplay = ({
 
   // Calculate max production for energy bar scaling
   const productions = sortedData.map(({ values }) =>
-    Number(values["kWh produced"])
+    Number(values[KEY_KWH_PRODUCED])
   );
   const maxProduction = Math.max(...productions);
 
@@ -88,8 +80,8 @@ const ProductionDisplay = ({
         </TableHead>
         <TableBody>
           {sortedData.map(({ time, values }) => {
-            const windSpeed = Number(values["Average wind speed (m/s)"]);
-            const production = Number(values["kWh produced"]);
+            const windSpeed = Number(values[KEY_AVG_WIND_SPEED]);
+            const production = Number(values[KEY_KWH_PRODUCED]);
 
             // Min/max scaling: smallest bar = 30%, largest bar = 100%, interpolate between
             const windSpeedPercentage =
