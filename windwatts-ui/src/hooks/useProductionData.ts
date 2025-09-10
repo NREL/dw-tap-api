@@ -3,6 +3,7 @@ import useSWR from "swr";
 import { SettingsContext } from "../providers/SettingsContext";
 import { getEnergyProduction } from "../services/api";
 import { isOutOfBounds } from "../utils";
+import { useLossAdjustedProductionData } from ".";
 
 export const useProductionData = () => {
   const {
@@ -10,6 +11,7 @@ export const useProductionData = () => {
     hubHeight,
     powerCurve,
     preferredModel: dataModel,
+    lossAssumptionFactor,
   } = useContext(SettingsContext);
   const { lat, lng } = currentPosition || {};
   const outOfBounds =
@@ -49,8 +51,13 @@ export const useProductionData = () => {
     }
   );
 
+  const productionDataWithLoss = useLossAdjustedProductionData(
+    data,
+    lossAssumptionFactor
+  );
+
   return {
-    productionData: data,
+    productionData: productionDataWithLoss ?? data,
     isLoading,
     error,
     hasData: !!data,
