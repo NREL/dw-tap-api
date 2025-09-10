@@ -4,7 +4,12 @@ import pandas as pd
 import calendar
 import numpy as np
 from scipy.interpolate import CubicSpline
-import time
+from enum import Enum
+
+class DatasetSchema(Enum):
+    TIMESERIES = "timeseries"                # Any raw time-series data (year/month/hour based, magnitudes not quantiles)
+    QUANTILES_WITH_YEAR = "quantiles_with_year"  # Quantile distributions, separated by year
+    QUANTILES_GLOBAL = "quantiles_global"        # Quantile distribution without year (global)
 
 class PowerCurveManager:
     """
@@ -18,6 +23,51 @@ class PowerCurveManager:
         """
         self.power_curves = {}
         self.load_power_curves(power_curve_dir)
+    
+    # ---------- NEW: schema detection ----------
+    def _classify_schema(self, df: pd.DataFrame) -> DatasetSchema:
+        """
+        Classify the dataset schema based on column patterns.
+
+        This inspects the DataFrame's column names (case-insensitive) to determine
+        what kind of dataset structure it represents. The classification is used
+        later to decide which average types (global, yearly, monthly, hourly) are
+        supported.
+
+        Detection logic:
+        - If the dataset has a ``probability`` column → it's a quantile dataset.
+            - If it also has a ``year`` column → QUANTILES_WITH_YEAR
+            (separate distributions per year).
+            - Otherwise → QUANTILES_GLOBAL
+            (single global quantile distribution, no time(year, month or hour) separation).
+        - If there is no ``probability`` column → assume WTK-style time-series data.
+            - If it has a combined ``mohr`` column (month+hour encoding), or
+            separate ``month`` and ``hour`` columns → TIMESERIES.
+        - Fallback: if none of the expected markers are found, default to
+        TIMESERIES, but subsequent processing may still raise errors if critical
+        columns are missing.
+
+        :param df: Input DataFrame with schema to classify.
+        :type df: pd.DataFrame
+        :return: A DatasetSchema enum value indicating the schema type.
+        :rtype: DatasetSchema
+        """
+        cols = set(df.columns.str.lower())  # robust to case
+        has_prob = "probability" in cols
+        has_year = "year" in cols
+        has_mohr = "mohr" in cols
+        has_month_hour = "month" in cols and "hour" in cols
+
+        if has_prob:
+            if has_year:
+                return DatasetSchema.QUANTILES_WITH_YEAR
+            else:
+                return DatasetSchema.QUANTILES_GLOBAL
+        # No probability column → treat as WTK-like time series
+        if has_mohr or has_month_hour:
+            return DatasetSchema.TIMESERIES
+        # Fall back: if neither, assume WTK-like (time-series) but raise if critical cols are missing later
+        return DatasetSchema.TIMESERIES
     
     def load_power_curves(self, directory: str):
         """
@@ -107,58 +157,85 @@ class PowerCurveManager:
 
         return quantiles_new,probs_new
     
-    def fetch_energy_production_df(self, df: pd.DataFrame, height: int, selected_power_curve: str, data_type : str, relevant_columns_only: bool = True) -> pd.DataFrame:
+    def _quantiles_to_kw_midpoints(
+        self,
+        df_sorted: pd.DataFrame,
+        ws_col: str,
+        power_curve: PowerCurve
+    ) -> pd.DataFrame:
         """
-        Computes energy production data using the selected power curve.
+        Takes a dataframe with columns [probability, ws_col] sorted by probability
+        → smooth CDF via SWI → midpoint quantiles → kW via power curve.
+        Returns a dataframe with columns [ws_col, f"{ws_col}_kw"] for equal-probability midpoints.
+        """
+        q_smooth, _ = self.estimation_quantiles_SWI(
+            df_sorted[ws_col].to_numpy(dtype=float),
+            df_sorted["probability"].to_numpy(dtype=float)
+        )
+        qs = pd.Series(q_smooth, dtype=float)
+        midpoints = (qs.shift(-1) + qs) / 2
+        midpoints = midpoints.iloc[:-1]  # drop last NaN
+
+        # Convert to kW
+        mid_df = pd.DataFrame({ws_col: midpoints})
+        mid_df[f"{ws_col}_kw"] = power_curve.windspeed_to_kw(mid_df, ws_col)
+        return mid_df
+
+    
+    def fetch_energy_production_df(self, df: pd.DataFrame, height: int, selected_power_curve: str, relevant_columns_only: bool = True) -> pd.DataFrame:
+        """
+        Computes energy production dataframe using the selected power curve.
 
         Args:
             df (pd.DataFrame): Dataframe containing wind speed data.
             height (int): Height in meters for which to estimate power production.
             selected_power_curve (str): Name of the selected power curve.
-            data_type (str): data source {wtk or era5}
             relevant_columns_only (bool): If True, returns only relevant columns.
 
         Returns:
-            pd.DataFrame: Processed dataframe with estimated power production.
+            pd.DataFrame
+            - WTK-like: ["year","month","hour", ws_col, f"{ws_col}_kw"] (if relevant_columns_only)
+            - Quantiles-with-year: ["year", ws_col, f"{ws_col}_kw"] for midpoint bins
+            - Global-quantiles: ["year"(absent), ws_col, f"{ws_col}_kw"] for midpoint bins
         """
         ws_col = f'windspeed_{height}m'
+        if ws_col not in df.columns:
+            raise KeyError(f"Expected column '{ws_col}' in input dataframe.")
+        
+        schema = self._classify_schema(df)
         power_curve = self.get_curve(selected_power_curve)
-        if data_type == 'wtk':
+
+        if schema == DatasetSchema.TIMESERIES:
             # era5 data doesn't have month and hour columns
-            df['month'], df['hour'] = df['mohr'] // 100, df['mohr'] % 100
-            df[f"{ws_col}_kw"] = power_curve.windspeed_to_kw(df, ws_col)
+            work = df.copy()
+            if "month" not in work.columns or "hour" not in work.columns:
+                if "mohr" not in work.columns:
+                    raise KeyError("WTK-like input requires 'mohr' or explicit 'month' and 'hour' columns.")
+                work["month"], work["hour"] = work["mohr"] // 100, work["mohr"] % 100
+
+            work[f"{ws_col}_kw"] = power_curve.windspeed_to_kw(work, ws_col)
             if relevant_columns_only:
-                return df[["year", "mohr", "month", "hour", ws_col, f"{ws_col}_kw"]]
-        elif data_type == 'era5':
+                cols = ["year", "mohr", "month", "hour", ws_col, f"{ws_col}_kw"]
+                return work[cols]
+            return work
+        
+        elif schema == DatasetSchema.QUANTILES_WITH_YEAR:
             records = []
             for year, group in df.groupby("year"):
                 # sorting by probability is important since the records might be shuffled by "groupby" and we are using midpoint method.
                 group = group.sort_values("probability").reset_index(drop=True)
-                
-                quantiles, probs = self.estimation_quantiles_SWI(group[ws_col].values, group['probability'].values)
-                
-                # Compute midpoints (32 values from 33 quantiles)
-                midpoints = (pd.Series(quantiles).shift(-1) + pd.Series(quantiles)) / 2
-                midpoints = midpoints.iloc[:-1]  # drop last NaN
-            
-                # Compute power for each midpoint
-                kw_values = power_curve.windspeed_to_kw(pd.DataFrame({"ws": midpoints}), "ws")
-                
-                for mp, kw in zip(midpoints, kw_values):
-                    records.append({
-                        "year": year,
-                        ws_col: mp, # pass midpoints
-                        f"{ws_col}_kw": kw
-                    })
-            midpoints_df = pd.DataFrame(records)
-
-            if relevant_columns_only:
-                return midpoints_df[["year", ws_col, f"{ws_col}_kw"]]
-        else:
-            raise ValueError(f"Invalid data_type: {data_type}.")
-        return df
+                mid_df = self._quantiles_to_kw_midpoints(group, ws_col, power_curve)
+                mid_df.insert(0, "year", year)
+                records.append(mid_df)
+            out = pd.concat(records, ignore_index=True) if records else pd.DataFrame(columns=["year", ws_col, f"{ws_col}_kw"])
+            return out if not relevant_columns_only else out[["year", ws_col, f"{ws_col}_kw"]]
+        
+        else:  # DatasetSchema.QUANTILES_GLOBAL
+            group = df.sort_values("probability").reset_index(drop=True)
+            out = self._quantiles_to_kw_midpoints(group, ws_col, power_curve)
+            return out if not relevant_columns_only else out[[ws_col, f"{ws_col}_kw"]]
     
-    def prepare_yearly_production_df(self, df: pd.DataFrame, height: int, selected_power_curve: str, data_type: str) -> pd.DataFrame:
+    def prepare_yearly_production_df(self, df: pd.DataFrame, height: int, selected_power_curve: str) -> pd.DataFrame:
         """
         Prepares yearly average energy production and windspeed dataframe for dependent methods.
 
@@ -166,40 +243,65 @@ class PowerCurveManager:
             df (pd.DataFrame): Dataframe containing data at all heights for a location.
             height (int): Height in meters.
             selected_power_curve (str): Power curve
-            data_type (str): data source {wtk or era5}
 
         Returns:
+            Returns a dataframe with ["year","Average wind speed (m/s)","kWh produced"].
+            For global quantiles (no year), returns a single pseudo-row with year=None.
             pd.Dataframe
         """
-        prod_df = self.fetch_energy_production_df(df, height, selected_power_curve, data_type)
+        prod_df = self.fetch_energy_production_df(df, height, selected_power_curve)
         ws_column = f'windspeed_{height}m'
         kw_column = f'windspeed_{height}m_kw'
 
-        if data_type=='wtk':
-            # era5 data doesn't have mohr, month and hour columns
-            prod_df = prod_df.drop(columns=["mohr", "month", "hour"] + [col for col in prod_df.columns if "winddirection" in col])
+        schema = self._classify_schema(df)
         
         res_list = []
-        for year, group in prod_df.groupby("year"):
-            avg_ws = group[ws_column].mean()
+        if schema == DatasetSchema.TIMESERIES:
+            work = prod_df.copy()
+            # If wind direction columns slipped through, drop them
+            work = work.drop(columns=[c for c in work.columns if "winddirection" in c], errors="ignore")
 
-            if data_type == 'wtk':
-                kwh = group[kw_column].sum() * 30 # Approximate estimation for 30 days per month
-            elif data_type == 'era5':
-                kwh = group[kw_column].sum() * 8760.0 / len(group) # 8760 hours/year
+            for year, group in work.groupby("year"):
+                avg_ws = group[ws_column].mean()
+                # Original approximation used in your code:
+                # sum of instantaneous power over typical month × 30 days
+                kwh = group[kw_column].sum() * 30
+                res_list.append({
+                    "year": year,
+                    "Average wind speed (m/s)": avg_ws,
+                    "kWh produced": kwh
+                })
 
+        elif schema == DatasetSchema.QUANTILES_WITH_YEAR:
+            # Midpoints are equal-probability bins → average power × hours/year
+            for year, group in prod_df.groupby("year"):
+                avg_ws = group[ws_column].mean()
+                avg_power_kw = group[kw_column].mean()
+                kwh = avg_power_kw * 8760.0
+                res_list.append({
+                    "year": year,
+                    "Average wind speed (m/s)": avg_ws,
+                    "kWh produced": kwh
+                })
+
+        else:  # QUANTILES_GLOBAL
+            if len(prod_df) == 0:
+                return pd.DataFrame(columns=["year", "Average wind speed (m/s)", "kWh produced"])
+
+            avg_ws = prod_df[ws_column].mean()
+            avg_power_kw = prod_df[kw_column].mean()
+            kwh = avg_power_kw * 8760.0
             res_list.append({
-                "year": year,
+                "year": None,
                 "Average wind speed (m/s)": avg_ws,
                 "kWh produced": kwh
             })
 
         res = pd.DataFrame(res_list)
-        res.sort_values("Average wind speed (m/s)", inplace=True)
-
+        res.sort_values("Average wind speed (m/s)", inplace=True, ignore_index=True)
         return res
     
-    def fetch_yearly_avg_energy_production(self, df: pd.DataFrame, height: int, selected_power_curve: str, data_type: str) -> dict:
+    def fetch_yearly_avg_energy_production(self, df: pd.DataFrame, height: int, selected_power_curve: str) -> dict:
         """
         Computes yearly average energy production and windspeed.
 
@@ -207,7 +309,6 @@ class PowerCurveManager:
             df (pd.DataFrame): Dataframe containing data at all heights for a location.
             height (int): Height in meters.
             selected_power_curve (str): Power curve
-            data_type (str): data source {wtk or era5}
 
         Returns:
             dict
@@ -219,15 +320,20 @@ class PowerCurveManager:
                 ...
             }
         """
-        yearly_prod_df = self.prepare_yearly_production_df(df,height,selected_power_curve,data_type)
+        yearly_prod_df = self.prepare_yearly_production_df(df,height,selected_power_curve)
         
-        yearly_prod_df["year"] = yearly_prod_df["year"].astype(str)
-        yearly_prod_df["kWh produced"] = round(yearly_prod_df["kWh produced"].astype(float))
-        yearly_prod_df["Average wind speed (m/s)"] = yearly_prod_df["Average wind speed (m/s)"].astype(float).map('{:,.2f}'.format)
+        result = {}
+        for _, row in yearly_prod_df.iterrows():
+            # Use "Global" if year is missing (for quantiles without year)
+            year_key = "Global" if pd.isna(row["year"]) else str(int(row["year"]))
+            result[year_key] = {
+                "Average wind speed (m/s)": f"{float(row['Average wind speed (m/s)']):.2f}",
+                "kWh produced": int(round(float(row["kWh produced"])))
+            }
 
-        return yearly_prod_df.set_index("year").to_dict(orient="index")
+        return result
     
-    def fetch_avg_energy_production_summary(self, df: pd.DataFrame, height: int, selected_power_curve: str, data_type: str) -> dict:
+    def fetch_avg_energy_production_summary(self, df: pd.DataFrame, height: int, selected_power_curve: str) -> dict:
         """
         Computes yearly average energy production and windspeed summary.
 
@@ -235,7 +341,6 @@ class PowerCurveManager:
             df (pd.DataFrame): Dataframe containing data at all heights for a location.
             height (int): Height in meters.
             selected_power_curve (str): Power curve
-            data_type (str): data source {wtk or era5}
 
         Returns:
             dict
@@ -247,25 +352,32 @@ class PowerCurveManager:
                 "Highest year": {"year": 2014, "Average wind speed (m/s)": "6.32", "kWh produced": 326354}
             }
         """
-        yearly_prod_df = self.prepare_yearly_production_df(df,height,selected_power_curve,data_type)
+        yearly_prod_df = self.prepare_yearly_production_df(df,height,selected_power_curve)
+        if yearly_prod_df.empty:
+            return {}
         res_avg = pd.DataFrame(yearly_prod_df.drop(columns=['year']).mean()).T
         res_avg.index = ["Average year"]
 
         # Final formatting
-        res_summary = pd.concat([yearly_prod_df.iloc[[0]], res_avg, yearly_prod_df.iloc[[-1]]])
+        res_summary = pd.concat([yearly_prod_df.iloc[[0]], res_avg, yearly_prod_df.iloc[[-1]]], ignore_index=False)
+
+        def fmt_year(v):
+            return None if pd.isna(v) else int(v)
+
         # Handle None year for average row - convert to proper None instead of pandas NA
-        res_summary["year"] = res_summary["year"].astype("Int64").where(res_summary["year"].notna(), None)
-        res_summary["kWh produced"] = round(res_summary["kWh produced"].astype(float))
+        res_summary["year"] = res_summary["year"].map(fmt_year)
+        res_summary["kWh produced"] = res_summary["kWh produced"].astype(float).round().astype(int)
         res_summary["Average wind speed (m/s)"] = res_summary["Average wind speed (m/s)"].astype(float).map('{:,.2f}'.format)
 
         res_summary.index = [
-            f"Lowest year",
-            res_summary.index[1], # Average year
-            f"Highest year"
+            "Lowest year",
+            "Average year",
+            "Highest year"
         ]
+        res_summary = res_summary.replace({np.nan: None})
         return res_summary.to_dict(orient="index")
 
-    def fetch_monthly_avg_energy_production(self, df: pd.DataFrame, height: int, selected_power_curve: str, data_type: str) -> dict:
+    def fetch_monthly_avg_energy_production(self, df: pd.DataFrame, height: int, selected_power_curve: str) -> dict:
         """
         Computes monthly average energy production.
 
@@ -282,21 +394,23 @@ class PowerCurveManager:
         'Feb': {'Average wind speed, m/s': '3.92', 'kWh produced': '6,357'}, 
         'Mar': {'Average wind speed, m/s': '4.17', 'kWh produced': '7,689'}....}
         """
-        
-        prod_df = self.fetch_energy_production_df(df, height, selected_power_curve, data_type)
+        schema = self._classify_schema(df)
+        if schema != DatasetSchema.TIMESERIES:
+            raise ValueError("Monthly averages are only supported for time-series (TIMESERIES) inputs.")
+        prod_df = self.fetch_energy_production_df(df, height, selected_power_curve)
        
         ws_column = f'windspeed_{height}m'
         kw_column = f'windspeed_{height}m_kw'
 
-        prod_df = prod_df.drop(columns=["mohr", "year", "hour"] + [col for col in prod_df.columns if "winddirection" in col])
+        work = prod_df.drop(columns=["mohr", "year", "hour"] + [col for col in prod_df.columns if "winddirection" in col],errors="ignore")
         
-        res = prod_df.groupby("month").agg(avg_ws=(ws_column, "mean"), kwh_total=(kw_column, "sum"))
+        res = work.groupby("month").agg(avg_ws=(ws_column, "mean"), kwh_total=(kw_column, "sum"))
         res["kwh_total"] *= 30 / 20.0  # Approximation: 30 days per month, averaged over 20 years
 
         res.rename(columns={"avg_ws": "Average wind speed (m/s)", "kwh_total": "kWh produced"}, inplace=True)
-        res.index = pd.Series(res.index).apply(lambda x: calendar.month_abbr[x])
+        res.index = pd.Series(res.index).apply(lambda x: calendar.month_abbr[int(x)])
 
-        res["kWh produced"] = round(res["kWh produced"].astype(float))
+        res["kWh produced"] = res["kWh produced"].round().astype(int)
         res["Average wind speed (m/s)"] = res["Average wind speed (m/s)"].astype(float).map('{:,.2f}'.format)
 
         return res.to_dict(orient="index")

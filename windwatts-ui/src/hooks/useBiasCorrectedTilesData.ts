@@ -1,23 +1,31 @@
 import { useContext, useMemo } from "react";
 import useSWR from "swr";
 import { SettingsContext } from "../providers/SettingsContext";
-import { getEnergyProduction } from "../services/api";
+import { getEnergyProduction, getWindspeedByLatLong } from "../services/api";
 import { isOutOfBounds } from "../utils";
 
-export const useProductionData = () => {
+export const useBiasCorrectedTilesData = () => {
   const {
     currentPosition,
     hubHeight,
     powerCurve,
     preferredModel: dataModel,
+    biasCorrection,
   } = useContext(SettingsContext);
+
   const { lat, lng } = currentPosition || {};
   const outOfBounds =
     lat && lng && dataModel ? isOutOfBounds(lat, lng, dataModel) : false;
-  const shouldFetch =
-    lat && lng && hubHeight && powerCurve && dataModel && !outOfBounds;
+  const shouldFetch = !!(
+    lat &&
+    lng &&
+    hubHeight &&
+    powerCurve &&
+    dataModel &&
+    biasCorrection &&
+    !outOfBounds
+  );
 
-  // Memoize the SWR key to prevent unnecessary re-renders
   const swrKey = useMemo(() => {
     if (!shouldFetch) return null;
     return JSON.stringify({
@@ -26,21 +34,33 @@ export const useProductionData = () => {
       hubHeight,
       powerCurve,
       dataModel,
-      time_period: "all",
+      biasCorrection,
     });
-  }, [shouldFetch, lat, lng, hubHeight, powerCurve, dataModel]);
+  }, [shouldFetch, lat, lng, hubHeight, powerCurve, dataModel, biasCorrection]);
 
   const { isLoading, data, error } = useSWR(
     swrKey,
-    () =>
-      getEnergyProduction({
-        lat: lat!,
-        lng: lng!,
-        hubHeight,
-        powerCurve,
-        dataModel,
-        time_period: "all",
-      }),
+    async () => {
+      const [wind, prod] = await Promise.all([
+        getWindspeedByLatLong({
+          lat: lat!,
+          lng: lng!,
+          hubHeight,
+          dataModel,
+          biasCorrection,
+        }),
+        getEnergyProduction({
+          lat: lat!,
+          lng: lng!,
+          hubHeight,
+          powerCurve,
+          dataModel,
+          time_period: "global",
+          biasCorrection,
+        }),
+      ]);
+      return { wind, prod };
+    },
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
@@ -50,7 +70,8 @@ export const useProductionData = () => {
   );
 
   return {
-    productionData: data,
+    windData: data?.wind,
+    productionData: data?.prod,
     isLoading,
     error,
     hasData: !!data,

@@ -7,7 +7,7 @@ export const fetchWrapper = async (url: string, options: RequestInit) => {
   }
   return response.json();
 };
-
+// time_period = "global" is default for windspeed in the era5_controller. But have to include "source" param as "athena_era5_bc" for bias corrected result and "athena_era5" for non bc result which is default anyway.
 export const getWindspeedByLatLong = async ({
   lat,
   lng,
@@ -25,6 +25,8 @@ export const getWindspeedByLatLong = async ({
   return fetchWrapper(url, options);
 };
 
+// time_period = "all" works for era5 but have to add source param as "athena_era5" ("athena_era5" is default in era5_data_controller as source)
+// time_period = "global" works for the era5_bc to fetch single global production value but have to add source as "athena_era5_bc". Key is "global_energy_production" to get value.
 export const getEnergyProduction = async ({
   lat,
   lng,
@@ -33,7 +35,7 @@ export const getEnergyProduction = async ({
   dataModel,
   time_period = "all",
   biasCorrection,
-}: EnergyProductionRequest & { biasCorrection?: boolean }) => {
+}: EnergyProductionRequest) => {
   const url = `/api/${dataModel}/energy-production?lat=${lat}&lng=${lng}&height=${hubHeight}&selected_powercurve=${powerCurve}&time_period=${time_period}${biasCorrection ? "&bias_correction=true" : ""}`;
   const options = {
     method: "GET",

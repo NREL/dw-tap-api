@@ -30,22 +30,30 @@ if not _skip_data_init:
         local_config_path="./app/config/windwatts_data_config.json")  # replace with YOUR local config path
     athena_config = config_manager.get_config()
 
-    # Initialize DataFetchers
-    # s3_data_fetcher = S3DataFetcher("WINDWATTS_S3_BUCKET_NAME")
-    athena_data_fetcher_wtk = AthenaDataFetcher(athena_config=athena_config, data_type='wtk')
-    # db_manager = DatabaseManager()
-    # db_data_fetcher = DatabaseDataFetcher(db_manager=db_manager)
+# Initialize DataFetchers
+# s3_data_fetcher = S3DataFetcher("WINDWATTS_S3_BUCKET_NAME")
+athena_data_fetcher_wtk = AthenaDataFetcher(athena_config=athena_config, source_key='wtk')
+# db_manager = DatabaseManager()
+# db_data_fetcher = DatabaseDataFetcher(db_manager=db_manager)
 
-    # Register fetchers
-    # data_fetcher_router.register_fetcher("database", db_data_fetcher)
-    # data_fetcher_router.register_fetcher("s3", s3_data_fetcher)
-    data_fetcher_router.register_fetcher("athena_wtk", athena_data_fetcher_wtk)
+# Register fetchers
+# data_fetcher_router.register_fetcher("database", db_data_fetcher)
+# data_fetcher_router.register_fetcher("s3", s3_data_fetcher)
+data_fetcher_router.register_fetcher("athena_wtk", athena_data_fetcher_wtk)
 
 # Multiple average types for wind speed
-wind_speed_avg_types = ["global", "monthly", "yearly", "hourly"]
-production_avg_types = ["summary", "yearly", "monthly", "all"]
-data_type = "wtk"
-data_source = "athena_wtk"
+# wind_speed_avg_types = ["global", "monthly", "yearly", "hourly"]
+# production_avg_types = ["summary", "yearly", "monthly", "all"]
+
+VALID_AVG_TYPES = {
+    "athena_wtk": {
+        "wind_speed": ["global", "yearly", "monthly", "hourly", "none"],
+        "production": ["global", "summary", "yearly", "monthly", "all", "none"],
+    }
+}
+# data_type = "wtk"
+VALID_SOURCES = {"athena_wtk"}  # <-- new
+DEFAULT_SOURCE = "athena_wtk"
 
 # Helper validation functions
 def validate_lat(lat: float) -> float:
@@ -63,14 +71,22 @@ def validate_height(height: int) -> int:
         raise HTTPException(status_code=400, detail="Height must be between 1 and 300 meters.")
     return height
 
-def validate_avg_type(avg_type: str) -> str:
-    if avg_type not in wind_speed_avg_types:
-        raise HTTPException(status_code=400, detail=f"Invalid avg_type. Must be one of: {wind_speed_avg_types}")
+def validate_avg_type(avg_type: str, source: str) -> str:
+    allowed = VALID_AVG_TYPES[source]["wind_speed"]
+    if avg_type not in allowed:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid avg_type. Must be one of: {allowed} for {source}."
+        )
     return avg_type
 
-def validate_production_avg_type(avg_type: str) -> str:
-    if avg_type not in production_avg_types:
-        raise HTTPException(status_code=400, detail=f"Invalid time_period. Must be one of: {production_avg_types}")
+def validate_production_avg_type(avg_type: str, source: str) -> str:
+    allowed = VALID_AVG_TYPES[source]["production"]
+    if avg_type not in allowed:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid time_period. Must be one of: {allowed} for {source}."
+        )
     return avg_type
 
 def validate_selected_powercurve(selected_powercurve: str) -> str:
@@ -81,8 +97,8 @@ def validate_selected_powercurve(selected_powercurve: str) -> str:
     return selected_powercurve
 
 def validate_source(source: str) -> str:
-    if source != data_source:
-        raise HTTPException(status_code=400, detail=f"Invalid source for {data_type} data. Must be '{data_source}'.")
+    if source not in VALID_SOURCES:
+        raise HTTPException(status_code=400, detail=f"Invalid source for WTK data. Must be one of: {sorted(VALID_SOURCES)}.")
     return source
 
 def _get_windspeed_core(
@@ -104,8 +120,8 @@ def _get_windspeed_core(
     lat = validate_lat(lat)
     lng = validate_lng(lng)
     height = validate_height(height)
-    avg_type = validate_avg_type(avg_type)
     source = validate_source(source)
+    avg_type = validate_avg_type(avg_type, source)
 
     params = {
         "lat": lat,
@@ -135,7 +151,7 @@ def get_windspeed_with_avg_type(
     lat: float = Query(..., description="Latitude of the location."),
     lng: float = Query(..., description="Longitude of the location."),
     height: int = Query(..., description="Height in meters."),
-    source: str = Query("athena_wtk", description="Source of the data.")
+    source: str = Query(DEFAULT_SOURCE, description="Source of the data.")
 ):
     try:
         return _get_windspeed_core(lat, lng, height, avg_type, source)
@@ -158,7 +174,7 @@ def get_windspeed(
     lat: float = Query(..., description="Latitude of the location."),
     lng: float = Query(..., description="Longitude of the location."),
     height: int = Query(..., description="Height in meters."),
-    source: str = Query("athena_wtk", description="Source of the data.")
+    source: str = Query(DEFAULT_SOURCE, description="Source of the data.")
 ):
     try:
         return _get_windspeed_core(lat, lng, height, "global", source)
@@ -219,8 +235,8 @@ def _get_energy_production_core(
     lng = validate_lng(lng)
     height = validate_height(height)
     selected_powercurve = validate_selected_powercurve(selected_powercurve)
-    time_period = validate_production_avg_type(time_period)
     source = validate_source(source)
+    time_period = validate_production_avg_type(time_period, source)
 
     params = {
         "lat": lat,
@@ -232,22 +248,27 @@ def _get_energy_production_core(
     if df is None:
         raise HTTPException(status_code=404, detail="Data not found")
 
-    if time_period == 'summary':
-        summary_avg_energy_production = power_curve_manager.fetch_avg_energy_production_summary(df, height, selected_powercurve, data_type)
+    if time_period == 'global':
+        summary_avg_energy_production = power_curve_manager.fetch_avg_energy_production_summary(df, height, selected_powercurve)
+        print("Global\n",summary_avg_energy_production['Average year']['kWh produced'])
         return {"energy_production": summary_avg_energy_production['Average year']['kWh produced']}
+    
+    elif time_period == 'summary':
+        summary_avg_energy_production = power_curve_manager.fetch_avg_energy_production_summary(df, height, selected_powercurve)
+        return {"summary_avg_energy_production": summary_avg_energy_production}
+    
     elif time_period == 'yearly':
-        yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(df, height, selected_powercurve, data_type)
-        return {yearly_avg_energy_production}
+        yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(df, height, selected_powercurve)
+        return {"yearly_avg_energy_production": yearly_avg_energy_production}
+    
     elif time_period == 'all':
-        summary_avg_energy_production = power_curve_manager.fetch_avg_energy_production_summary(df, height, selected_powercurve, data_type)
-        yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(df, height, selected_powercurve, data_type)
+        summary_avg_energy_production = power_curve_manager.fetch_avg_energy_production_summary(df, height, selected_powercurve)
+        yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(df, height, selected_powercurve)
         return {
             "energy_production": summary_avg_energy_production['Average year']['kWh produced'],
             "summary_avg_energy_production": summary_avg_energy_production,
             "yearly_avg_energy_production": yearly_avg_energy_production
         }
-    else:
-        raise HTTPException(status_code=400, detail=f"production avg_type must be one of: {production_avg_types} for {data_type} data.")
 
 @router.get(
         "/energy-production/{time_period}",
@@ -261,12 +282,12 @@ def _get_energy_production_core(
             500: {"description": "Internal server error"},
         }
 )
-def energy_production(
+def energy_production_with_period(
     time_period: str = Path(..., description="Time period for production estimate."),lat: float = Query(..., description="Latitude of the location."),
     lng: float = Query(..., description="Longitude of the location."),
     height: int = Query(..., description="Height in meters."),
     selected_powercurve: str = Query(..., description="Selected power curve name."),
-    source: str = Query("athena_wtk", description="Source of the data.")
+    source: str = Query(DEFAULT_SOURCE, description="Source of the data.")
 ):
     try:
         return _get_energy_production_core(lat, lng, height, selected_powercurve, time_period, source)
@@ -290,7 +311,7 @@ def energy_production(
     lng: float = Query(..., description="Longitude of the location."),
     height: int = Query(..., description="Height in meters."),
     selected_powercurve: str = Query(..., description="Selected power curve name."),
-    source: str = Query("athena_wtk", description="Source of the data.")
+    source: str = Query(DEFAULT_SOURCE, description="Source of the data.")
 ):
     try:
         return _get_energy_production_core(lat, lng, height, selected_powercurve, "all", source)
