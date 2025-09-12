@@ -7,6 +7,7 @@ import {
   StoredSettings,
 } from "./SettingsContext";
 import { DataModel } from "../types";
+import { percentToFactor } from "../utils";
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
   // Use the useLocalStorage hook to manage settings
@@ -62,9 +63,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   const setLossAssumptionPercent = useCallback(
     (percent: number) => {
-      const num = Number(percent);
-      const clampedPercent = Math.max(0, Math.min(100, isNaN(num) ? 0 : num));
-      const factor = (100 - clampedPercent) / 100;
+      const factor = percentToFactor(percent);
       setLossAssumptionFactor(factor);
     },
     [setLossAssumptionFactor]
