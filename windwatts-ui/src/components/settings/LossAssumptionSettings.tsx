@@ -43,8 +43,8 @@ export function LossAssumptionSettings() {
       <Typography variant="h6" gutterBottom>
         Loss Assumption
       </Typography>
-      <Typography variant="body1" gutterBottom>
-        Reduce displayed energy results by an assumed percent loss.
+      <Typography variant="body2" mb={2}>
+        Set an energy percent loss (17% recommended).
       </Typography>
       <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
         <FormControlLabel
@@ -77,9 +77,6 @@ export function LossAssumptionSettings() {
           }}
         />
       </Box>
-      <Typography variant="caption" color="text.secondary">
-        Stored internally as a factor of {((100 - percent) / 100).toFixed(2)}.
-      </Typography>
     </Box>
   );
 }
