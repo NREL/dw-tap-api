@@ -5,7 +5,6 @@ import {
   KEY_HIGHEST_YEAR,
   KEY_KWH_PRODUCED,
   KEY_LOWEST_YEAR,
-  KEY_AVG_WIND_SPEED,
 } from "../constants";
 
 type EnergyRow = Record<string, string | number | null>;
@@ -52,15 +51,6 @@ export function useLossAdjustedProductionData(
               lossAssumptionFactor,
               { mode: "floor" }
             );
-          }
-          if (row[KEY_AVG_WIND_SPEED] != null) {
-            const ws = Number(row[KEY_AVG_WIND_SPEED]);
-            if (Number.isFinite(ws)) {
-              row[KEY_AVG_WIND_SPEED] = applyLoss(ws, lossAssumptionFactor, {
-                mode: "floor",
-                digits: 2,
-              });
-            }
           }
         });
       };

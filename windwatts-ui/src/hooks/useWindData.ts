@@ -2,7 +2,7 @@ import { useContext, useMemo } from "react";
 import useSWR from "swr";
 import { SettingsContext } from "../providers/SettingsContext";
 import { getWindspeedByLatLong } from "../services/api";
-import { applyLoss, isOutOfBounds } from "../utils";
+import { isOutOfBounds } from "../utils";
 
 export const useWindData = () => {
   const {
@@ -38,28 +38,8 @@ export const useWindData = () => {
     }
   );
 
-  const { lossAssumptionFactor } = useContext(SettingsContext);
-  const windData = useMemo(() => {
-    if (!data) return data;
-    try {
-      const clone = structuredClone
-        ? structuredClone(data)
-        : JSON.parse(JSON.stringify(data));
-      if (clone.global_avg != null) {
-        clone.global_avg = applyLoss(
-          Number(clone.global_avg),
-          lossAssumptionFactor,
-          { mode: "floor", digits: 2 }
-        );
-      }
-      return clone;
-    } catch {
-      return data;
-    }
-  }, [data, lossAssumptionFactor]);
-
   return {
-    windData,
+    windData: data,
     isLoading,
     error,
     hasData: !!data,
