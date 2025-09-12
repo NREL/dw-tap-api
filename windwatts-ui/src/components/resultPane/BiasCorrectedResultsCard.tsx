@@ -137,9 +137,9 @@ export const BiasCorrectedTiles = memo(() => {
         <Typography variant="h6" sx={{ fontWeight: 700 }}>
           {convertOutput(
             Number(
-              productionData?.energy_production?.[
-              KEY_AVERAGE_YEAR
-              ]?.[KEY_KWH_PRODUCED] || 0
+              productionData?.energy_production?.[KEY_AVERAGE_YEAR]?.[
+                KEY_KWH_PRODUCED
+              ] || 0
             ),
             units.output
           ).replace(/\s\w+$/, "")}
