@@ -165,7 +165,7 @@ def get_windspeed_with_avg_type(
     lat: float = Query(..., description="Latitude of the location."),
     lng: float = Query(..., description="Longitude of the location."),
     height: int = Query(..., description="Height in meters."),
-    bias_correction: bool = Query(False, description="If true, use bias-corrected ERA5 (athena_ensemble)."),
+    bias_correction: bool = Query(False, description="If true, use ensemble model (athena_ensemble)."),
     source: str = Query(DEFAULT_SOURCE, description="Source of the data.")
 ):
     try:
@@ -192,7 +192,7 @@ def get_windspeed(
     lat: float = Query(..., description="Latitude of the location."),
     lng: float = Query(..., description="Longitude of the location."),
     height: int = Query(..., description="Height in meters."),
-    bias_correction: bool = Query(False, description="If true, use bias-corrected ERA5 (athena_ensemble)."),
+    bias_correction: bool = Query(False, description="If true, use ensemble model (athena_ensemble)."),
     source: str = Query(DEFAULT_SOURCE, description="Source of the data.")
 ):
     try:
@@ -313,7 +313,7 @@ def energy_production_with_period(
     lng: float = Query(..., description="Longitude of the location."),
     height: int = Query(..., description="Height in meters."),
     selected_powercurve: str = Query(..., description="Selected power curve name."),
-    bias_correction: bool = Query(False, description="If true, use bias-corrected ERA5 (athena_ensemble)."),
+    bias_correction: bool = Query(False, description="If true, use ensemble model (athena_ensemble)."),
     source: str = Query(DEFAULT_SOURCE, description="Source of the data.")
 ):
     try:
@@ -342,7 +342,7 @@ def energy_production(
     height: int = Query(..., description="Height in meters."),
     selected_powercurve: str = Query(..., description="Selected power curve name."),
     time_period: str = Query(..., description="Time period for production estimate."),
-    bias_correction: bool = Query(False, description="If true, use bias-corrected ERA5 (athena_ensemble)."),
+    bias_correction: bool = Query(False, description="If true, use ensemble model (athena_ensemble)."),
     source: str = Query(DEFAULT_SOURCE, description="Source of the data.")
 ):
     try:
