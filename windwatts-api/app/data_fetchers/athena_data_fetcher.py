@@ -18,7 +18,7 @@ class AthenaDataFetcher(AbstractDataFetcher):
         if self.base_type == 'wtk':
             print(f"Initializing WTK Client with Source Key: {self.source_key}")
             self.client = WindwattsWTKClient(config_path=athena_config, source_key = self.source_key) # source_key  "wtk"
-        elif self.base_type == 'era5':
+        elif self.base_type == 'era5' or self.base_type == 'ensemble':
             print(f"Initializing ERA5 Client with Source Key: {self.source_key}")
             self.client = WindwattsERA5Client(config_path=athena_config, source_key = self.source_key) # source_key  "era5" or "era5_bc"
         else:
