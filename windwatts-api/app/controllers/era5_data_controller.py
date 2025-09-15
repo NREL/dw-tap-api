@@ -33,7 +33,7 @@ if not _skip_data_init:
 # Initialize DataFetchers
 # s3_data_fetcher = S3DataFetcher("WINDWATTS_S3_BUCKET_NAME")
 athena_data_fetcher_era5 = AthenaDataFetcher(athena_config=athena_config, source_key='era5')
-athena_data_fetcher_era5_bc = AthenaDataFetcher(athena_config=athena_config, source_key='era5_bc')
+athena_data_fetcher_ensemble = AthenaDataFetcher(athena_config=athena_config, source_key='ensemble')
 # db_manager = DatabaseManager()
 # db_data_fetcher = DatabaseDataFetcher(db_manager=db_manager)
 
@@ -42,7 +42,7 @@ data_fetcher_router = DataFetcherRouter()
 # data_fetcher_router.register_fetcher("database", db_data_fetcher)
 # data_fetcher_router.register_fetcher("s3", s3_data_fetcher)
 data_fetcher_router.register_fetcher("athena_era5", athena_data_fetcher_era5)
-data_fetcher_router.register_fetcher("athena_era5_bc", athena_data_fetcher_era5_bc)
+data_fetcher_router.register_fetcher("athena_ensemble", athena_data_fetcher_ensemble)
 
 # # Multiple average types for wind speed and production for era5 and bias corrected era5
 # era5_wind_speed_avg_types = ["global", "yearly"]
@@ -57,7 +57,7 @@ VALID_AVG_TYPES = {
         "wind_speed": ["global", "yearly", "none"],
         "production": ["global", "summary", "yearly", "all", "none"],
     },
-    "athena_era5_bc": {
+    "athena_ensemble": {
         "wind_speed": ["global", "none"],
         "production": ["global", "none"],
     },
@@ -65,7 +65,7 @@ VALID_AVG_TYPES = {
 
 # data_type='era5'
 # data_source = "athena_era5"
-VALID_SOURCES = {"athena_era5", "athena_era5_bc"}  # <-- new
+VALID_SOURCES = {"athena_era5", "athena_ensemble"}  # <-- new
 DEFAULT_SOURCE = "athena_era5"
 
 # Helper validation functions
@@ -165,12 +165,12 @@ def get_windspeed_with_avg_type(
     lat: float = Query(..., description="Latitude of the location."),
     lng: float = Query(..., description="Longitude of the location."),
     height: int = Query(..., description="Height in meters."),
-    bias_correction: bool = Query(False, description="If true, use bias-corrected ERA5 (athena_era5_bc)."),
+    bias_correction: bool = Query(False, description="If true, use ensemble model (athena_ensemble)."),
     source: str = Query(DEFAULT_SOURCE, description="Source of the data.")
 ):
     try:
         if bias_correction:
-            return _get_windspeed_core(lat, lng, height, avg_type, source="athena_era5_bc")
+            return _get_windspeed_core(lat, lng, height, avg_type, source="athena_ensemble")
         else:
             return _get_windspeed_core(lat, lng, height, avg_type, source)
     except Exception:
@@ -192,12 +192,12 @@ def get_windspeed(
     lat: float = Query(..., description="Latitude of the location."),
     lng: float = Query(..., description="Longitude of the location."),
     height: int = Query(..., description="Height in meters."),
-    bias_correction: bool = Query(False, description="If true, use bias-corrected ERA5 (athena_era5_bc)."),
+    bias_correction: bool = Query(False, description="If true, use ensemble model (athena_ensemble)."),
     source: str = Query(DEFAULT_SOURCE, description="Source of the data.")
 ):
     try:
         if bias_correction:
-            return _get_windspeed_core(lat, lng, height, "global", source="athena_era5_bc")
+            return _get_windspeed_core(lat, lng, height, "global", source="athena_ensemble")
         else:
             return _get_windspeed_core(lat, lng, height, "global", source)
     except Exception:
@@ -264,7 +264,6 @@ def _get_energy_production_core(
     selected_powercurve = validate_selected_powercurve(selected_powercurve)
     source = validate_source(source)
     time_period = validate_production_avg_type(time_period, source)
-    print("Inside EP Core\n")
     params = {
         "lat": lat,
         "lng": lng,
@@ -277,7 +276,6 @@ def _get_energy_production_core(
     
     if time_period == 'global':
         summary_avg_energy_production = power_curve_manager.fetch_avg_energy_production_summary(df, height, selected_powercurve)
-        print("Global\n",summary_avg_energy_production['Average year']['kWh produced'])
         return {"energy_production": summary_avg_energy_production['Average year']['kWh produced']}
     
     elif time_period == 'summary':
@@ -291,9 +289,6 @@ def _get_energy_production_core(
     elif time_period == 'all':
         summary_avg_energy_production = power_curve_manager.fetch_avg_energy_production_summary(df, height, selected_powercurve)
         yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(df, height, selected_powercurve)
-        print("global_energy_production\n",summary_avg_energy_production['Average year']['kWh produced'])
-        print("summary_avg_energy_production\n", summary_avg_energy_production)
-        print("yearly_avg_energy_production\n",yearly_avg_energy_production)
         return {
             "energy_production": summary_avg_energy_production['Average year']['kWh produced'],
             "summary_avg_energy_production": summary_avg_energy_production,
@@ -318,12 +313,12 @@ def energy_production_with_period(
     lng: float = Query(..., description="Longitude of the location."),
     height: int = Query(..., description="Height in meters."),
     selected_powercurve: str = Query(..., description="Selected power curve name."),
-    bias_correction: bool = Query(False, description="If true, use bias-corrected ERA5 (athena_era5_bc)."),
+    bias_correction: bool = Query(False, description="If true, use ensemble model (athena_ensemble)."),
     source: str = Query(DEFAULT_SOURCE, description="Source of the data.")
 ):
     try:
         if bias_correction:
-            return _get_energy_production_core(lat, lng, height, selected_powercurve, time_period, source="athena_era5_bc")
+            return _get_energy_production_core(lat, lng, height, selected_powercurve, time_period, source="athena_ensemble")
         else:
             return _get_energy_production_core(lat, lng, height, selected_powercurve, time_period, source)
     except Exception:
@@ -347,12 +342,12 @@ def energy_production(
     height: int = Query(..., description="Height in meters."),
     selected_powercurve: str = Query(..., description="Selected power curve name."),
     time_period: str = Query(..., description="Time period for production estimate."),
-    bias_correction: bool = Query(False, description="If true, use bias-corrected ERA5 (athena_era5_bc)."),
+    bias_correction: bool = Query(False, description="If true, use ensemble model (athena_ensemble)."),
     source: str = Query(DEFAULT_SOURCE, description="Source of the data.")
 ):
     try:
         if bias_correction:
-            return _get_energy_production_core(lat, lng, height, selected_powercurve, time_period="global", source="athena_era5_bc")
+            return _get_energy_production_core(lat, lng, height, selected_powercurve, time_period="global", source="athena_ensemble")
         else:
             return _get_energy_production_core(lat, lng, height, selected_powercurve, time_period, source)
     except Exception:
