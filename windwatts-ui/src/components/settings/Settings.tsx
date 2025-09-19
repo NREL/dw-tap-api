@@ -14,6 +14,7 @@ import { useContext, useState } from "react";
 import { SettingsContext } from "../../providers/SettingsContext";
 // import { ModelSettings } from "./ModelSettings";
 import { PowerCurveSettings } from "./PowerCurveSettings";
+import { LossAssumptionSettings } from "./LossAssumptionSettings";
 import { HubHeightSettings } from "./HubHeightSettings";
 import {
   SETTINGS_MODAL_WIDTH,
@@ -96,6 +97,7 @@ export const Settings = () => {
         >
           <HubHeightSettings />
           <PowerCurveSettings />
+          <LossAssumptionSettings />
           <UnitsSettings />
           {/* <ModelSettings /> */}
 

@@ -14,9 +14,13 @@ export interface StoredSettings {
   powerCurve: string;
   preferredModel: DataModel;
   biasCorrection: boolean;
+  // Loss assumption factor stored as inverse percentage (e.g., 0.83 for 17%)
+  lossAssumptionFactor: number;
 }
 
 export interface Settings extends StoredSettings {
+  // Derived value for convenience (0-100)
+  lossAssumptionPercent: number;
   toggleSettings: () => void;
   toggleResults: () => void;
   setCurrentPosition: (position: CurrentPosition) => void;
@@ -24,6 +28,8 @@ export interface Settings extends StoredSettings {
   setPowerCurve: (curve: string) => void;
   setPreferredModel: (preferredModel: DataModel) => void;
   setBiasCorrection: (biasCorrection: boolean) => void;
+  setLossAssumptionFactor: (factor: number) => void;
+  setLossAssumptionPercent: (percent: number) => void;
 }
 
 export const defaultValues: StoredSettings = {
@@ -34,10 +40,12 @@ export const defaultValues: StoredSettings = {
   powerCurve: "nrel-reference-100kW", // default power curve
   preferredModel: "era5", // default to era5 model
   biasCorrection: false,
+  lossAssumptionFactor: 0.83, // default to 17% loss
 };
 
 export const SettingsContext = createContext<Settings>({
   ...defaultValues,
+  lossAssumptionPercent: 17,
   toggleSettings: () => {},
   toggleResults: () => {},
   setCurrentPosition: () => {},
@@ -45,4 +53,6 @@ export const SettingsContext = createContext<Settings>({
   setPowerCurve: () => {},
   setPreferredModel: () => {},
   setBiasCorrection: () => {},
+  setLossAssumptionFactor: () => {},
+  setLossAssumptionPercent: () => {},
 });

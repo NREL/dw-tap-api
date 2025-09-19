@@ -18,3 +18,18 @@ export const INITIAL_MAP_ZOOM = 12; // Only used for initial zoom, then user con
 
 // Breakpoints (should match theme breakpoints)
 export const MOBILE_BREAKPOINT = "sm";
+
+export const MONTH_NAMES = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];

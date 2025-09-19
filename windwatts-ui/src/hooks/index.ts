@@ -7,3 +7,4 @@ export { useProductionData } from "./useProductionData";
 export { useBiasCorrectedTilesData } from "./useBiasCorrectedTilesData";
 export { useToggle } from "./useToggle";
 export { useWindData } from "./useWindData";
+export { useLossAdjustedProductionData } from "./useLossAdjustedProductionData";
