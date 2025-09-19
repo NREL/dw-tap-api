@@ -2,7 +2,7 @@ import { useContext, useMemo } from "react";
 import useSWR from "swr";
 import { SettingsContext } from "../providers/SettingsContext";
 import { getEnergyProduction, getWindspeedByLatLong } from "../services/api";
-import { isOutOfBounds } from "../utils";
+import { isOutOfBounds, applyLoss } from "../utils";
 
 export const useBiasCorrectedTilesData = () => {
   const {
@@ -11,6 +11,7 @@ export const useBiasCorrectedTilesData = () => {
     powerCurve,
     preferredModel: dataModel,
     biasCorrection,
+    lossAssumptionFactor,
   } = useContext(SettingsContext);
 
   const { lat, lng } = currentPosition || {};
@@ -69,9 +70,25 @@ export const useBiasCorrectedTilesData = () => {
     }
   );
 
+  // Apply loss adjustment to production data
+  const productionDataWithLoss = useMemo(() => {
+    if (!data?.prod || !data.prod.energy_production) return data?.prod;
+    
+    const adjustedProduction = applyLoss(
+      Number(data.prod.energy_production),
+      lossAssumptionFactor,
+      { mode: "floor" }
+    );
+    
+    return {
+      ...data.prod,
+      energy_production: adjustedProduction
+    };
+  }, [data?.prod, lossAssumptionFactor]);
+
   return {
     windData: data?.wind,
-    productionData: data?.prod,
+    productionData: productionDataWithLoss,
     isLoading,
     error,
     hasData: !!data,
