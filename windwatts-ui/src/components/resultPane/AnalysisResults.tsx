@@ -1,4 +1,4 @@
-import { Box, Stack, Divider } from "@mui/material";
+import { Box, Stack, Divider, Typography } from "@mui/material";
 import { ProductionCard } from "./ProductionCard";
 import { EnsembleTiles } from "./EnsembleResultsCard";
 import { useContext } from "react";
@@ -18,9 +18,12 @@ export const AnalysisResults = () => {
             textAlign="center"
             sx={{ my: 1, fontWeight: 600, color: "text.secondary" }}
           >
-            Ensemble Model Results
+            Ensemble Model Results *
           </Divider>
           <EnsembleTiles />
+          <Typography variant="body2" color="text.secondary">
+            * Experimental ML-based model - improved performance (under development)
+          </Typography>
         </>
       ) : (
         <>

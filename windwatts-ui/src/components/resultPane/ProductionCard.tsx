@@ -32,7 +32,7 @@ import { SettingsContext } from "../../providers/SettingsContext";
 export const ProductionCard = memo(() => {
   const [expanded, setExpanded] = useState(false);
   const { units } = useContext(UnitsContext);
-  const { ensemble, preferredModel } = useContext(SettingsContext);
+  const { preferredModel } = useContext(SettingsContext);
   const {
     productionData,
     isLoading,
