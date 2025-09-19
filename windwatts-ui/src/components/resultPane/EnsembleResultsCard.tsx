@@ -2,13 +2,13 @@ import { memo, useContext } from "react";
 import { Box, Paper, Typography, Skeleton } from "@mui/material";
 import { UnitsContext } from "../../providers/UnitsContext";
 import { SettingsContext } from "../../providers/SettingsContext";
-import { useBiasCorrectedTilesData } from "../../hooks";
+import { useEnsembleTilesData } from "../../hooks";
 import { convertWindspeed, convertOutput, getWindResource } from "../../utils";
 
-// Compact, card-less variant for embedding in the top row
-export const BiasCorrectedTiles = memo(() => {
+// Compact, card-less variant for embedding in the top row - using ensemble model
+export const EnsembleTiles = memo(() => {
   const { units } = useContext(UnitsContext);
-  const { biasCorrection } = useContext(SettingsContext);
+  const { ensemble } = useContext(SettingsContext);
 
   const {
     windData,
@@ -16,9 +16,9 @@ export const BiasCorrectedTiles = memo(() => {
     isLoading: isTilesLoading,
     error,
     hasData,
-  } = useBiasCorrectedTilesData();
+  } = useEnsembleTilesData();
 
-  if (!biasCorrection) return null;
+  if (!ensemble) return null;
 
   const loading = isTilesLoading;
   const hasDataCombined = hasData;

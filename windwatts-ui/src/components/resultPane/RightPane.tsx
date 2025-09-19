@@ -129,19 +129,16 @@ export const RightPane = () => {
 
         <AnalysisResults />
 
-        <Stack spacing={1} sx={{ mt: 2 }}>
-          <DataSourceLinks preferredModel={preferredModel} />
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            <Chip
-              label="Disclaimer"
-              color="info"
-              variant="outlined"
-              sx={{ border: "none", fontSize: "0.95rem" }}
-              onClick={() => setShowDisclaimer((v) => !v)}
-              icon={<InfoOutlinedIcon sx={{ fontSize: "1.1rem" }} />}
-            />
-          </Box>
-        </Stack>
+        <Box sx={{ display: "flex", alignItems: "center", mt: 2 }}>
+          <Chip
+            label="Disclaimer"
+            color="info"
+            variant="outlined"
+            sx={{ border: "none", fontSize: "0.95rem" }}
+            onClick={() => setShowDisclaimer((v) => !v)}
+            icon={<InfoOutlinedIcon sx={{ fontSize: "1.1rem" }} />}
+          />
+        </Box>
         <Collapse in={showDisclaimer}>
           <Typography
             variant="body2"

@@ -12,6 +12,7 @@ import {
   Chip,
   Paper,
   Skeleton,
+  Link,
 } from "@mui/material";
 import { UnitsContext } from "../../providers/UnitsContext";
 import {
@@ -19,6 +20,7 @@ import {
   KEY_HIGHEST_YEAR,
   KEY_KWH_PRODUCED,
   KEY_LOWEST_YEAR,
+  DATA_MODEL_INFO,
 } from "../../constants";
 import { ProductionDataTable } from "./ProductionDataTable";
 import { convertOutput, getOutOfBoundsMessage } from "../../utils";
@@ -30,7 +32,7 @@ import { SettingsContext } from "../../providers/SettingsContext";
 export const ProductionCard = memo(() => {
   const [expanded, setExpanded] = useState(false);
   const { units } = useContext(UnitsContext);
-  const { biasCorrection } = useContext(SettingsContext);
+  const { ensemble, preferredModel } = useContext(SettingsContext);
   const {
     productionData,
     isLoading,
@@ -43,7 +45,22 @@ export const ProductionCard = memo(() => {
   } = useProductionData();
 
   const title = "Production";
-  const subheader = `Estimated annual production potential${biasCorrection ? " (not bias corrected)" : ""}`;
+  const subheader = (
+    <>
+      Estimated Annual Production Potential from{" "}
+      <Link
+        href={
+          DATA_MODEL_INFO[preferredModel]?.source_href ||
+          DATA_MODEL_INFO.era5.source_href
+        }
+        target="_blank"
+        rel="noopener noreferrer"
+        underline="hover"
+      >
+        {preferredModel.toUpperCase()} Model
+      </Link>
+    </>
+  );
   const details = [
     "Wind energy production can vary significantly from year to year. Understanding both the average resource and its variability is key to setting realistic expectations.",
   ];
@@ -68,7 +85,7 @@ export const ProductionCard = memo(() => {
               />
             </Box>
           }
-          subheader="Estimated annual production potential"
+          subheader={subheader}
           sx={{ bgcolor: "warning.light", pb: 1 }}
         />
         <CardContent sx={{ py: 2 }}>

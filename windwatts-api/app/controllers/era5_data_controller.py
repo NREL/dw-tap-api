@@ -44,7 +44,7 @@ data_fetcher_router = DataFetcherRouter()
 data_fetcher_router.register_fetcher("athena_era5", athena_data_fetcher_era5)
 data_fetcher_router.register_fetcher("athena_ensemble", athena_data_fetcher_ensemble)
 
-# # Multiple average types for wind speed and production for era5 and bias corrected era5
+# # Multiple average types for wind speed and production for era5 and ensemble model
 # era5_wind_speed_avg_types = ["global", "yearly"]
 # era5_production_avg_types = ["summary", "yearly", "all"]
 
@@ -165,11 +165,11 @@ def get_windspeed_with_avg_type(
     lat: float = Query(..., description="Latitude of the location."),
     lng: float = Query(..., description="Longitude of the location."),
     height: int = Query(..., description="Height in meters."),
-    bias_correction: bool = Query(False, description="If true, use ensemble model (athena_ensemble)."),
+    ensemble: bool = Query(False, description="If true, use ensemble model (athena_ensemble)."),
     source: str = Query(DEFAULT_SOURCE, description="Source of the data.")
 ):
     try:
-        if bias_correction:
+        if ensemble:
             return _get_windspeed_core(lat, lng, height, avg_type, source="athena_ensemble")
         else:
             return _get_windspeed_core(lat, lng, height, avg_type, source)
@@ -192,11 +192,11 @@ def get_windspeed(
     lat: float = Query(..., description="Latitude of the location."),
     lng: float = Query(..., description="Longitude of the location."),
     height: int = Query(..., description="Height in meters."),
-    bias_correction: bool = Query(False, description="If true, use ensemble model (athena_ensemble)."),
+    ensemble: bool = Query(False, description="If true, use ensemble model (athena_ensemble)."),
     source: str = Query(DEFAULT_SOURCE, description="Source of the data.")
 ):
     try:
-        if bias_correction:
+        if ensemble:
             return _get_windspeed_core(lat, lng, height, "global", source="athena_ensemble")
         else:
             return _get_windspeed_core(lat, lng, height, "global", source)
@@ -313,11 +313,11 @@ def energy_production_with_period(
     lng: float = Query(..., description="Longitude of the location."),
     height: int = Query(..., description="Height in meters."),
     selected_powercurve: str = Query(..., description="Selected power curve name."),
-    bias_correction: bool = Query(False, description="If true, use ensemble model (athena_ensemble)."),
+    ensemble: bool = Query(False, description="If true, use ensemble model (athena_ensemble)."),
     source: str = Query(DEFAULT_SOURCE, description="Source of the data.")
 ):
     try:
-        if bias_correction:
+        if ensemble:
             return _get_energy_production_core(lat, lng, height, selected_powercurve, time_period, source="athena_ensemble")
         else:
             return _get_energy_production_core(lat, lng, height, selected_powercurve, time_period, source)
@@ -342,11 +342,11 @@ def energy_production(
     height: int = Query(..., description="Height in meters."),
     selected_powercurve: str = Query(..., description="Selected power curve name."),
     time_period: str = Query(..., description="Time period for production estimate."),
-    bias_correction: bool = Query(False, description="If true, use ensemble model (athena_ensemble)."),
+    ensemble: bool = Query(False, description="If true, use ensemble model (athena_ensemble)."),
     source: str = Query(DEFAULT_SOURCE, description="Source of the data.")
 ):
     try:
-        if bias_correction:
+        if ensemble:
             return _get_energy_production_core(lat, lng, height, selected_powercurve, time_period="global", source="athena_ensemble")
         else:
             return _get_energy_production_core(lat, lng, height, selected_powercurve, time_period, source)

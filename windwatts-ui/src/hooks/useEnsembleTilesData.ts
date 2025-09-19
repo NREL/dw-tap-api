@@ -4,13 +4,13 @@ import { SettingsContext } from "../providers/SettingsContext";
 import { getEnergyProduction, getWindspeedByLatLong } from "../services/api";
 import { isOutOfBounds, applyLoss } from "../utils";
 
-export const useBiasCorrectedTilesData = () => {
+export const useEnsembleTilesData = () => {
   const {
     currentPosition,
     hubHeight,
     powerCurve,
     preferredModel: dataModel,
-    biasCorrection,
+    ensemble,
     lossAssumptionFactor,
   } = useContext(SettingsContext);
 
@@ -23,7 +23,7 @@ export const useBiasCorrectedTilesData = () => {
     hubHeight &&
     powerCurve &&
     dataModel &&
-    biasCorrection &&
+    ensemble &&
     !outOfBounds
   );
 
@@ -35,9 +35,9 @@ export const useBiasCorrectedTilesData = () => {
       hubHeight,
       powerCurve,
       dataModel,
-      biasCorrection,
+      ensemble,
     });
-  }, [shouldFetch, lat, lng, hubHeight, powerCurve, dataModel, biasCorrection]);
+  }, [shouldFetch, lat, lng, hubHeight, powerCurve, dataModel, ensemble]);
 
   const { isLoading, data, error } = useSWR(
     swrKey,
@@ -48,7 +48,7 @@ export const useBiasCorrectedTilesData = () => {
           lng: lng!,
           hubHeight,
           dataModel,
-          biasCorrection,
+          ensemble,
         }),
         getEnergyProduction({
           lat: lat!,
@@ -57,7 +57,7 @@ export const useBiasCorrectedTilesData = () => {
           powerCurve,
           dataModel,
           time_period: "global",
-          biasCorrection,
+          ensemble,
         }),
       ]);
       return { wind, prod };

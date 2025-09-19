@@ -45,9 +45,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     [setSettings]
   );
 
-  const setBiasCorrection = useCallback(
-    (biasCorrection: boolean) => {
-      setSettings((current) => ({ ...current, biasCorrection }));
+  const setEnsemble = useCallback(
+    (ensemble: boolean) => {
+      setSettings((current) => ({ ...current, ensemble }));
     },
     [setSettings]
   );
@@ -99,8 +99,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       setPowerCurve,
       preferredModel: settings.preferredModel,
       setPreferredModel,
-      biasCorrection: settings.biasCorrection,
-      setBiasCorrection,
+      ensemble: settings.ensemble,
+      setEnsemble,
       lossAssumptionFactor:
         settings.lossAssumptionFactor ?? defaultValues.lossAssumptionFactor,
       lossAssumptionPercent: Math.round(
@@ -119,7 +119,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       settings.hubHeight,
       settings.powerCurve,
       settings.preferredModel,
-      settings.biasCorrection,
+      settings.ensemble,
       settings.lossAssumptionFactor,
       toggleSettings,
       toggleResults,
@@ -127,7 +127,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       setHubHeight,
       setPowerCurve,
       setPreferredModel,
-      setBiasCorrection,
+      setEnsemble,
       setLossAssumptionFactor,
       setLossAssumptionPercent,
     ]

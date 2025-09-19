@@ -22,7 +22,7 @@ import {
 } from "../../constants";
 
 export const Settings = () => {
-  const { settingsOpen, toggleSettings, biasCorrection, setBiasCorrection } =
+  const { settingsOpen, toggleSettings, ensemble, setEnsemble } =
     useContext(SettingsContext);
   const [hasScrolled, setHasScrolled] = useState(false);
 
@@ -109,11 +109,11 @@ export const Settings = () => {
             <FormControlLabel
               control={
                 <Switch
-                  checked={!!biasCorrection}
-                  onChange={(e) => setBiasCorrection(e.target.checked)}
+                  checked={!!ensemble}
+                  onChange={(e) => setEnsemble(e.target.checked)}
                 />
               }
-              label="Enable bias correction"
+              label="Enable ensemble model"
             />
           </Paper>
         </Box>
