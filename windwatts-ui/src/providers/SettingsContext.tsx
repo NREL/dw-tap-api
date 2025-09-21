@@ -14,7 +14,7 @@ export interface StoredSettings {
   powerCurve: string;
   preferredModel: DataModel;
   ensemble: boolean;
-  // Loss assumption factor stored as inverse percentage (e.g., 0.83 for 17%)
+  // Loss assumption factor stored as inverse percentage (e.g., 1.0 for 0%, or 0.83 for 17%)
   lossAssumptionFactor: number;
 }
 
@@ -40,12 +40,12 @@ export const defaultValues: StoredSettings = {
   powerCurve: "nrel-reference-100kW", // default power curve
   preferredModel: "era5", // default to era5 model
   ensemble: false,
-  lossAssumptionFactor: 0.83, // default to 17% loss
+  lossAssumptionFactor: 1.0, // default to no loss (0%), recommend 17%
 };
 
 export const SettingsContext = createContext<Settings>({
   ...defaultValues,
-  lossAssumptionPercent: 17,
+  lossAssumptionPercent: 0, // default to 0% loss to disable loss assumption
   toggleSettings: () => {},
   toggleResults: () => {},
   setCurrentPosition: () => {},
