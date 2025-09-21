@@ -97,8 +97,8 @@ export const Settings = () => {
         >
           <HubHeightSettings />
           <PowerCurveSettings />
-          <LossAssumptionSettings />
           <UnitsSettings />
+          <LossAssumptionSettings />
           {/* <ModelSettings /> */}
 
           <Divider sx={{ my: 2 }} />
