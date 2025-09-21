@@ -6,7 +6,6 @@ import {
   Collapse,
   Chip,
   Button,
-  Stack,
   Divider,
   Link,
 } from "@mui/material";
@@ -17,7 +16,6 @@ import { AnalysisResults } from "./AnalysisResults";
 import { useContext, useState } from "react";
 import { SettingsContext } from "../../providers/SettingsContext";
 import { POWER_CURVE_LABEL } from "../../constants";
-import { DataSourceLinks } from "./DataSourceLinks";
 
 const Item = styled(Paper)(({ theme }) => ({
   ...theme.typography.body2,
@@ -32,7 +30,6 @@ export const RightPane = () => {
     hubHeight,
     powerCurve,
     toggleSettings,
-    preferredModel,
   } = useContext(SettingsContext);
 
   const { lat, lng } = currentPosition ?? {};
