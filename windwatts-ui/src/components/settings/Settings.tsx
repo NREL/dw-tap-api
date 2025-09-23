@@ -97,7 +97,7 @@ export const Settings = () => {
           <UnitsSettings />
           <LossAssumptionSettings />
           {/* <ModelSettings /> */}
-          <EnsembleSettings />
+          {/* <EnsembleSettings /> */}
         </Box>
       </Box>
     </Modal>
