@@ -2,15 +2,16 @@ import { useContext, useMemo } from "react";
 import useSWR from "swr";
 import { SettingsContext } from "../providers/SettingsContext";
 import { getEnergyProduction, getWindspeedByLatLong } from "../services/api";
-import { isOutOfBounds } from "../utils";
+import { isOutOfBounds, applyLoss } from "../utils";
 
-export const useBiasCorrectedTilesData = () => {
+export const useEnsembleTilesData = () => {
   const {
     currentPosition,
     hubHeight,
     powerCurve,
     preferredModel: dataModel,
-    biasCorrection,
+    ensemble,
+    lossAssumptionFactor,
   } = useContext(SettingsContext);
 
   const { lat, lng } = currentPosition || {};
@@ -22,7 +23,7 @@ export const useBiasCorrectedTilesData = () => {
     hubHeight &&
     powerCurve &&
     dataModel &&
-    biasCorrection &&
+    ensemble &&
     !outOfBounds
   );
 
@@ -34,9 +35,9 @@ export const useBiasCorrectedTilesData = () => {
       hubHeight,
       powerCurve,
       dataModel,
-      biasCorrection,
+      ensemble,
     });
-  }, [shouldFetch, lat, lng, hubHeight, powerCurve, dataModel, biasCorrection]);
+  }, [shouldFetch, lat, lng, hubHeight, powerCurve, dataModel, ensemble]);
 
   const { isLoading, data, error } = useSWR(
     swrKey,
@@ -47,7 +48,7 @@ export const useBiasCorrectedTilesData = () => {
           lng: lng!,
           hubHeight,
           dataModel,
-          biasCorrection,
+          ensemble,
         }),
         getEnergyProduction({
           lat: lat!,
@@ -56,7 +57,7 @@ export const useBiasCorrectedTilesData = () => {
           powerCurve,
           dataModel,
           time_period: "global",
-          biasCorrection,
+          ensemble,
         }),
       ]);
       return { wind, prod };
@@ -69,9 +70,25 @@ export const useBiasCorrectedTilesData = () => {
     }
   );
 
+  // Apply loss adjustment to production data
+  const productionDataWithLoss = useMemo(() => {
+    if (!data?.prod || !data.prod.energy_production) return data?.prod;
+    
+    const adjustedProduction = applyLoss(
+      Number(data.prod.energy_production),
+      lossAssumptionFactor,
+      { mode: "floor" }
+    );
+    
+    return {
+      ...data.prod,
+      energy_production: adjustedProduction
+    };
+  }, [data?.prod, lossAssumptionFactor]);
+
   return {
     windData: data?.wind,
-    productionData: data?.prod,
+    productionData: productionDataWithLoss,
     isLoading,
     error,
     hasData: !!data,

@@ -2,14 +2,13 @@ import { memo, useContext } from "react";
 import { Box, Paper, Typography, Skeleton } from "@mui/material";
 import { UnitsContext } from "../../providers/UnitsContext";
 import { SettingsContext } from "../../providers/SettingsContext";
-import { useBiasCorrectedTilesData } from "../../hooks";
+import { useEnsembleTilesData } from "../../hooks";
 import { convertWindspeed, convertOutput, getWindResource } from "../../utils";
-import { KEY_AVERAGE_YEAR, KEY_KWH_PRODUCED } from "../../constants";
 
-// Compact, card-less variant for embedding in the top row
-export const BiasCorrectedTiles = memo(() => {
+// Compact, card-less variant for embedding in the top row - using ensemble model
+export const EnsembleTiles = memo(() => {
   const { units } = useContext(UnitsContext);
-  const { biasCorrection } = useContext(SettingsContext);
+  const { ensemble } = useContext(SettingsContext);
 
   const {
     windData,
@@ -17,9 +16,9 @@ export const BiasCorrectedTiles = memo(() => {
     isLoading: isTilesLoading,
     error,
     hasData,
-  } = useBiasCorrectedTilesData();
+  } = useEnsembleTilesData();
 
-  if (!biasCorrection) return null;
+  if (!ensemble) return null;
 
   const loading = isTilesLoading;
   const hasDataCombined = hasData;
@@ -136,11 +135,7 @@ export const BiasCorrectedTiles = memo(() => {
         </Typography>
         <Typography variant="h6" sx={{ fontWeight: 700 }}>
           {convertOutput(
-            Number(
-              productionData?.energy_production?.[KEY_AVERAGE_YEAR]?.[
-                KEY_KWH_PRODUCED
-              ] || 0
-            ),
+            Number(productionData?.energy_production || 0),
             units.output
           ).replace(/\s\w+$/, "")}
         </Typography>

@@ -28,7 +28,7 @@ export function LossAssumptionSettings() {
     setInputValue(String(value));
   };
 
-  const enabled = percent > 0;
+  const enabled = percent > 0; // Enable if percent > 0
 
   const handleToggle = (on: boolean) => {
     if (on) {

@@ -13,8 +13,8 @@ export interface StoredSettings {
   hubHeight: number;
   powerCurve: string;
   preferredModel: DataModel;
-  biasCorrection: boolean;
-  // Loss assumption factor stored as inverse percentage (e.g., 0.83 for 17%)
+  ensemble: boolean;
+  // Loss assumption factor stored as inverse percentage (e.g., 1.0 for 0%, or 0.83 for 17%)
   lossAssumptionFactor: number;
 }
 
@@ -27,7 +27,7 @@ export interface Settings extends StoredSettings {
   setHubHeight: (hubHeight: number) => void;
   setPowerCurve: (curve: string) => void;
   setPreferredModel: (preferredModel: DataModel) => void;
-  setBiasCorrection: (biasCorrection: boolean) => void;
+  setEnsemble: (ensemble: boolean) => void;
   setLossAssumptionFactor: (factor: number) => void;
   setLossAssumptionPercent: (percent: number) => void;
 }
@@ -39,20 +39,20 @@ export const defaultValues: StoredSettings = {
   hubHeight: 40, // default hub height in meters
   powerCurve: "nrel-reference-100kW", // default power curve
   preferredModel: "era5", // default to era5 model
-  biasCorrection: false,
-  lossAssumptionFactor: 0.83, // default to 17% loss
+  ensemble: false,
+  lossAssumptionFactor: 1.0, // default to no loss (0%), recommend 17%
 };
 
 export const SettingsContext = createContext<Settings>({
   ...defaultValues,
-  lossAssumptionPercent: 17,
+  lossAssumptionPercent: 0, // default to 0% loss to disable loss assumption
   toggleSettings: () => {},
   toggleResults: () => {},
   setCurrentPosition: () => {},
   setHubHeight: () => {},
   setPowerCurve: () => {},
   setPreferredModel: () => {},
-  setBiasCorrection: () => {},
+  setEnsemble: () => {},
   setLossAssumptionFactor: () => {},
   setLossAssumptionPercent: () => {},
 });

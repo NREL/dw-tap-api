@@ -22,7 +22,7 @@ import {
 } from "../../constants";
 
 export const Settings = () => {
-  const { settingsOpen, toggleSettings, biasCorrection, setBiasCorrection } =
+  const { settingsOpen, toggleSettings, ensemble, setEnsemble } =
     useContext(SettingsContext);
   const [hasScrolled, setHasScrolled] = useState(false);
 
@@ -97,8 +97,8 @@ export const Settings = () => {
         >
           <HubHeightSettings />
           <PowerCurveSettings />
-          <LossAssumptionSettings />
           <UnitsSettings />
+          <LossAssumptionSettings />
           {/* <ModelSettings /> */}
 
           <Divider sx={{ my: 2 }} />
@@ -109,12 +109,15 @@ export const Settings = () => {
             <FormControlLabel
               control={
                 <Switch
-                  checked={!!biasCorrection}
-                  onChange={(e) => setBiasCorrection(e.target.checked)}
+                  checked={!!ensemble}
+                  onChange={(e) => setEnsemble(e.target.checked)}
                 />
               }
-              label="Enable bias correction"
+              label="Enable Ensemble Model"
             />
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontStyle: "italic" }}>
+              The WindWatts Ensemble model is an alternative to our default atmospheric model, ERA5. This new model leverages machine learning with data from multiple constituent models with ancillary location and terrain data. While early results show significant performance improvements, this model is still being developed and should be used with care.
+            </Typography>
           </Paper>
         </Box>
       </Box>
