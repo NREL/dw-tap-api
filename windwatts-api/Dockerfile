@@ -1,5 +1,5 @@
-# Use the official Python image
-FROM python:3.13-slim
+# Use the official Python image with Debian bookworm
+FROM python:3.13-slim-bookworm
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
@@ -10,8 +10,8 @@ ENV PYTHONPATH=/app
 # Set the working directory
 WORKDIR $APP_HOME
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
+# Install system dependencies and upgrade packages
+RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     gdal-bin libgdal-dev libproj-dev libgeos-dev \
     gcc python3-dev libffi-dev curl
 
