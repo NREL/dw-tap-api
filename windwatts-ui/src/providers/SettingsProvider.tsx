@@ -7,6 +7,7 @@ import {
   StoredSettings,
 } from "./SettingsContext";
 import { DataModel } from "../types";
+import { percentToFactor } from "../utils";
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
   // Use the useLocalStorage hook to manage settings
@@ -44,6 +45,30 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     [setSettings]
   );
 
+  const setEnsemble = useCallback(
+    (ensemble: boolean) => {
+      setSettings((current) => ({ ...current, ensemble }));
+    },
+    [setSettings]
+  );
+
+  // Loss assumption: stored as factor (0-1). Default to 0.83 if missing
+  const setLossAssumptionFactor = useCallback(
+    (factor: number) => {
+      const clamped = Math.max(0, Math.min(1, Number(factor)));
+      setSettings((current) => ({ ...current, lossAssumptionFactor: clamped }));
+    },
+    [setSettings]
+  );
+
+  const setLossAssumptionPercent = useCallback(
+    (percent: number) => {
+      const factor = percentToFactor(percent);
+      setLossAssumptionFactor(factor);
+    },
+    [setLossAssumptionFactor]
+  );
+
   // Toggle functions that update the settings directly
   const toggleSettings = useCallback(() => {
     setSettings((current) => ({
@@ -74,6 +99,18 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       setPowerCurve,
       preferredModel: settings.preferredModel,
       setPreferredModel,
+      ensemble: settings.ensemble,
+      setEnsemble,
+      lossAssumptionFactor:
+        settings.lossAssumptionFactor ?? defaultValues.lossAssumptionFactor,
+      lossAssumptionPercent: Math.round(
+        (1 -
+          (settings.lossAssumptionFactor ??
+            defaultValues.lossAssumptionFactor)) *
+          100
+      ),
+      setLossAssumptionFactor,
+      setLossAssumptionPercent,
     }),
     [
       settings.settingsOpen,
@@ -82,12 +119,17 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       settings.hubHeight,
       settings.powerCurve,
       settings.preferredModel,
+      settings.ensemble,
+      settings.lossAssumptionFactor,
       toggleSettings,
       toggleResults,
       setCurrentPosition,
       setHubHeight,
       setPowerCurve,
       setPreferredModel,
+      setEnsemble,
+      setLossAssumptionFactor,
+      setLossAssumptionPercent,
     ]
   );
 

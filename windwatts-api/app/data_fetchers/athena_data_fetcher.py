@@ -2,23 +2,27 @@ from .abstract_data_fetcher import AbstractDataFetcher
 from windwatts_data import WindwattsWTKClient, WindwattsERA5Client
 
 class AthenaDataFetcher(AbstractDataFetcher):
-    def __init__(self, athena_config: str, data_type: str):
+    def __init__(self, athena_config: str, source_key: str):
         """
-        Initializes the AthenaDataFetcher with the given configuration.
+        Initializes the AthenaDataFetcher with a single source_key like 'wtk', 'era5', or 'era5_bc'.
+        We infer the base family ('wtk' or 'era5') from the part before the first underscore.
 
         Args:
             athena_config (str): Path to the Athena configuration file.
-            data_type (str): Type of data source ('wtk' or 'era5').
+            source_key (str): Key in the config that specifies which athena source.
         """
-        self.data_type = data_type.lower()
-        if self.data_type == 'wtk':
-            print("Initializing WTK Client")
-            self.client = WindwattsWTKClient(config_path=athena_config)
-        elif self.data_type == 'era5':
-            print("Initializing ERA5 Client")
-            self.client = WindwattsERA5Client(config_path=athena_config)
+        # self.data_type = data_type.lower()
+        self.source_key = source_key.lower()
+        self.base_type = self.source_key.split("_", 1)[0]  # 'wtk' or 'era5' (from 'era5_bc' too)
+
+        if self.base_type == 'wtk':
+            print(f"Initializing WTK Client with Source Key: {self.source_key}")
+            self.client = WindwattsWTKClient(config_path=athena_config, source_key = self.source_key) # source_key  "wtk"
+        elif self.base_type == 'era5' or self.base_type == 'ensemble':
+            print(f"Initializing ERA5 Client with Source Key: {self.source_key}")
+            self.client = WindwattsERA5Client(config_path=athena_config, source_key = self.source_key) # source_key  "era5" or "era5_bc"
         else:
-            raise ValueError(f"Unsupported data type: {data_type}")
+            raise ValueError(f"Unsupported base dataset: {self.base_type}")
 
     def fetch_data(self, lat: float, lng: float, height: int, avg_type: str = 'global') -> dict:
         """
@@ -38,13 +42,14 @@ class AthenaDataFetcher(AbstractDataFetcher):
         Raises:
             ValueError: If the avg_type is not supported for the selected client.
         """
-        valid_avg_types_params = {
-            'wtk': ['global', 'yearly', 'monthly', 'hourly', 'none'],
-            'era5': ['global', 'yearly', 'none']
-        }
+        # valid_avg_types_params = {
+        #     'wtk': ['global', 'yearly', 'monthly', 'hourly', 'none'],
+        #     'era5': ['global', 'yearly', 'none'],
+        #     'era5_bc': ['global','none']
+        # }
 
-        if avg_type not in valid_avg_types_params[self.data_type]:
-            raise ValueError(f"avg_type '{avg_type}' is not supported for data type '{self.data_type}'")
+        # if avg_type not in valid_avg_types_params[self.source_key]:
+        #     raise ValueError(f"avg_type '{avg_type}' is not supported for data type '{self.data_type}'")
 
         if avg_type == 'none':
             return self.client.fetch_df(lat=lat, long=lng, height=height)

@@ -6,7 +6,6 @@ import {
   Collapse,
   Chip,
   Button,
-  Stack,
   Divider,
   Link,
 } from "@mui/material";
@@ -17,7 +16,6 @@ import { AnalysisResults } from "./AnalysisResults";
 import { useContext, useState } from "react";
 import { SettingsContext } from "../../providers/SettingsContext";
 import { POWER_CURVE_LABEL } from "../../constants";
-import { DataSourceLinks } from "./DataSourceLinks";
 
 const Item = styled(Paper)(({ theme }) => ({
   ...theme.typography.body2,
@@ -32,7 +30,6 @@ export const RightPane = () => {
     hubHeight,
     powerCurve,
     toggleSettings,
-    preferredModel,
   } = useContext(SettingsContext);
 
   const { lat, lng } = currentPosition ?? {};
@@ -129,19 +126,16 @@ export const RightPane = () => {
 
         <AnalysisResults />
 
-        <Stack spacing={1} sx={{ mt: 2 }}>
-          <DataSourceLinks preferredModel={preferredModel} />
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            <Chip
-              label="Disclaimer"
-              color="info"
-              variant="outlined"
-              sx={{ border: "none", fontSize: "0.95rem" }}
-              onClick={() => setShowDisclaimer((v) => !v)}
-              icon={<InfoOutlinedIcon sx={{ fontSize: "1.1rem" }} />}
-            />
-          </Box>
-        </Stack>
+        <Box sx={{ display: "flex", alignItems: "center", mt: 2 }}>
+          <Chip
+            label="Disclaimer"
+            color="info"
+            variant="outlined"
+            sx={{ border: "none", fontSize: "0.95rem" }}
+            onClick={() => setShowDisclaimer((v) => !v)}
+            icon={<InfoOutlinedIcon sx={{ fontSize: "1.1rem" }} />}
+          />
+        </Box>
         <Collapse in={showDisclaimer}>
           <Typography
             variant="body2"

@@ -12,17 +12,27 @@ import {
   Chip,
   Paper,
   Skeleton,
+  Link,
 } from "@mui/material";
 import { UnitsContext } from "../../providers/UnitsContext";
+import {
+  KEY_AVERAGE_YEAR,
+  KEY_HIGHEST_YEAR,
+  KEY_KWH_PRODUCED,
+  KEY_LOWEST_YEAR,
+  DATA_MODEL_INFO,
+} from "../../constants";
 import { ProductionDataTable } from "./ProductionDataTable";
 import { convertOutput, getOutOfBoundsMessage } from "../../utils";
 import { ExpandMore, ExpandLess } from "@mui/icons-material";
 import { OutOfBoundsWarning } from "../shared";
 import { useProductionData } from "../../hooks";
+import { SettingsContext } from "../../providers/SettingsContext";
 
 export const ProductionCard = memo(() => {
   const [expanded, setExpanded] = useState(false);
   const { units } = useContext(UnitsContext);
+  const { preferredModel } = useContext(SettingsContext);
   const {
     productionData,
     isLoading,
@@ -35,7 +45,22 @@ export const ProductionCard = memo(() => {
   } = useProductionData();
 
   const title = "Production";
-  const subheader = "Estimated annual production potential";
+  const subheader = (
+    <>
+      Estimated Annual Production Potential from{" "}
+      <Link
+        href={
+          DATA_MODEL_INFO[preferredModel]?.source_href ||
+          DATA_MODEL_INFO.era5.source_href
+        }
+        target="_blank"
+        rel="noopener noreferrer"
+        underline="hover"
+      >
+        {preferredModel.toUpperCase()} Model
+      </Link>
+    </>
+  );
   const details = [
     "Wind energy production can vary significantly from year to year. Understanding both the average resource and its variability is key to setting realistic expectations.",
   ];
@@ -60,7 +85,7 @@ export const ProductionCard = memo(() => {
               />
             </Box>
           }
-          subheader="Estimated annual production potential"
+          subheader={subheader}
           sx={{ bgcolor: "warning.light", pb: 1 }}
         />
         <CardContent sx={{ py: 2 }}>
@@ -212,17 +237,23 @@ export const ProductionCard = memo(() => {
   }
 
   // Data loaded successfully
-  const summaryData = productionData.summary_avg_energy_production;
-  const avgProduction = summaryData?.["Average year"]?.["kWh produced"] || 0;
-  const lowProduction = summaryData?.["Lowest year"]?.["kWh produced"] || 0;
-  const highProduction = summaryData?.["Highest year"]?.["kWh produced"] || 0;
+  const summaryData = productionData?.summary_avg_energy_production;
+  const avgProduction = Number(
+    summaryData?.[KEY_AVERAGE_YEAR]?.[KEY_KWH_PRODUCED] || 0
+  );
+  const lowProduction = Number(
+    summaryData?.[KEY_LOWEST_YEAR]?.[KEY_KWH_PRODUCED] || 0
+  );
+  const highProduction = Number(
+    summaryData?.[KEY_HIGHEST_YEAR]?.[KEY_KWH_PRODUCED] || 0
+  );
 
   // Determine data type and set up variables
   // may need something more robust here if we add more data types
   const monthlyData = "monthly_avg_energy_production" in productionData;
   const tableData = monthlyData
     ? productionData.monthly_avg_energy_production
-    : productionData.yearly_avg_energy_production;
+    : productionData?.yearly_avg_energy_production;
 
   const detailsLabel = monthlyData
     ? "Monthly Production Details"

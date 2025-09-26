@@ -23,7 +23,13 @@ export const useWindData = () => {
 
   const { isLoading, data, error } = useSWR(
     swrKey,
-    () => getWindspeedByLatLong({ lat: lat!, lng: lng!, hubHeight, dataModel }),
+    () =>
+      getWindspeedByLatLong({
+        lat: lat!,
+        lng: lng!,
+        hubHeight,
+        dataModel,
+      }),
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,

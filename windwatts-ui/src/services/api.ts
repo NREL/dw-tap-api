@@ -7,14 +7,15 @@ export const fetchWrapper = async (url: string, options: RequestInit) => {
   }
   return response.json();
 };
-
+// time_period = "global" is default for windspeed in the era5_controller. But have to include "source" param as "athena_ensemble" for ensemble model result and "athena_era5" for regular era5 result which is default anyway.
 export const getWindspeedByLatLong = async ({
   lat,
   lng,
   hubHeight,
   dataModel,
+  ensemble,
 }: WindspeedByLatLngRequest) => {
-  const url = `/api/${dataModel}/windspeed?lat=${lat}&lng=${lng}&height=${hubHeight}`;
+  const url = `/api/${dataModel}/windspeed?lat=${lat}&lng=${lng}&height=${hubHeight}${ensemble ? "&ensemble=true" : ""}`;
   const options = {
     method: "GET",
     headers: {
@@ -24,6 +25,8 @@ export const getWindspeedByLatLong = async ({
   return fetchWrapper(url, options);
 };
 
+// time_period = "all" works for era5 but have to add source param as "athena_era5" ("athena_era5" is default in era5_data_controller as source)
+// time_period = "global" works for the ensemble model to fetch single global production value but have to add source as "athena_ensemble". Key is "energy_production" to get value.
 export const getEnergyProduction = async ({
   lat,
   lng,
@@ -31,8 +34,9 @@ export const getEnergyProduction = async ({
   powerCurve,
   dataModel,
   time_period = "all",
+  ensemble,
 }: EnergyProductionRequest) => {
-  const url = `/api/${dataModel}/energy-production?lat=${lat}&lng=${lng}&height=${hubHeight}&selected_powercurve=${powerCurve}&time_period=${time_period}`;
+  const url = `/api/${dataModel}/energy-production?lat=${lat}&lng=${lng}&height=${hubHeight}&selected_powercurve=${powerCurve}&time_period=${time_period}${ensemble ? "&ensemble=true" : ""}`;
   const options = {
     method: "GET",
     headers: {

@@ -88,39 +88,46 @@ class AuditMiddleware(BaseHTTPMiddleware):
         request_id: str
     ):
         """Create audit log entry for successful requests only"""
-        db: Session = SessionLocal()
-        try:
-            # Get user ID from request if available
-            user_id = None
-            if hasattr(request.state, "user"):
-                user_id = str(request.state.user.id)
+        print("Logging request")
+        print("Request ID", request_id)
+        print("Duration", duration_ms)
+        print("Request size", request_size)
+        print("Response size", response_size)
+        print("Request", request)
+        print("Response", response)
+        # db: Session = SessionLocal()
+        # try:
+        #     # Get user ID from request if available
+        #     user_id = None
+        #     if hasattr(request.state, "user"):
+        #         user_id = str(request.state.user.id)
 
-            # Extract path information
-            path = str(request.url.path)
+        #     # Extract path information
+        #     path = str(request.url.path)
 
-            # Create audit log entry
-            audit_log = AuditLog(
-                user_id=user_id,
-                action="api_request",
-                resource=path,
-                method=request.method,
-                status_code=response.status_code,
-                ip_address=request.client.host if request.client else None,
-                user_agent=request.headers.get("user-agent"),
-                duration_ms=duration_ms,
-                request_size_bytes=request_size,
-                response_size_bytes=response_size,
-                request_id=request_id,
-                log_metadata={
-                    "query_params": dict(request.query_params),
-                    "path_params": request.path_params
-                }
-            )
+        #     # Create audit log entry
+        #     audit_log = AuditLog(
+        #         user_id=user_id,
+        #         action="api_request",
+        #         resource=path,
+        #         method=request.method,
+        #         status_code=response.status_code,
+        #         ip_address=request.client.host if request.client else None,
+        #         user_agent=request.headers.get("user-agent"),
+        #         duration_ms=duration_ms,
+        #         request_size_bytes=request_size,
+        #         response_size_bytes=response_size,
+        #         request_id=request_id,
+        #         log_metadata={
+        #             "query_params": dict(request.query_params),
+        #             "path_params": request.path_params
+        #         }
+        #     )
             
-            db.add(audit_log)
-            db.commit()
-        except Exception as e:
-            logger.error(f"Failed to create audit log: {str(e)}")
-            db.rollback()
-        finally:
-            db.close() 
+        #     db.add(audit_log)
+        #     db.commit()
+        # except Exception as e:
+        #     logger.error(f"Failed to create audit log: {str(e)}")
+        #     db.rollback()
+        # finally:
+        #     db.close() 

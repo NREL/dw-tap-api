@@ -1,10 +1,20 @@
-import { Box, Modal, Typography, IconButton } from "@mui/material";
+import {
+  Box,
+  Modal,
+  Typography,
+  IconButton,
+  Divider,
+  Paper,
+  FormControlLabel,
+  Switch,
+} from "@mui/material";
 import { Close } from "@mui/icons-material";
 import { UnitsSettings } from "./UnitsSettings";
 import { useContext, useState } from "react";
 import { SettingsContext } from "../../providers/SettingsContext";
 // import { ModelSettings } from "./ModelSettings";
 import { PowerCurveSettings } from "./PowerCurveSettings";
+import { LossAssumptionSettings } from "./LossAssumptionSettings";
 import { HubHeightSettings } from "./HubHeightSettings";
 import {
   SETTINGS_MODAL_WIDTH,
@@ -12,7 +22,8 @@ import {
 } from "../../constants";
 
 export const Settings = () => {
-  const { settingsOpen, toggleSettings } = useContext(SettingsContext);
+  const { settingsOpen, toggleSettings, ensemble, setEnsemble } =
+    useContext(SettingsContext);
   const [hasScrolled, setHasScrolled] = useState(false);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -87,7 +98,27 @@ export const Settings = () => {
           <HubHeightSettings />
           <PowerCurveSettings />
           <UnitsSettings />
+          <LossAssumptionSettings />
           {/* <ModelSettings /> */}
+
+          <Divider sx={{ my: 2 }} />
+          <Typography variant="subtitle1" gutterBottom>
+            Experimental
+          </Typography>
+          <Paper sx={{ p: 2 }} variant="outlined">
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={!!ensemble}
+                  onChange={(e) => setEnsemble(e.target.checked)}
+                />
+              }
+              label="Enable Ensemble Model"
+            />
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontStyle: "italic" }}>
+              The WindWatts Ensemble model is an alternative to our default atmospheric model, ERA5. This new model leverages machine learning with data from multiple constituent models with ancillary location and terrain data. While early results show significant performance improvements, this model is still being developed and should be used with care.
+            </Typography>
+          </Paper>
         </Box>
       </Box>
     </Modal>
