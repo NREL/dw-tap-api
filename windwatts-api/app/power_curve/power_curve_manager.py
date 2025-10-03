@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import calendar
 import numpy as np
-from scipy.interpolate import CubicSpline
+from scipy.interpolate import CubicSpline, PchipInterpolator
 from enum import Enum
 
 class DatasetSchema(Enum):
@@ -113,11 +113,18 @@ class PowerCurveManager:
     
     def estimation_quantiles_SWI(self, quantiles, probs, M1=1000, M2=501):
         """
-        Estimate a smoother quantile function using the Spline With Inversion (SWI) method.
+        Estimate a smoother quantile function using the Spline With Inversion (SWI) method, with a safe fallback..
 
         This method constructs a cubic spline interpolation of the empirical CDF (defined by the 
         provided `quantiles` and corresponding `probs`), and then performs an inversion to generate 
         a smooth estimate of quantiles over a high-resolution, uniformly spaced probability range.
+
+        Fallback (PCHIP on Q(p)):
+        - If CubicSpline fails (e.g., because quantiles contain duplicates,
+          violating the "strictly increasing x" rule), falls back to directly
+          interpolating Q(p) = quantile at probability p using PCHIP.
+        - This guarantees monotone, shape-preserving interpolation without
+          explicit inversion.
 
         Assumes that:
             - `quantiles` and `probs` are both sorted in ascending order.
@@ -138,24 +145,37 @@ class PowerCurveManager:
         :rtype: Tuple[numpy.ndarray, numpy.ndarray]
         """
 
-        x = quantiles
-        y = probs # interpolate probs w.r.t. quantile values
+        q = np.asarray(quantiles, dtype=np.float64)  # quantiles
+        p = np.asarray(probs,     dtype=np.float64)  # probabilities
 
-        # === Compute approximate derivatives at endpoints ===
-        dy_start = (y[1] - y[0]) / (x[1] - x[0])  # Forward difference
-        dy_end = (y[-1] - y[-2]) / (x[-1] - x[-2])  # Backward difference
+        try:
+            x = q
+            y = p # interpolate probs w.r.t. quantile values
 
-        # === Create the cubic spline with clamped boundary conditions ===
-        spline = CubicSpline(x, y, bc_type=((1, dy_start), (1, dy_end)))
-        
-        #=== High-resolution discretization (interp_point_count is large) ===
-        x_smooth = np.linspace(x[0], x[-1], M1)
-        y_smooth = spline(x_smooth)
+            # === Compute approximate derivatives at endpoints ===
+            dy_start = (y[1] - y[0]) / (x[1] - x[0])  # Forward difference
+            dy_end = (y[-1] - y[-2]) / (x[-1] - x[-2])  # Backward difference
 
-        probs_new = np.linspace(0, 1, M2)
-        quantiles_new = self.find_inverse(x_smooth, y_smooth, probs_new)
+            # === Create the cubic spline with clamped boundary conditions ===
+            spline = CubicSpline(x, y, bc_type=((1, dy_start), (1, dy_end)))
+            
+            #=== High-resolution discretization (interp_point_count is large) ===
+            x_smooth = np.linspace(x[0], x[-1], M1, dtype=np.float64)
+            y_smooth = spline(x_smooth)
 
-        return quantiles_new,probs_new
+            # Invert F(q) -> Q(p)
+            probs_new = np.linspace(0, 1, M2)
+            quantiles_new = self.find_inverse(x_smooth, y_smooth, probs_new)
+
+            return quantiles_new,probs_new
+
+        except (ValueError, ZeroDivisionError):
+            # Fallback: PCHIP on Q(p)
+            Q = PchipInterpolator(p, q)   # monotone if q is non-decreasing
+            probs_new = np.linspace(0, 1, M2, dtype=np.float64)
+            quantiles_new = Q(probs_new)
+
+            return quantiles_new, probs_new
     
     def _quantiles_to_kw_midpoints(
         self,
