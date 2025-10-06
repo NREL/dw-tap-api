@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import calendar
 import numpy as np
-from scipy.interpolate import CubicSpline, PchipInterpolator
+from scipy.interpolate import CubicSpline
 from enum import Enum
 
 class DatasetSchema(Enum):
