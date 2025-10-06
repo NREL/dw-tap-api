@@ -111,6 +111,30 @@ class PowerCurveManager:
         closest_indices = np.argmin(diff, axis=0)
         return x_smooth[closest_indices]
     
+    def _jitter_nonincreasing(self, q: np.ndarray, eps: float = 1e-5):
+        """
+        Ensure q is strictly increasing by adding a tiny epsilon to any element
+        that is <= its predecessor. Long flat runs become a tiny staircase.
+        
+        :param q: Input array of quantile values that may include equal or decreasing entries.
+        :type q: numpy.ndarray
+        :param eps: Minimum increment applied to enforce strict monotonicity. Defaults to 1e-5.
+        :type eps: float
+        :return: A strictly increasing version of the input array with minimal perturbation.
+        :rtype: numpy.ndarray
+        """
+        # Example:
+        # q = np.array([3.02, 3.02, 3.02, 3.05])
+        # _jitter_nonincreasing(q, eps=1e-5)
+        # array([3.02, 3.02001, 3.02002, 3.05])
+        q = np.asarray(q, dtype=np.float64).copy()
+        for i in range(1, q.size):
+            if not np.isfinite(q[i]) or not np.isfinite(q[i-1]):
+                continue
+            if q[i] <= q[i-1]:
+                q[i] = q[i-1] + eps
+        return q
+    
     def estimation_quantiles_SWI(self, quantiles, probs, M1=1000, M2=501):
         """
         Estimate a smoother quantile function using the Spline With Inversion (SWI) method, with a safe fallback..
@@ -119,12 +143,11 @@ class PowerCurveManager:
         provided `quantiles` and corresponding `probs`), and then performs an inversion to generate 
         a smooth estimate of quantiles over a high-resolution, uniformly spaced probability range.
 
-        Fallback (PCHIP on Q(p)):
-        - If CubicSpline fails (e.g., because quantiles contain duplicates,
-          violating the "strictly increasing x" rule), falls back to directly
-          interpolating Q(p) = quantile at probability p using PCHIP.
-        - This guarantees monotone, shape-preserving interpolation without
-          explicit inversion.
+        If the cubic spline fails due to equal or non-increasing quantile values
+        (which violate the strictly increasing requirement of CubicSpline),
+        those quantiles are adjusted by a small epsilon (+1e-5) to enforce
+        monotonicity before retrying. This correction is minimal and does not
+        materially affect the resulting averages.
 
         Assumes that:
             - `quantiles` and `probs` are both sorted in ascending order.
@@ -148,10 +171,11 @@ class PowerCurveManager:
         q = np.asarray(quantiles, dtype=np.float64)  # quantiles
         p = np.asarray(probs,     dtype=np.float64)  # probabilities
 
-        try:
-            x = q
-            y = p # interpolate probs w.r.t. quantile values
+        # Predefine defaults in case both attempts fail
+        probs_new = np.linspace(0, 1, M2, dtype=np.float64)
+        quantiles_new = np.zeros_like(probs_new, dtype=np.float64)
 
+        def _run_cubic(x,y):
             # === Compute approximate derivatives at endpoints ===
             dy_start = (y[1] - y[0]) / (x[1] - x[0])  # Forward difference
             dy_end = (y[-1] - y[-2]) / (x[-1] - x[-2])  # Backward difference
@@ -164,18 +188,19 @@ class PowerCurveManager:
             y_smooth = spline(x_smooth)
 
             # Invert F(q) -> Q(p)
-            probs_new = np.linspace(0, 1, M2)
-            quantiles_new = self.find_inverse(x_smooth, y_smooth, probs_new)
+            q_new = self.find_inverse(x_smooth, y_smooth, probs_new)
 
-            return quantiles_new,probs_new
-
+            return q_new,probs_new
+        
+        try:
+            return _run_cubic(q, p)
         except (ValueError, ZeroDivisionError):
-            # Fallback: PCHIP on Q(p)
-            Q = PchipInterpolator(p, q)   # monotone if q is non-decreasing
-            probs_new = np.linspace(0, 1, M2, dtype=np.float64)
-            quantiles_new = Q(probs_new)
-
-            return quantiles_new, probs_new
+            try:
+                q_fix = self._jitter_nonincreasing(q, eps=1e-5)
+                return _run_cubic(q_fix, p)
+            except Exception as e2:
+                print(f"Warning: CubicSpline failed even after jittering — {e2}")
+                return quantiles_new, probs_new
     
     def _quantiles_to_kw_midpoints(
         self,
