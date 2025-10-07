@@ -73,16 +73,16 @@ export const useEnsembleTilesData = () => {
   // Apply loss adjustment to production data
   const productionDataWithLoss = useMemo(() => {
     if (!data?.prod || !data.prod.energy_production) return data?.prod;
-    
+
     const adjustedProduction = applyLoss(
       Number(data.prod.energy_production),
       lossAssumptionFactor,
       { mode: "floor" }
     );
-    
+
     return {
       ...data.prod,
-      energy_production: adjustedProduction
+      energy_production: adjustedProduction,
     };
   }, [data?.prod, lossAssumptionFactor]);
 
