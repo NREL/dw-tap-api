@@ -1,5 +1,5 @@
 from .abstract_data_fetcher import AbstractDataFetcher
-from windwatts_data import WindwattsWTKClient, WindwattsERA5Client
+from windwatts_data import WindwattsWTKClient, WindwattsERA5Client, WindwattsEnsembleClient
 
 class AthenaDataFetcher(AbstractDataFetcher):
     def __init__(self, athena_config: str, source_key: str):
@@ -18,9 +18,12 @@ class AthenaDataFetcher(AbstractDataFetcher):
         if self.base_type == 'wtk':
             print(f"Initializing WTK Client with Source Key: {self.source_key}")
             self.client = WindwattsWTKClient(config_path=athena_config, source_key = self.source_key) # source_key  "wtk"
-        elif self.base_type == 'era5' or self.base_type == 'ensemble':
+        elif self.base_type == 'era5':
             print(f"Initializing ERA5 Client with Source Key: {self.source_key}")
             self.client = WindwattsERA5Client(config_path=athena_config, source_key = self.source_key) # source_key  "era5" or "era5_bc"
+        elif self.base_type == 'ensemble':
+            print(f"Initializing Ensemble Client with Source Key: {self.source_key}")
+            self.client = WindwattsEnsembleClient(config_path=athena_config, source_key = self.source_key) # source_key  "ensemble"
         else:
             raise ValueError(f"Unsupported base dataset: {self.base_type}")
 

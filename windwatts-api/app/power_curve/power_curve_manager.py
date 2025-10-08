@@ -5,25 +5,49 @@ import calendar
 import numpy as np
 from scipy.interpolate import CubicSpline
 from enum import Enum
+from typing import Optional
 
 class DatasetSchema(Enum):
-    TIMESERIES = "timeseries"                # Any raw time-series data (year/month/hour based, magnitudes not quantiles)
-    QUANTILES_WITH_YEAR = "quantiles_with_year"  # Quantile distributions, separated by year
-    QUANTILES_GLOBAL = "quantiles_global"        # Quantile distribution without year (global)
+    TIMESERIES = "timeseries"                # Any raw time-series data (year/month/hour based, magnitudes not quantiles) - wtk
+    QUANTILES_WITH_YEAR = "quantiles_with_year"  # Quantile distributions, separated by year - era5
+    QUANTILES_GLOBAL = "quantiles_global"        # Quantile distribution without year (global) - ensemble data
 
 class PowerCurveManager:
     """
     Manages multiple power curves stored in a directory.
     """
-    def __init__(self, power_curve_dir: str):
+    def __init__(self, 
+                power_curve_dir: str,
+                use_swi_default: bool = False,
+                schema_swi_prefs: Optional[dict] = None):
         """
         Initialize PowerCurveManager to load multiple power curves.
 
         :param power_curve_dir: Directory containing power curve files.
+        :param use_swi_default: Fallback if a schema isn't in schema_swi_prefs.
+        :param schema_swi_prefs: Optional dict overriding per-schema SWI behavior.       
         """
         self.power_curves = {}
         self.load_power_curves(power_curve_dir)
+        self.use_swi_default = use_swi_default
+
+        self.schema_swi_prefs = {
+            DatasetSchema.TIMESERIES: False, # not used for midpoints; defined for completeness
+            DatasetSchema.QUANTILES_WITH_YEAR: True, # SWI ON
+            DatasetSchema.QUANTILES_GLOBAL: False # SWI OFF
+        }
+        
+        if schema_swi_prefs:
+            self.schema_swi_prefs.update(schema_swi_prefs)
+        
+    def _use_swi_for(self, schema: DatasetSchema) -> bool:
+        """Resolve SWI strictly by schema (falls back to class default if absent)."""
+        return self.schema_swi_prefs.get(schema, self.use_swi_default)
     
+    def set_schema_swi_pref(self, schema: DatasetSchema, enabled: bool) -> None:
+        """Change SWI default for a specific schema."""
+        self.schema_swi_prefs[schema] = bool(enabled)
+
     # ---------- NEW: schema detection ----------
     def _classify_schema(self, df: pd.DataFrame) -> DatasetSchema:
         """
@@ -230,18 +254,23 @@ class PowerCurveManager:
         self,
         df_sorted: pd.DataFrame,
         ws_col: str,
-        power_curve: PowerCurve
+        power_curve: PowerCurve,
+        use_swi: bool
     ) -> pd.DataFrame:
         """
         Takes a dataframe with columns [probability, ws_col] sorted by probability
-        → smooth CDF via SWI → midpoint quantiles → kW via power curve.
+        → smooth CDF via SWI or not based on use_swi flag → midpoint quantiles → kW via power curve.
         Returns a dataframe with columns [ws_col, f"{ws_col}_kw"] for equal-probability midpoints.
         """
-        q_smooth, _ = self.estimation_quantiles_SWI(
-            df_sorted[ws_col].to_numpy(dtype=float),
-            df_sorted["probability"].to_numpy(dtype=float)
-        )
-        qs = pd.Series(q_smooth, dtype=float)
+        probs = df_sorted["probability"].to_numpy(dtype=float)
+        quants = df_sorted[ws_col].to_numpy(dtype=float)
+
+        if use_swi:
+            q_est, _ = self.estimation_quantiles_SWI(quantiles=quants,probs=probs)
+        else:
+            q_est = quants
+
+        qs = pd.Series(q_est, dtype=float)
         midpoints = (qs.shift(-1) + qs) / 2
         midpoints = midpoints.iloc[:-1]  # drop last NaN
 
@@ -250,7 +279,6 @@ class PowerCurveManager:
         mid_df[f"{ws_col}_kw"] = power_curve.windspeed_to_kw(mid_df, ws_col)
         return mid_df
 
-    
     def fetch_energy_production_df(self, df: pd.DataFrame, height: int, selected_power_curve: str, relevant_columns_only: bool = True) -> pd.DataFrame:
         """
         Computes energy production dataframe using the selected power curve.
@@ -289,19 +317,21 @@ class PowerCurveManager:
             return work
         
         elif schema == DatasetSchema.QUANTILES_WITH_YEAR:
+            use_swi_eff = self._use_swi_for(schema)
             records = []
             for year, group in df.groupby("year"):
                 # sorting by probability is important since the records might be shuffled by "groupby" and we are using midpoint method.
                 group = group.sort_values("probability").reset_index(drop=True)
-                mid_df = self._quantiles_to_kw_midpoints(group, ws_col, power_curve)
+                mid_df = self._quantiles_to_kw_midpoints(group, ws_col, power_curve, use_swi=use_swi_eff)
                 mid_df.insert(0, "year", year)
                 records.append(mid_df)
             out = pd.concat(records, ignore_index=True) if records else pd.DataFrame(columns=["year", ws_col, f"{ws_col}_kw"])
             return out if not relevant_columns_only else out[["year", ws_col, f"{ws_col}_kw"]]
         
         else:  # DatasetSchema.QUANTILES_GLOBAL
+            use_swi_eff = self._use_swi_for(schema)
             group = df.sort_values("probability").reset_index(drop=True)
-            out = self._quantiles_to_kw_midpoints(group, ws_col, power_curve)
+            out = self._quantiles_to_kw_midpoints(group, ws_col, power_curve, use_swi=use_swi_eff)
             return out if not relevant_columns_only else out[[ws_col, f"{ws_col}_kw"]]
     
     def prepare_yearly_production_df(self, df: pd.DataFrame, height: int, selected_power_curve: str) -> pd.DataFrame:
