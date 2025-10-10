@@ -5,25 +5,49 @@ import calendar
 import numpy as np
 from scipy.interpolate import CubicSpline
 from enum import Enum
+from typing import Optional
 
 class DatasetSchema(Enum):
-    TIMESERIES = "timeseries"                # Any raw time-series data (year/month/hour based, magnitudes not quantiles)
-    QUANTILES_WITH_YEAR = "quantiles_with_year"  # Quantile distributions, separated by year
-    QUANTILES_GLOBAL = "quantiles_global"        # Quantile distribution without year (global)
+    TIMESERIES = "timeseries"                # Any raw time-series data (year/month/hour based, magnitudes not quantiles) - wtk
+    QUANTILES_WITH_YEAR = "quantiles_with_year"  # Quantile distributions, separated by year - era5
+    QUANTILES_GLOBAL = "quantiles_global"        # Quantile distribution without year (global) - ensemble data
 
 class PowerCurveManager:
     """
     Manages multiple power curves stored in a directory.
     """
-    def __init__(self, power_curve_dir: str):
+    def __init__(self, 
+                power_curve_dir: str,
+                use_swi_default: bool = False,
+                schema_swi_prefs: Optional[dict] = None):
         """
         Initialize PowerCurveManager to load multiple power curves.
 
         :param power_curve_dir: Directory containing power curve files.
+        :param use_swi_default: Fallback if a schema isn't in schema_swi_prefs.
+        :param schema_swi_prefs: Optional dict overriding per-schema SWI behavior.       
         """
         self.power_curves = {}
         self.load_power_curves(power_curve_dir)
+        self.use_swi_default = use_swi_default
+
+        self.schema_swi_prefs = {
+            DatasetSchema.TIMESERIES: False, # not used for midpoints; defined for completeness
+            DatasetSchema.QUANTILES_WITH_YEAR: True, # SWI ON
+            DatasetSchema.QUANTILES_GLOBAL: False # SWI OFF
+        }
+        
+        if schema_swi_prefs:
+            self.schema_swi_prefs.update(schema_swi_prefs)
+        
+    def _use_swi_for(self, schema: DatasetSchema) -> bool:
+        """Resolve SWI strictly by schema (falls back to class default if absent)."""
+        return self.schema_swi_prefs.get(schema, self.use_swi_default)
     
+    def set_schema_swi_pref(self, schema: DatasetSchema, enabled: bool) -> None:
+        """Change SWI default for a specific schema."""
+        self.schema_swi_prefs[schema] = bool(enabled)
+
     # ---------- NEW: schema detection ----------
     def _classify_schema(self, df: pd.DataFrame) -> DatasetSchema:
         """
@@ -111,13 +135,79 @@ class PowerCurveManager:
         closest_indices = np.argmin(diff, axis=0)
         return x_smooth[closest_indices]
     
+    def _jitter_nonincreasing(self, q: np.ndarray, eps: float = 1e-5):
+        """
+        Ensure q is strictly increasing by adding a tiny epsilon to any element
+        that is <= its predecessor. Long flat runs become a tiny staircase.
+        
+        :param q: Input array of quantile values that may include equal or decreasing entries.
+        :type q: numpy.ndarray
+        :param eps: Minimum increment applied to enforce strict monotonicity. Defaults to 1e-5.
+        :type eps: float
+        :return: A strictly increasing version of the input array with minimal perturbation.
+        :rtype: numpy.ndarray
+        """
+        # Example:
+        # q = np.array([3.02, 3.02, 3.02, 3.05])
+        # _jitter_nonincreasing(q, eps=1e-5)
+        # array([3.02, 3.02001, 3.02002, 3.05])
+        q = np.asarray(q, dtype=np.float64).copy()
+        for i in range(1, q.size):
+            if not np.isfinite(q[i]) or not np.isfinite(q[i-1]):
+                continue
+            if q[i] <= q[i-1]:
+                q[i] = q[i-1] + eps
+        return q
+    
+    def run_cubic(self, x, y, probs_new, M1):
+        """
+        Internal helper: fit cubic spline F(q)=P(X≤q) and invert to Q(p).
+
+        Given strictly increasing quantile values (`x`) and their corresponding
+        probabilities (`y`), this fits a cubic spline with clamped endpoint slopes,
+        samples it on a dense grid, ensures the resulting CDF is monotone, and
+        numerically inverts it to return a smooth quantile function Q(p).
+
+        :param x: Quantile values (must be strictly increasing).
+        :type x: numpy.ndarray
+        :param y: Cumulative probabilities corresponding to x.
+        :type y: numpy.ndarray
+        :param probs_new: Uniformly spaced probabilities at which to estimate new quantiles.
+        :type probs_new: numpy.ndarray
+        :param M1: Number of interpolation points for CDF smoothing.
+        :type M1: int
+        :return: Tuple (quantiles_new, probs_new) representing the smoothed quantile curve.
+        :rtype: Tuple[numpy.ndarray, numpy.ndarray]
+        """
+        # === Compute approximate derivatives at endpoints ===
+        dy_start = (y[1] - y[0]) / (x[1] - x[0])  # Forward difference
+        dy_end = (y[-1] - y[-2]) / (x[-1] - x[-2])  # Backward difference
+
+        # === Create the cubic spline with clamped boundary conditions ===
+        spline = CubicSpline(x, y, bc_type=((1, dy_start), (1, dy_end)))
+        
+        #=== High-resolution discretization (interp_point_count is large) ===
+        x_smooth = np.linspace(x[0], x[-1], M1, dtype=np.float64)
+        y_smooth = spline(x_smooth)
+
+        # Invert F(q) -> Q(p)
+        q_new = self.find_inverse(x_smooth, y_smooth, probs_new)
+
+        return q_new,probs_new
+    
     def estimation_quantiles_SWI(self, quantiles, probs, M1=1000, M2=501):
         """
-        Estimate a smoother quantile function using the Spline With Inversion (SWI) method.
+        Estimate a smoother quantile function using the Spline With Inversion (SWI) method, with a safe fallback..
 
         This method constructs a cubic spline interpolation of the empirical CDF (defined by the 
         provided `quantiles` and corresponding `probs`), and then performs an inversion to generate 
         a smooth estimate of quantiles over a high-resolution, uniformly spaced probability range.
+
+        If the cubic spline fails due to equal or non-increasing quantile values
+        (which violate the strictly increasing requirement of CubicSpline),
+        those quantiles are adjusted by a small epsilon (+1e-5) to enforce
+        monotonicity before retrying. This correction is minimal and does not
+        materially affect the resulting averages.
 
         Assumes that:
             - `quantiles` and `probs` are both sorted in ascending order.
@@ -138,41 +228,49 @@ class PowerCurveManager:
         :rtype: Tuple[numpy.ndarray, numpy.ndarray]
         """
 
-        x = quantiles
-        y = probs # interpolate probs w.r.t. quantile values
+        q = np.asarray(quantiles, dtype=np.float64)  # quantiles
+        p = np.asarray(probs,     dtype=np.float64)  # probabilities
 
-        # === Compute approximate derivatives at endpoints ===
-        dy_start = (y[1] - y[0]) / (x[1] - x[0])  # Forward difference
-        dy_end = (y[-1] - y[-2]) / (x[-1] - x[-2])  # Backward difference
-
-        # === Create the cubic spline with clamped boundary conditions ===
-        spline = CubicSpline(x, y, bc_type=((1, dy_start), (1, dy_end)))
+        # Predefine defaults in case both attempts fail
+        probs_new = np.linspace(0, 1, M2, dtype=np.float64)
+        quantiles_new_default = np.zeros_like(probs_new, dtype=np.float64)
         
-        #=== High-resolution discretization (interp_point_count is large) ===
-        x_smooth = np.linspace(x[0], x[-1], M1)
-        y_smooth = spline(x_smooth)
-
-        probs_new = np.linspace(0, 1, M2)
-        quantiles_new = self.find_inverse(x_smooth, y_smooth, probs_new)
-
-        return quantiles_new,probs_new
+        try:
+            return self.run_cubic(q, p, probs_new, M1)
+        except (ValueError, ZeroDivisionError) as e1:
+            print(f"Cubic Spline failed due to: {e1}. Attempting Fallback...")
+        except Exception as e2:
+            print(f"Cubic Spline failed due to: {e2}.")
+            return quantiles_new_default, probs_new
+        
+        try:
+            q_fix = self._jitter_nonincreasing(q, eps=1e-5)
+            return self.run_cubic(q_fix, p, probs_new, M1)
+        except Exception as e3:
+            print(f"Warning: CubicSpline failed even after jittering — {e3}")
+            return quantiles_new_default, probs_new
     
     def _quantiles_to_kw_midpoints(
         self,
         df_sorted: pd.DataFrame,
         ws_col: str,
-        power_curve: PowerCurve
+        power_curve: PowerCurve,
+        use_swi: bool
     ) -> pd.DataFrame:
         """
         Takes a dataframe with columns [probability, ws_col] sorted by probability
-        → smooth CDF via SWI → midpoint quantiles → kW via power curve.
+        → smooth CDF via SWI or not based on use_swi flag → midpoint quantiles → kW via power curve.
         Returns a dataframe with columns [ws_col, f"{ws_col}_kw"] for equal-probability midpoints.
         """
-        q_smooth, _ = self.estimation_quantiles_SWI(
-            df_sorted[ws_col].to_numpy(dtype=float),
-            df_sorted["probability"].to_numpy(dtype=float)
-        )
-        qs = pd.Series(q_smooth, dtype=float)
+        probs = df_sorted["probability"].to_numpy(dtype=float)
+        quants = df_sorted[ws_col].to_numpy(dtype=float)
+
+        if use_swi:
+            q_est, _ = self.estimation_quantiles_SWI(quantiles=quants,probs=probs)
+        else:
+            q_est = quants
+
+        qs = pd.Series(q_est, dtype=float)
         midpoints = (qs.shift(-1) + qs) / 2
         midpoints = midpoints.iloc[:-1]  # drop last NaN
 
@@ -181,7 +279,6 @@ class PowerCurveManager:
         mid_df[f"{ws_col}_kw"] = power_curve.windspeed_to_kw(mid_df, ws_col)
         return mid_df
 
-    
     def fetch_energy_production_df(self, df: pd.DataFrame, height: int, selected_power_curve: str, relevant_columns_only: bool = True) -> pd.DataFrame:
         """
         Computes energy production dataframe using the selected power curve.
@@ -220,19 +317,21 @@ class PowerCurveManager:
             return work
         
         elif schema == DatasetSchema.QUANTILES_WITH_YEAR:
+            use_swi_eff = self._use_swi_for(schema)
             records = []
             for year, group in df.groupby("year"):
                 # sorting by probability is important since the records might be shuffled by "groupby" and we are using midpoint method.
                 group = group.sort_values("probability").reset_index(drop=True)
-                mid_df = self._quantiles_to_kw_midpoints(group, ws_col, power_curve)
+                mid_df = self._quantiles_to_kw_midpoints(group, ws_col, power_curve, use_swi=use_swi_eff)
                 mid_df.insert(0, "year", year)
                 records.append(mid_df)
             out = pd.concat(records, ignore_index=True) if records else pd.DataFrame(columns=["year", ws_col, f"{ws_col}_kw"])
             return out if not relevant_columns_only else out[["year", ws_col, f"{ws_col}_kw"]]
         
         else:  # DatasetSchema.QUANTILES_GLOBAL
+            use_swi_eff = self._use_swi_for(schema)
             group = df.sort_values("probability").reset_index(drop=True)
-            out = self._quantiles_to_kw_midpoints(group, ws_col, power_curve)
+            out = self._quantiles_to_kw_midpoints(group, ws_col, power_curve, use_swi=use_swi_eff)
             return out if not relevant_columns_only else out[[ws_col, f"{ws_col}_kw"]]
     
     def prepare_yearly_production_df(self, df: pd.DataFrame, height: int, selected_power_curve: str) -> pd.DataFrame:
