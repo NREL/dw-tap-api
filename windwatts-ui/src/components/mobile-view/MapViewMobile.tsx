@@ -1,15 +1,14 @@
-import { GoogleMap, InfoWindow, Marker } from "@react-google-maps/api";
+import { GoogleMap } from "@react-google-maps/api";
 import { useContext } from "react";
-import { Box, Backdrop, CircularProgress } from "@mui/material";
+import { Box } from "@mui/material";
 import { SettingsContext } from "../../providers/SettingsContext";
-import { getOutOfBoundsMessage } from "../../utils";
-import { OutOfBoundsWarning } from "../shared";
+import { OutOfBoundsMarker, LoadingBackdrop } from "../shared";
 import { useMobileBottomSheet } from "../../providers/MobileBottomSheetProvider";
 import { useGeolocation, useOutOfBounds, useMapView } from "../../hooks";
 import { DEFAULT_MAP_CENTER } from "../../constants";
 
 export const MapViewMobile = () => {
-  const { setCurrentPosition } = useContext(SettingsContext);
+  const { setCurrentPosition, zoom, setZoom } = useContext(SettingsContext);
   const {
     outOfBounds,
     infoWindowOpen,
@@ -17,10 +16,9 @@ export const MapViewMobile = () => {
     currentPosition,
     preferredModel,
   } = useOutOfBounds();
-  const { isLoaded, onLoad } = useMapView(currentPosition);
+  const { isLoaded, onLoad } = useMapView(currentPosition, zoom, setZoom);
   const { clearSearchInput, expandDrawer } = useMobileBottomSheet();
 
-  // Get Device Current Location
   useGeolocation();
 
   const handleSetLocation = (location: { lat: number; lng: number }) => {
@@ -38,20 +36,12 @@ export const MapViewMobile = () => {
       lng,
     });
 
-    // Clear search input and expand drawer on mobile when map is tapped
     clearSearchInput();
     expandDrawer();
   };
 
   if (!isLoaded) {
-    return (
-      <Backdrop
-        open={true}
-        sx={(theme) => ({ color: "#fff", zIndex: theme.zIndex.drawer + 1 })}
-      >
-        <CircularProgress color="inherit" />
-      </Backdrop>
-    );
+    return <LoadingBackdrop />;
   }
 
   return (
@@ -74,31 +64,11 @@ export const MapViewMobile = () => {
           }}
         >
           {outOfBounds && currentPosition && infoWindowOpen && (
-            <>
-              <Marker
-                position={currentPosition}
-                icon={{
-                  path: window.google.maps.SymbolPath.CIRCLE,
-                  scale: 10,
-                  fillColor: "#d32f2f",
-                  fillOpacity: 1,
-                  strokeWeight: 2,
-                  strokeColor: "#fff",
-                }}
-              />
-              <InfoWindow
-                position={currentPosition}
-                onCloseClick={() => setInfoWindowOpen(false)}
-              >
-                <OutOfBoundsWarning
-                  message={getOutOfBoundsMessage(
-                    currentPosition.lat,
-                    currentPosition.lng,
-                    preferredModel
-                  )}
-                />
-              </InfoWindow>
-            </>
+            <OutOfBoundsMarker
+              position={currentPosition}
+              preferredModel={preferredModel}
+              onClose={() => setInfoWindowOpen(false)}
+            />
           )}
         </GoogleMap>
       )}

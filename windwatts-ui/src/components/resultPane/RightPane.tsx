@@ -16,6 +16,7 @@ import { AnalysisResults } from "./AnalysisResults";
 import { useContext, useState } from "react";
 import { SettingsContext } from "../../providers/SettingsContext";
 import { POWER_CURVE_LABEL } from "../../constants";
+import { ShareButton } from "../shared";
 
 const Item = styled(Paper)(({ theme }) => ({
   ...theme.typography.body2,
@@ -25,12 +26,8 @@ const Item = styled(Paper)(({ theme }) => ({
 }));
 
 export const RightPane = () => {
-  const {
-    currentPosition,
-    hubHeight,
-    powerCurve,
-    toggleSettings,
-  } = useContext(SettingsContext);
+  const { currentPosition, hubHeight, powerCurve, toggleSettings } =
+    useContext(SettingsContext);
 
   const { lat, lng } = currentPosition ?? {};
 
@@ -70,7 +67,6 @@ export const RightPane = () => {
           flexDirection: "column",
         }}
       >
-        {/* Subheader to separate from app header */}
         <Divider
           textAlign="center"
           sx={{ my: 2, fontWeight: 600, color: "text.secondary" }}
@@ -99,30 +95,38 @@ export const RightPane = () => {
           ))}
         </Grid>
 
-        <Button
-          variant="outlined"
-          size="small"
-          startIcon={<SettingsIcon />}
-          onClick={toggleSettings}
+        <Box
           sx={{
-            alignSelf: "flex-end",
+            display: "flex",
+            gap: 1,
+            justifyContent: "flex-end",
             marginBottom: 2,
-            fontSize: "0.9em",
-            textTransform: "none",
-            borderRadius: 2,
-            px: 2,
-            py: 0.5,
-            borderColor: "primary.main",
-            color: "primary.main",
-            "&:hover": {
-              backgroundColor: "primary.main",
-              color: "white",
-              borderColor: "primary.main",
-            },
           }}
         >
-          Edit settings
-        </Button>
+          <ShareButton size="small" variant="outlined" />
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<SettingsIcon />}
+            onClick={toggleSettings}
+            sx={{
+              fontSize: "0.9em",
+              textTransform: "none",
+              borderRadius: 2,
+              px: 2,
+              py: 0.5,
+              borderColor: "primary.main",
+              color: "primary.main",
+              "&:hover": {
+                backgroundColor: "primary.main",
+                color: "white",
+                borderColor: "primary.main",
+              },
+            }}
+          >
+            Edit settings
+          </Button>
+        </Box>
 
         <AnalysisResults />
 

@@ -1,15 +1,15 @@
-import { GoogleMap, InfoWindow, Marker } from "@react-google-maps/api";
+import { GoogleMap } from "@react-google-maps/api";
 import { useContext } from "react";
 import { SearchBar } from "../core";
-import { Box, Backdrop, CircularProgress } from "@mui/material";
+import { Box } from "@mui/material";
 import { SettingsContext } from "../../providers/SettingsContext";
-import { getOutOfBoundsMessage } from "../../utils";
-import { OutOfBoundsWarning } from "../shared";
+import { OutOfBoundsMarker, LoadingBackdrop } from "../shared";
 import { useGeolocation, useOutOfBounds, useMapView } from "../../hooks";
 import { DEFAULT_MAP_CENTER } from "../../constants";
 
 export const MapViewDesktop = () => {
-  const { toggleSettings, setCurrentPosition } = useContext(SettingsContext);
+  const { toggleSettings, setCurrentPosition, zoom, setZoom } =
+    useContext(SettingsContext);
   const {
     outOfBounds,
     infoWindowOpen,
@@ -17,9 +17,8 @@ export const MapViewDesktop = () => {
     currentPosition,
     preferredModel,
   } = useOutOfBounds();
-  const { isLoaded, onLoad } = useMapView(currentPosition);
+  const { isLoaded, onLoad } = useMapView(currentPosition, zoom, setZoom);
 
-  // Get Device Current Location
   useGeolocation();
 
   const handlePlaceSelected = (place: google.maps.places.PlaceResult) => {
@@ -49,14 +48,7 @@ export const MapViewDesktop = () => {
   };
 
   if (!isLoaded) {
-    return (
-      <Backdrop
-        open={true}
-        sx={(theme) => ({ color: "#fff", zIndex: theme.zIndex.drawer + 1 })}
-      >
-        <CircularProgress color="inherit" />
-      </Backdrop>
-    );
+    return <LoadingBackdrop />;
   }
 
   return (
@@ -70,7 +62,6 @@ export const MapViewDesktop = () => {
           top: 20,
           zIndex: 1000,
           px: 2,
-          // Allow clicks to pass through the full-width centering wrapper
           pointerEvents: "none",
         }}
       >
@@ -83,7 +74,6 @@ export const MapViewDesktop = () => {
             p: 1.5,
             boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
             backdropFilter: "blur(10px)",
-            // Re-enable interactions for the actual search bar container
             pointerEvents: "auto",
           }}
         >
@@ -116,31 +106,11 @@ export const MapViewDesktop = () => {
           }}
         >
           {outOfBounds && currentPosition && infoWindowOpen && (
-            <>
-              <Marker
-                position={currentPosition}
-                icon={{
-                  path: window.google.maps.SymbolPath.CIRCLE,
-                  scale: 10,
-                  fillColor: "#d32f2f",
-                  fillOpacity: 1,
-                  strokeWeight: 2,
-                  strokeColor: "#fff",
-                }}
-              />
-              <InfoWindow
-                position={currentPosition}
-                onCloseClick={() => setInfoWindowOpen(false)}
-              >
-                <OutOfBoundsWarning
-                  message={getOutOfBoundsMessage(
-                    currentPosition.lat,
-                    currentPosition.lng,
-                    preferredModel
-                  )}
-                />
-              </InfoWindow>
-            </>
+            <OutOfBoundsMarker
+              position={currentPosition}
+              preferredModel={preferredModel}
+              onClose={() => setInfoWindowOpen(false)}
+            />
           )}
         </GoogleMap>
       )}
