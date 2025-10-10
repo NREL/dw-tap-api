@@ -9,6 +9,8 @@ RUN apt-get update && apt-get upgrade -y && \
 
 FROM node:lts-alpine AS build
 
+RUN apk update && apk upgrade
+
 # Copy the installed SSL certs into this image
 COPY --from=certificates /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=certificates /usr/share/ca-certificates /usr/share/ca-certificates
@@ -36,7 +38,7 @@ RUN yarn build
 # TODO use split NGINX
 FROM nginx:alpine
 
-RUN apk add --no-cache ca-certificates
+RUN apk update && apk upgrade && apk add --no-cache ca-certificates
 
 COPY --from=build /app/dist /usr/share/nginx/html
 
