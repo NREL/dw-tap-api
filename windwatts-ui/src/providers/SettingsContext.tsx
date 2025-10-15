@@ -46,12 +46,12 @@ export const defaultValues: StoredSettings = {
   powerCurve: "nrel-reference-100kW",
   preferredModel: "era5",
   ensemble: false,
-  lossAssumptionFactor: 0.83,
+  lossAssumptionFactor: 1.0, // 1.0 = 0% loss, 0.83 = 17% loss defaulted to 0% loss
 };
 
 export const SettingsContext = createContext<Settings>({
   ...defaultValues,
-  lossAssumptionPercent: 17,
+  lossAssumptionPercent: 0,
   toggleSettings: () => {},
   toggleResults: () => {},
   setCurrentPosition: () => {},
