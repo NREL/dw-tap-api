@@ -22,7 +22,8 @@ export const AnalysisResults = () => {
           </Divider>
           <EnsembleTiles />
           <Typography variant="body2" color="text.secondary">
-            * Experimental ML-based model - improved performance (under development)
+            * Experimental ML-based model - improved performance (under
+            development)
           </Typography>
         </>
       ) : (
