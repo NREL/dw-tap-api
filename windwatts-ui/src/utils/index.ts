@@ -83,12 +83,12 @@ export const formatNumber = (
 ): string => {
   if (!Number.isFinite(num)) throw new Error(`${num} is not a number`);
 
-  const hasDecimals = num % 1 !== 0;
-  const formattedNum = hasDecimals
-    ? num.toFixed(decimalPlaces)
-    : num.toString();
+  const formattedNum = num.toFixed(decimalPlaces);
 
-  return Number(formattedNum).toLocaleString(locale);
+  return Number(formattedNum).toLocaleString(locale, {
+    minimumFractionDigits: decimalPlaces,
+    maximumFractionDigits: decimalPlaces,
+  });
 };
 
 export function isOutOfBounds(
