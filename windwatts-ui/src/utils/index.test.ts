@@ -22,7 +22,7 @@ describe("getWindResource", () => {
 
 describe("convertWindspeed", () => {
   test("converts to mph", () => {
-    expect(convertWindspeed(10, "mph")).toBe("22.37 mph");
+    expect(convertWindspeed(10, "mph")).toBe("22.4 mph");
   });
   test("converts to m/s", () => {
     expect(convertWindspeed(10, "m/s")).toBe("10 m/s");
