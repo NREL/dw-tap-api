@@ -39,6 +39,7 @@ export function ShareButton({
         startIcon={<ShareIcon />}
         onClick={handleShare}
         sx={{
+          fontSize: "0.9em",
           textTransform: "none",
           borderRadius: 2,
           px: 2,
@@ -52,7 +53,7 @@ export function ShareButton({
           },
         }}
       >
-        Share link
+        Share Link
       </Button>
 
       <Snackbar
