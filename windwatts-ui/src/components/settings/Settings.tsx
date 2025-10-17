@@ -16,7 +16,7 @@ import {
   SETTINGS_MODAL_WIDTH,
   SETTINGS_MODAL_MAX_HEIGHT,
 } from "../../constants";
-// import { EnsembleSettings } from "./EnsembleSettings";
+import { EnsembleSettings } from "./EnsembleSettings";
 
 export const Settings = () => {
   const { settingsOpen, toggleSettings } =
@@ -97,7 +97,7 @@ export const Settings = () => {
           <UnitsSettings />
           <LossAssumptionSettings />
           {/* <ModelSettings /> */}
-          {/* <EnsembleSettings /> */}
+          <EnsembleSettings />
         </Box>
       </Box>
     </Modal>

@@ -15,15 +15,6 @@ export function UnitsSettings() {
     }
   };
 
-  const handleOutputChange = (
-    _: React.MouseEvent<HTMLElement>,
-    newOutputUnit: string
-  ) => {
-    if (newOutputUnit !== null) {
-      updateUnit("output", newOutputUnit);
-    }
-  };
-
   return (
     <Box sx={{ mt: 4 }}>
       <Typography variant="h6" gutterBottom>
@@ -60,25 +51,6 @@ export function UnitsSettings() {
             </ToggleButton>
             <ToggleButton value="m/s">
               <Typography variant="body2">m/s</Typography>
-            </ToggleButton>
-          </SettingToggleButtonGroup>
-        </Box>
-        <Box sx={{ gridColumn: "span 4" }}>
-          <Typography variant="body2">Output:</Typography>
-        </Box>
-        <Box sx={{ gridColumn: "span 8", textAlign: "left" }}>
-          <SettingToggleButtonGroup
-            value={units.output}
-            exclusive
-            size="small"
-            onChange={handleOutputChange}
-            aria-label="output units"
-          >
-            <ToggleButton value="MWh">
-              <Typography variant="body2">MWh</Typography>
-            </ToggleButton>
-            <ToggleButton value="kWh">
-              <Typography variant="body2">kWh</Typography>
             </ToggleButton>
           </SettingToggleButtonGroup>
         </Box>

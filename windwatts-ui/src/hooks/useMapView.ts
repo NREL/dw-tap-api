@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useGoogleMaps } from "./useGoogleMaps";
-import { INITIAL_MAP_ZOOM } from "../constants";
 
 export const useMapView = (
-  currentPosition: { lat: number; lng: number } | null
+  currentPosition: { lat: number; lng: number } | null,
+  zoom: number,
+  setZoom: (zoom: number) => void
 ) => {
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(
@@ -12,25 +13,23 @@ export const useMapView = (
   const hasSetInitialZoom = useRef(false);
   const { isLoaded } = useGoogleMaps();
 
-  // Map initialization callback
-  const onLoad = useCallback((map: google.maps.Map) => {
-    setMap(map);
-    // Set initial zoom only once when map loads
-    if (!hasSetInitialZoom.current) {
-      map.setZoom(INITIAL_MAP_ZOOM);
-      hasSetInitialZoom.current = true;
-    }
-  }, []);
+  const onLoad = useCallback(
+    (map: google.maps.Map) => {
+      setMap(map);
+      if (!hasSetInitialZoom.current) {
+        map.setZoom(zoom);
+        hasSetInitialZoom.current = true;
+      }
+    },
+    [zoom]
+  );
 
-  // Automatic marker management when position or map changes
   useEffect(() => {
     if (isLoaded && map && currentPosition && window.google?.maps?.marker) {
-      // Remove existing marker if there is one
       if (markerRef.current) {
         markerRef.current.map = null;
       }
 
-      // Create new marker
       const { AdvancedMarkerElement } = window.google.maps.marker;
       const advancedMarker = new AdvancedMarkerElement({
         position: currentPosition,
@@ -38,12 +37,25 @@ export const useMapView = (
         title: "Selected Location",
       });
 
-      // Save reference to the new marker
       markerRef.current = advancedMarker;
     }
   }, [isLoaded, map, currentPosition]);
 
-  // Clean up marker on unmount
+  useEffect(() => {
+    if (!map) return;
+
+    const listener = map.addListener("zoom_changed", () => {
+      const newZoom = map.getZoom();
+      if (newZoom !== undefined && newZoom !== zoom) {
+        setZoom(newZoom);
+      }
+    });
+
+    return () => {
+      google.maps.event.removeListener(listener);
+    };
+  }, [map, zoom, setZoom]);
+
   useEffect(() => {
     return () => {
       if (markerRef.current) {

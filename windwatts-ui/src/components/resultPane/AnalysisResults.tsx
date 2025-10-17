@@ -6,9 +6,13 @@ import { SettingsContext } from "../../providers/SettingsContext";
 import { WindSpeedCard } from "./WindSpeedCard";
 import { WindResourceCard } from "./WindResourceCard";
 import { DataSourceLinks } from "./DataSourceLinks";
+import { useOutputUnit } from "../../hooks";
 
 export const AnalysisResults = () => {
   const { ensemble, preferredModel } = useContext(SettingsContext);
+  
+  useOutputUnit(); // auto-switches between kWh and MWh
+  
   return (
     <Stack spacing={2}>
       {/* Top row: either Wind Speed + Resource, or Ensemble Model tiles */}
@@ -22,7 +26,7 @@ export const AnalysisResults = () => {
           </Divider>
           <EnsembleTiles />
           <Typography variant="body2" color="text.secondary">
-            * Experimental ML-based model - improved performance (under development)
+            * Experimental model (under development)
           </Typography>
         </>
       ) : (
