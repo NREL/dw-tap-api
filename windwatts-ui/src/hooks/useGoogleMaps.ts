@@ -7,6 +7,8 @@ export const useGoogleMaps = () => {
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: import.meta.env.VITE_MAP_API_KEY,
     libraries,
+    version: "quarterly",
+    mapIds: [import.meta.env.VITE_MAP_ID],
   });
 
   return {
