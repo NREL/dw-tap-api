@@ -135,3 +135,28 @@ class HealthCheckResponse(BaseModel):
             "example": {"status": "up"}
         }
     }
+
+class GridLocation(BaseModel):
+    index: str
+    latitude: float
+    longitude: float
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {"index": "031233", "latitude": 43.653, "longitude": -79.47437700534891}
+        }
+    }
+
+class NearestLocationsResponse(BaseModel):
+    locations: List[GridLocation]
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "locations": [
+                    {"index": "031233", "latitude": 43.653, "longitude": -79.47437700534891},
+                    {"index": "031234", "latitude": 43.653, "longitude": -79.22437433155213}
+                ]
+            }
+        }
+    }

@@ -12,11 +12,14 @@ import {
 import { styled } from "@mui/material/styles";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import SettingsIcon from "@mui/icons-material/Settings";
+import DownloadIcon from "@mui/icons-material/Download";
 import { AnalysisResults } from "./AnalysisResults";
 import { useContext, useState } from "react";
 import { SettingsContext } from "../../providers/SettingsContext";
 import { POWER_CURVE_LABEL } from "../../constants";
 import { ShareButton } from "../shared";
+import { useDownload } from "../../hooks/useDownload";
+import { DownloadDialog } from "./DownloadDialog";
 
 const Item = styled(Paper)(({ theme }) => ({
   ...theme.typography.body2,
@@ -26,30 +29,67 @@ const Item = styled(Paper)(({ theme }) => ({
 }));
 
 export const RightPane = () => {
-  const { currentPosition, hubHeight, powerCurve, toggleSettings } =
-    useContext(SettingsContext);
+  const {
+    currentPosition,
+    hubHeight,
+    powerCurve,
+    preferredModel,
+    toggleSettings,
+  } = useContext(SettingsContext);
 
   const { lat, lng } = currentPosition ?? {};
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
+
+  const {
+    isDownloading,
+    showDownloadDialog,
+    nearestGridLocation,
+    handleDownloadClick,
+    handleDownloadConfirm,
+    handleDownloadCancel,
+  } = useDownload();
 
   const settingOptions = [
-    {
-      title: "Location",
-      data:
-        currentPosition && lat && lng
-          ? `${lat.toFixed(3)}, ${lng.toFixed(3)}`
-          : "Not selected",
-    },
-    {
-      title: "Hub height",
-      data: hubHeight ? `${hubHeight} meters` : "Not selected",
-    },
-    {
-      title: "Power curve",
-      data: powerCurve ? `${POWER_CURVE_LABEL[powerCurve]}` : "Not selected",
-    },
-  ];
+      {
+        title: "Location",
+        data:
+          currentPosition && lat && lng
+            ? `${lat.toFixed(3)}, ${lng.toFixed(3)}`
+            : "Not selected",
+      },
+      {
+        title: "Hub height",
+        data: hubHeight ? `${hubHeight} meters` : "Not selected",
+      },
+      {
+        title: "Power curve",
+        data: powerCurve ? `${POWER_CURVE_LABEL[powerCurve]}` : "Not selected",
+      },
+    ];
 
-  const [showDisclaimer, setShowDisclaimer] = useState(false);
+  const canDownload = currentPosition && lat && lng && hubHeight;
+  
+  const downloadDataModel = preferredModel;
+
+  const onDownloadClick = () => {
+    if (!canDownload || !lat || !lng) return;
+    
+    handleDownloadClick({
+      lat: lat,
+      lng: lng,
+      dataModel: downloadDataModel,
+    });
+  };
+
+  const onDownloadConfirm = () => {
+    if (!canDownload) return;
+    
+    handleDownloadConfirm({
+      lat: lat!,
+      lng: lng!,
+      dataModel: downloadDataModel,
+    });
+  };
 
   return (
     <Box
@@ -130,6 +170,41 @@ export const RightPane = () => {
 
         <AnalysisResults />
 
+        {canDownload && (
+          <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2, mb: 2 }}>
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<DownloadIcon />}
+              onClick={onDownloadClick}
+              disabled={isDownloading}
+              sx={{
+                fontSize: "0.9em",
+                textTransform: "none",
+                borderRadius: 2,
+                px: 2,
+                py: 0.5,
+                backgroundColor: "primary.main",
+                "&:hover": {
+                  backgroundColor: "primary.dark",
+                },
+              }}
+            >
+              {isDownloading ? 'Downloading...' : 'Download Example Hourly Data'}
+            </Button>
+          </Box>
+        )}
+
+        <DownloadDialog
+          open={showDownloadDialog}
+          onClose={handleDownloadCancel}
+          onConfirm={onDownloadConfirm}
+          isDownloading={isDownloading}
+          lat={lat}
+          lng={lng}
+          nearestGridLocation={nearestGridLocation}
+          dataModel={downloadDataModel}
+        />
         <Box sx={{ display: "flex", alignItems: "center", mt: 2 }}>
           <Chip
             label="Disclaimer"
