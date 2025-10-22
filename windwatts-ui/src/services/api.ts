@@ -69,3 +69,89 @@ export const getAvailablePowerCurves = async () => {
   };
   return fetchWrapper(url, options);
 };
+
+export const getNearestGridLocation = async ({
+  lat,
+  lng,
+  n_neighbors = 1,
+  dataModel
+}: {
+  lat: number;
+  lng: number;
+  n_neighbors?: number;
+  dataModel?: string;
+}) => {
+  const url = `/api/${dataModel}/nearest-locations?lat=${lat}&lng=${lng}&n_neighbors=${n_neighbors}`;
+  const options = {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  return fetchWrapper(url, options);
+};
+
+export const downloadCSV = async ({
+  lat,
+  lng,
+  n_neighbors = 1,
+  dataModel
+}: {
+  lat: number;
+  lng: number;
+  n_neighbors?: number;
+  source?: string;
+  dataModel?: string;
+}) => {
+  const nearestLocationData = await getNearestGridLocation({
+      lat,
+      lng,
+      n_neighbors: 1,
+      dataModel,
+    });
+
+  let gridLat = lat;
+  let gridLng = lng;
+
+  if (nearestLocationData?.locations?.[0]) {
+      gridLat = nearestLocationData.locations[0].latitude;
+      gridLng = nearestLocationData.locations[0].longitude;
+  }
+
+  const url = `/api/${dataModel}/download-csv?lat=${lat}&lng=${lng}&n_neighbors=${n_neighbors}`;
+  
+  const options = {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+
+  try {
+
+    const response = await fetch(url, options);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    // Handling the file blob and trigger the download
+    const blob = await response.blob();
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = downloadUrl;
+    
+    // Generating the filename with grid coordinates
+    const filename = `wind_data_${gridLat.toFixed(3)}_${gridLng.toFixed(3)}.csv`;
+    link.download = filename;
+    
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(downloadUrl);
+    
+    return { success: true, filename };
+  } catch (error) {
+    console.error('Download failed:', error);
+    throw error;
+  }
+};
