@@ -20,10 +20,12 @@ export const useOutputUnit = () => {
 
     let shouldUseMWh = false;
 
-    if (ensemble) { // ensemble mode - auto-convert if either output >= 10,000
+    if (ensemble) {
+      // ensemble mode - auto-convert if either output >= 10,000
       const ensembleProduction = Number(ensembleData?.energy_production || 0);
       shouldUseMWh = ensembleProduction >= 10000 || prodAvg >= 10000;
-    } else { // non-ensemble mode - auto-convert if average output >= 10,000
+    } else {
+      // non-ensemble mode - auto-convert if average output >= 10,000
       shouldUseMWh = prodAvg >= 10000;
     }
 

@@ -17,7 +17,7 @@ import {
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const { updateUnit } = useContext(UnitsContext);
-  
+
   const [settings, setSettings] = useState<StoredSettings>(() => {
     const urlParams = parseUrlParams();
 
@@ -41,7 +41,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
           urlParams.lossAssumption !== undefined
             ? percentToFactor(urlParams.lossAssumption)
             : defaultValues.lossAssumptionFactor,
-        windspeedUnit: urlParams.windspeedUnit ?? URL_PARAM_DEFAULTS.windspeedUnit,
+        windspeedUnit:
+          urlParams.windspeedUnit ?? URL_PARAM_DEFAULTS.windspeedUnit,
       };
     }
 

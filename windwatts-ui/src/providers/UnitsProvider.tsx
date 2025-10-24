@@ -9,19 +9,25 @@ export function UnitsProvider({ children }: { children: React.ReactNode }) {
     defaultUnitValues
   );
 
-  const updateUnit = useCallback((key: string, value: string) => {
-    setUnits((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
-  }, [setUnits]);
+  const updateUnit = useCallback(
+    (key: string, value: string) => {
+      setUnits((prev) => ({
+        ...prev,
+        [key]: value,
+      }));
+    },
+    [setUnits]
+  );
 
-  const updateUnits = useCallback((newValues: StoredUnits) => {
-    setUnits((prev) => ({
-      ...prev,
-      ...newValues,
-    }));
-  }, [setUnits]);
+  const updateUnits = useCallback(
+    (newValues: StoredUnits) => {
+      setUnits((prev) => ({
+        ...prev,
+        ...newValues,
+      }));
+    },
+    [setUnits]
+  );
 
   return (
     <UnitsContext.Provider value={{ units, setUnits, updateUnit, updateUnits }}>
