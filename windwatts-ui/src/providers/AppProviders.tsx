@@ -8,8 +8,8 @@ interface AppProvidersProps {
 
 export const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
   return (
-    <SettingsProvider>
-      <UnitsProvider>{children}</UnitsProvider>
-    </SettingsProvider>
+    <UnitsProvider>
+      <SettingsProvider>{children}</SettingsProvider>
+    </UnitsProvider>
   );
 };

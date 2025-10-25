@@ -16,6 +16,7 @@ export interface StoredSettings {
   preferredModel: DataModel;
   ensemble: boolean;
   lossAssumptionFactor: number;
+  windspeedUnit: string;
 }
 
 export interface Settings extends StoredSettings {
@@ -35,6 +36,7 @@ export interface Settings extends StoredSettings {
   setEnsemble: (ensemble: boolean) => void;
   setLossAssumptionFactor: (factor: number) => void;
   setLossAssumptionPercent: (percent: number) => void;
+  setWindspeedUnit: (unit: string) => void;
 }
 
 export const defaultValues: StoredSettings = {
@@ -47,6 +49,7 @@ export const defaultValues: StoredSettings = {
   preferredModel: "era5",
   ensemble: false,
   lossAssumptionFactor: 1.0, // 1.0 = 0% loss, 0.83 = 17% loss defaulted to 0% loss
+  windspeedUnit: "mph",
 };
 
 export const SettingsContext = createContext<Settings>({
@@ -62,4 +65,5 @@ export const SettingsContext = createContext<Settings>({
   setEnsemble: () => {},
   setLossAssumptionFactor: () => {},
   setLossAssumptionPercent: () => {},
+  setWindspeedUnit: () => {},
 });

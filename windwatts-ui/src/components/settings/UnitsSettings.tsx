@@ -1,9 +1,11 @@
 import { Box, Typography, ToggleButton } from "@mui/material";
 import { useContext } from "react";
+import { SettingsContext } from "../../providers/SettingsContext";
 import { UnitsContext } from "../../providers/UnitsContext";
 import { SettingToggleButtonGroup } from "./SettingToggleButtonGroup";
 
 export function UnitsSettings() {
+  const { setWindspeedUnit } = useContext(SettingsContext);
   const { units, updateUnit } = useContext(UnitsContext);
 
   const handleWindspeedChange = (
@@ -11,6 +13,8 @@ export function UnitsSettings() {
     newWindspeedUnit: string
   ) => {
     if (newWindspeedUnit !== null) {
+      // Update both: SettingsContext (for URL) and UnitsContext (for components)
+      setWindspeedUnit(newWindspeedUnit);
       updateUnit("windspeed", newWindspeedUnit);
     }
   };

@@ -1,10 +1,18 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import {
+  useState,
+  useMemo,
+  useCallback,
+  useEffect,
+  useContext,
+  useRef,
+} from "react";
 import {
   SettingsContext,
   defaultValues,
   CurrentPosition,
   StoredSettings,
 } from "./SettingsContext";
+import { UnitsContext } from "./UnitsContext";
 import { DataModel } from "../types";
 import { percentToFactor } from "../utils";
 import {
@@ -15,8 +23,13 @@ import {
 } from "../utils/urlParams";
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
+  const { updateUnit } = useContext(UnitsContext);
+
+  // Parse URL params once and cache the result
+  const urlParamsRef = useRef(parseUrlParams());
+
   const [settings, setSettings] = useState<StoredSettings>(() => {
-    const urlParams = parseUrlParams();
+    const urlParams = urlParamsRef.current;
 
     if (hasLaunchParams(urlParams)) {
       return {
@@ -34,6 +47,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
           urlParams.lossAssumption !== undefined
             ? percentToFactor(urlParams.lossAssumption)
             : defaultValues.lossAssumptionFactor,
+        windspeedUnit:
+          urlParams.windspeedUnit ?? URL_PARAM_DEFAULTS.windspeedUnit,
       };
     }
 
@@ -44,13 +59,19 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   });
 
   useEffect(() => {
+    const urlParams = urlParamsRef.current;
+    if (urlParams.windspeedUnit) {
+      updateUnit("windspeed", urlParams.windspeedUnit);
+    }
+  }, [updateUnit]);
+
+  useEffect(() => {
     if (!settings.currentPosition) {
       return;
     }
 
     const url = buildUrlFromSettings({
       currentPosition: settings.currentPosition,
-      zoom: settings.zoom,
       hubHeight: settings.hubHeight,
       powerCurve: settings.powerCurve,
       preferredModel: settings.preferredModel,
@@ -58,6 +79,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       lossAssumptionPercent: Math.round(
         (1 - settings.lossAssumptionFactor) * 100
       ),
+      zoom: settings.zoom,
+      windspeedUnit: settings.windspeedUnit,
     });
 
     if (url !== "/") {
@@ -71,6 +94,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     settings.preferredModel,
     settings.ensemble,
     settings.lossAssumptionFactor,
+    settings.windspeedUnit,
   ]);
 
   const setCurrentPosition = useCallback(
@@ -137,6 +161,13 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     [setLossAssumptionFactor]
   );
 
+  const setWindspeedUnit = useCallback(
+    (unit: string) => {
+      setSettings((current) => ({ ...current, windspeedUnit: unit }));
+    },
+    [setSettings]
+  );
+
   // Toggle functions that update the settings directly
   const toggleSettings = useCallback(() => {
     setSettings((current) => ({
@@ -181,6 +212,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       ),
       setLossAssumptionFactor,
       setLossAssumptionPercent,
+      windspeedUnit: settings.windspeedUnit,
+      setWindspeedUnit,
     }),
     [
       settings.settingsOpen,
@@ -192,6 +225,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       settings.preferredModel,
       settings.ensemble,
       settings.lossAssumptionFactor,
+      settings.windspeedUnit,
       toggleSettings,
       toggleResults,
       setCurrentPosition,
@@ -202,6 +236,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       setEnsemble,
       setLossAssumptionFactor,
       setLossAssumptionPercent,
+      setWindspeedUnit,
     ]
   );
 
