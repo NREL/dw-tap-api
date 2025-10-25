@@ -1,4 +1,11 @@
-import { useState, useMemo, useCallback, useEffect, useContext } from "react";
+import {
+  useState,
+  useMemo,
+  useCallback,
+  useEffect,
+  useContext,
+  useRef,
+} from "react";
 import {
   SettingsContext,
   defaultValues,
@@ -18,12 +25,11 @@ import {
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const { updateUnit } = useContext(UnitsContext);
 
-  const [settings, setSettings] = useState<StoredSettings>(() => {
-    const urlParams = parseUrlParams();
+  // Parse URL params once and cache the result
+  const urlParamsRef = useRef(parseUrlParams());
 
-    if (urlParams.windspeedUnit) {
-      updateUnit("windspeed", urlParams.windspeedUnit);
-    }
+  const [settings, setSettings] = useState<StoredSettings>(() => {
+    const urlParams = urlParamsRef.current;
 
     if (hasLaunchParams(urlParams)) {
       return {
@@ -51,6 +57,13 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       currentPosition: null,
     };
   });
+
+  useEffect(() => {
+    const urlParams = urlParamsRef.current;
+    if (urlParams.windspeedUnit) {
+      updateUnit("windspeed", urlParams.windspeedUnit);
+    }
+  }, [updateUnit]);
 
   useEffect(() => {
     if (!settings.currentPosition) {
