@@ -10,9 +10,9 @@ import { useOutputUnit } from "../../hooks";
 
 export const AnalysisResults = () => {
   const { ensemble, preferredModel } = useContext(SettingsContext);
-  
+
   useOutputUnit(); // auto-switches between kWh and MWh
-  
+
   return (
     <Stack spacing={2}>
       {/* Top row: either Wind Speed + Resource, or Ensemble Model tiles */}
