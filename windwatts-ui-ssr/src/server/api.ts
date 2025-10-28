@@ -58,4 +58,8 @@ export const era5 = {
     if (params.ensemble) url.searchParams.set("ensemble", "true");
     return fetchJson<any>(url.toString());
   },
+  async availablePowerCurves() {
+    const url = `${getApiBase()}/era5/available-powercurves`;
+    return fetchJson<{ available_power_curves: string[] }>(url);
+  }
 };

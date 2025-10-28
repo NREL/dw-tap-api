@@ -1,6 +1,7 @@
 import { Stack, Typography, Grid } from "@mui/material";
 import Controls from "../src/components/Controls";
 import WindDataCard from "../src/components/WindDataCard";
+import SummaryBar from "../src/components/SummaryBar";
 import Map from "../src/components/Map";
 import { era5 } from "../src/server/api";
 import { URL_PARAM_DEFAULTS } from "../src/utils/urlParams";
@@ -24,17 +25,24 @@ export default async function Page({
   let wind: any = null;
   let production: any = null;
   let error: string | null = null;
+  let curves: string[] = [];
 
   try {
-    wind = await era5.windspeed({ lat, lng, height, source: "athena_era5" });
-    production = await era5.energyProduction({
-      lat,
-      lng,
-      height,
-      powerCurve,
-      source: "athena_era5",
-      time_period: "all"
-    });
+    const [w, p, c] = await Promise.all([
+      era5.windspeed({ lat, lng, height, source: "athena_era5" }),
+      era5.energyProduction({
+        lat,
+        lng,
+        height,
+        powerCurve,
+        source: "athena_era5",
+        time_period: "all"
+      }),
+      era5.availablePowerCurves()
+    ]);
+    wind = w;
+    production = p;
+    curves = c?.available_power_curves || [];
   } catch (e: any) {
     error = e?.message || "Failed to load";
   }
@@ -43,7 +51,8 @@ export default async function Page({
     <main style={{ padding: 24 }}>
       <Stack spacing={2}>
         <Typography variant="h5">Wind Data</Typography>
-        <Controls />
+        <SummaryBar />
+        <Controls powerCurves={curves} />
         <Grid container spacing={2}>
           <Grid item xs={12} md={7}>
             <Map />
