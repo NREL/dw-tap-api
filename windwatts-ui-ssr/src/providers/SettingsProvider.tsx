@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback, useEffect } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   SettingsContext,
   defaultValues,
@@ -8,13 +9,43 @@ import {
   type StoredSettings
 } from "./SettingsContext";
 import type { DataModel } from "../types/DataModel";
+import { buildUrlFromSettings, parseUrlParams, hasLaunchParams, URL_PARAM_DEFAULTS } from "../utils/urlParams";
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
-  const [settings, setSettings] = useState<StoredSettings>({ ...defaultValues });
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const [settings, setSettings] = useState<StoredSettings>(() => {
+    const params = parseUrlParams(searchParams);
+    if (hasLaunchParams(params)) {
+      return {
+        ...defaultValues,
+        currentPosition: params.lat && params.lng ? { lat: params.lat, lng: params.lng } : null,
+        zoom: params.zoom ?? URL_PARAM_DEFAULTS.zoom,
+        hubHeight: params.hubHeight ?? URL_PARAM_DEFAULTS.hubHeight,
+        powerCurve: params.powerCurve ?? URL_PARAM_DEFAULTS.powerCurve,
+        preferredModel: params.dataModel ?? URL_PARAM_DEFAULTS.dataModel,
+        ensemble: params.ensemble ?? URL_PARAM_DEFAULTS.ensemble,
+        lossAssumptionFactor: 1 - (params.lossAssumption ?? 0) / 100
+      };
+    }
+    return { ...defaultValues, currentPosition: null };
+  });
 
   useEffect(() => {
-    // could sync URL here if needed
-  }, [settings]);
+    if (!settings.currentPosition) return;
+    const url = buildUrlFromSettings({
+      currentPosition: settings.currentPosition,
+      zoom: settings.zoom,
+      hubHeight: settings.hubHeight,
+      powerCurve: settings.powerCurve,
+      preferredModel: settings.preferredModel,
+      ensemble: settings.ensemble,
+      lossAssumptionPercent: Math.round((1 - settings.lossAssumptionFactor) * 100)
+    });
+    if (url !== pathname) router.replace(url);
+  }, [router, pathname, settings]);
 
   const setCurrentPosition = useCallback(
     (

@@ -16,7 +16,7 @@ export default async function DenverPage() {
       <Stack spacing={2}>
         <Typography variant="h5">ERA5 Windspeed @40m — Denver, CO</Typography>
         <pre style={{ background: "#f5f5f5", padding: 12, borderRadius: 6 }}>
-{JSON.stringify(data, null, 2)}
+          {JSON.stringify(data, null, 2)}
         </pre>
       </Stack>
     </main>

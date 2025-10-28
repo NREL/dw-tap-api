@@ -4,18 +4,32 @@ export function getApiBase(): string {
   return "http://localhost:8080/api";
 }
 
-export async function fetchJson<T>(pathOrUrl: string, init?: RequestInit): Promise<T> {
-  const url = pathOrUrl.startsWith("http") ? pathOrUrl : `${getApiBase()}${pathOrUrl}`;
+export async function fetchJson<T>(
+  pathOrUrl: string,
+  init?: RequestInit
+): Promise<T> {
+  const url = pathOrUrl.startsWith("http")
+    ? pathOrUrl
+    : `${getApiBase()}${pathOrUrl}`;
   const res = await fetch(url, { cache: "no-store", ...(init || {}) });
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    throw new Error(`Fetch failed ${res.status} ${res.statusText}: ${url} ${text}`);
+    throw new Error(
+      `Fetch failed ${res.status} ${res.statusText}: ${url} ${text}`
+    );
   }
   return res.json() as Promise<T>;
 }
 
 export const era5 = {
-  async windspeed(params: { lat: number; lng: number; height: number; source?: string; avg_type?: string; ensemble?: boolean }) {
+  async windspeed(params: {
+    lat: number;
+    lng: number;
+    height: number;
+    source?: string;
+    avg_type?: string;
+    ensemble?: boolean;
+  }) {
     const url = new URL(`${getApiBase()}/era5/windspeed`);
     url.searchParams.set("lat", String(params.lat));
     url.searchParams.set("lng", String(params.lng));
@@ -25,7 +39,15 @@ export const era5 = {
     if (params.ensemble) url.searchParams.set("ensemble", "true");
     return fetchJson<any>(url.toString());
   },
-  async energyProduction(params: { lat: number; lng: number; height: number; powerCurve: string; time_period?: string; source?: string; ensemble?: boolean }) {
+  async energyProduction(params: {
+    lat: number;
+    lng: number;
+    height: number;
+    powerCurve: string;
+    time_period?: string;
+    source?: string;
+    ensemble?: boolean;
+  }) {
     const time = params.time_period || "global";
     const url = new URL(`${getApiBase()}/era5/energy-production/${time}`);
     url.searchParams.set("lat", String(params.lat));
@@ -35,5 +57,5 @@ export const era5 = {
     if (params.source) url.searchParams.set("source", params.source);
     if (params.ensemble) url.searchParams.set("ensemble", "true");
     return fetchJson<any>(url.toString());
-  }
+  },
 };

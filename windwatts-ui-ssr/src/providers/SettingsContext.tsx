@@ -52,14 +52,14 @@ export const defaultValues: StoredSettings = {
 export const SettingsContext = createContext<Settings>({
   ...defaultValues,
   lossAssumptionPercent: 0,
-  toggleSettings: () => {},
-  toggleResults: () => {},
-  setCurrentPosition: () => {},
-  setZoom: () => {},
-  setHubHeight: () => {},
-  setPowerCurve: () => {},
-  setPreferredModel: () => {},
-  setEnsemble: () => {},
-  setLossAssumptionFactor: () => {},
-  setLossAssumptionPercent: () => {}
+  toggleSettings: () => { },
+  toggleResults: () => { },
+  setCurrentPosition: () => { },
+  setZoom: () => { },
+  setHubHeight: () => { },
+  setPowerCurve: () => { },
+  setPreferredModel: () => { },
+  setEnsemble: () => { },
+  setLossAssumptionFactor: () => { },
+  setLossAssumptionPercent: () => { }
 });

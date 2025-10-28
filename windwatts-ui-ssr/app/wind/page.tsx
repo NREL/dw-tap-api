@@ -11,7 +11,7 @@ function getParamsFromUrl(): { lat: number; lng: number; height: number; powerCu
   let search = "";
   try {
     if (url) search = new URL(url).search;
-  } catch {}
+  } catch { }
   const params = new URLSearchParams(search);
   const lat = parseFloat(params.get("lat") || "39.7392");
   const lng = parseFloat(params.get("lng") || "-104.9903");
@@ -31,11 +31,11 @@ export default async function WindPage() {
         <Typography>lat={lat.toFixed(4)}, lng={lng.toFixed(4)}, height={height}m, powerCurve={powerCurve}</Typography>
         <Typography variant="subtitle1">ERA5 Windspeed</Typography>
         <pre style={{ background: "#f5f5f5", padding: 12, borderRadius: 6 }}>
-{JSON.stringify(wind, null, 2)}
+          {JSON.stringify(wind, null, 2)}
         </pre>
         <Typography variant="subtitle1">Energy Production (summary)</Typography>
         <pre style={{ background: "#f5f5f5", padding: 12, borderRadius: 6 }}>
-{JSON.stringify(production, null, 2)}
+          {JSON.stringify(production, null, 2)}
         </pre>
       </Stack>
     </main>
