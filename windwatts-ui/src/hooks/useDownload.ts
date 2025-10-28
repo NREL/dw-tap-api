@@ -1,23 +1,19 @@
 import { useState } from "react";
 import { downloadCSV, getNearestGridLocation } from "../services/api";
+import { DataModel } from "../types";
 
 export const useDownload = () => {
 
   const [isDownloading, setIsDownloading] = useState(false);
-  const [showDownloadDialog, setShowDownloadDialog] = useState(false);
-  const [nearestGridLocation, setNearestGridLocation] = useState<{
-    latitude: number;
-    longitude: number;
-  } | null>(null);
 
-  const handleDownloadClick = async ({
+  const fetchNearestGridLocation = async ({
     lat,
     lng,
     dataModel,
   }: {
     lat: number;
     lng: number;
-    dataModel?: string;
+    dataModel: DataModel;
   }) => {
     try {
       // Fetch nearest grid location
@@ -29,31 +25,31 @@ export const useDownload = () => {
       });
       
       if (nearestLocationData?.locations?.[0]) {
-        setNearestGridLocation({
+        return {
           latitude: nearestLocationData.locations[0].latitude,
           longitude: nearestLocationData.locations[0].longitude,
-        });
+        };
       }
+      return null;
     } catch (error) {
       console.error('Failed to fetch nearest location:', error);
-      // Still show dialog even if nearest location fetch fails
-      setNearestGridLocation(null);
+      return null;
     }
-    
-    setShowDownloadDialog(true);
   };
 
-  const handleDownloadConfirm = async ({
+  const downloadFile = async ({
     lat,
     lng,
     dataModel,
+    gridLat,
+    gridLng,
   }: {
     lat: number;
     lng: number;
-    dataModel?: string;
+    dataModel: DataModel;
+    gridLat: number;
+    gridLng: number;
   }) => {
-    setShowDownloadDialog(false);
-    
     try {
       setIsDownloading(true);
       await downloadCSV({
@@ -61,27 +57,21 @@ export const useDownload = () => {
         lng,
         n_neighbors: 1,
         dataModel,
+        gridLat,
+        gridLng,
       });
+      return { success: true };
     } catch (error) {
       console.error('Download failed:', error);
-      alert('Download failed. Please try again.');
+      return { success: false, error };
     } finally {
       setIsDownloading(false);
-      setNearestGridLocation(null);
     }
-  };
-
-  const handleDownloadCancel = () => {
-    setShowDownloadDialog(false);
-    setNearestGridLocation(null);
   };
 
   return {
     isDownloading,
-    showDownloadDialog,
-    nearestGridLocation,
-    handleDownloadClick,
-    handleDownloadConfirm,
-    handleDownloadCancel,
+    fetchNearestGridLocation,
+    downloadFile,
   };
 };

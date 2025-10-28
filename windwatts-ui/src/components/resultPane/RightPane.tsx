@@ -12,14 +12,11 @@ import {
 import { styled } from "@mui/material/styles";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import SettingsIcon from "@mui/icons-material/Settings";
-import DownloadIcon from "@mui/icons-material/Download";
 import { AnalysisResults } from "./AnalysisResults";
 import { useContext, useState } from "react";
 import { SettingsContext } from "../../providers/SettingsContext";
 import { POWER_CURVE_LABEL } from "../../constants";
-import { ShareButton } from "../shared";
-import { useDownload } from "../../hooks/useDownload";
-import { DownloadDialog } from "./DownloadDialog";
+import { ShareButton, DownloadButton } from "../shared";
 
 const Item = styled(Paper)(({ theme }) => ({
   ...theme.typography.body2,
@@ -38,16 +35,10 @@ export const RightPane = () => {
   } = useContext(SettingsContext);
 
   const { lat, lng } = currentPosition ?? {};
-  const [showDisclaimer, setShowDisclaimer] = useState(false);
+  const canDownload = lat && lng;
+  const downloadDataModel = preferredModel;
 
-  const {
-    isDownloading,
-    showDownloadDialog,
-    nearestGridLocation,
-    handleDownloadClick,
-    handleDownloadConfirm,
-    handleDownloadCancel,
-  } = useDownload();
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
 
   const settingOptions = [
       {
@@ -66,30 +57,6 @@ export const RightPane = () => {
         data: powerCurve ? `${POWER_CURVE_LABEL[powerCurve]}` : "Not selected",
       },
     ];
-
-  const canDownload = currentPosition && lat && lng && hubHeight;
-  
-  const downloadDataModel = preferredModel;
-
-  const onDownloadClick = () => {
-    if (!canDownload || !lat || !lng) return;
-    
-    handleDownloadClick({
-      lat: lat,
-      lng: lng,
-      dataModel: downloadDataModel,
-    });
-  };
-
-  const onDownloadConfirm = () => {
-    if (!canDownload) return;
-    
-    handleDownloadConfirm({
-      lat: lat!,
-      lng: lng!,
-      dataModel: downloadDataModel,
-    });
-  };
 
   return (
     <Box
@@ -170,14 +137,17 @@ export const RightPane = () => {
 
         <AnalysisResults />
 
-        {canDownload && (
+        {canDownload && lat && lng && (
           <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2, mb: 2 }}>
-            <Button
+            <DownloadButton
+              lat={lat}
+              lng={lng}
+              dataModel={downloadDataModel}
+              canDownload={canDownload}
               variant="contained"
               size="small"
-              startIcon={<DownloadIcon />}
-              onClick={onDownloadClick}
-              disabled={isDownloading}
+              buttonText="Download Example Hourly Data"
+              downloadingText="Downloading..."
               sx={{
                 fontSize: "0.9em",
                 textTransform: "none",
@@ -189,22 +159,10 @@ export const RightPane = () => {
                   backgroundColor: "primary.dark",
                 },
               }}
-            >
-              {isDownloading ? 'Downloading...' : 'Download Example Hourly Data'}
-            </Button>
+            />
           </Box>
         )}
 
-        <DownloadDialog
-          open={showDownloadDialog}
-          onClose={handleDownloadCancel}
-          onConfirm={onDownloadConfirm}
-          isDownloading={isDownloading}
-          lat={lat}
-          lng={lng}
-          nearestGridLocation={nearestGridLocation}
-          dataModel={downloadDataModel}
-        />
         <Box sx={{ display: "flex", alignItems: "center", mt: 2 }}>
           <Chip
             label="Disclaimer"

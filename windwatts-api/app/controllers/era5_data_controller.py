@@ -67,6 +67,15 @@ VALID_AVG_TYPES = {
         "production": ["global", "none"],
     },
 }
+# YEARS list for the sample data download feature
+SAMPLE_YEARS = {
+    "s3_era5" : [2020, 2021, 2022, 2023]
+}
+
+# YEARS for which we have wtk data in the S3
+ALL_YEARS = {
+    "s3_era5" : list(range(2013,2024))
+}
 
 # data_type='era5'
 # data_source = "athena_era5"
@@ -120,9 +129,9 @@ def validate_source(source: str) -> str:
         raise HTTPException(status_code=400, detail=f"Invalid source for ERA5 data. Must be one of: {sorted(VALID_SOURCES)}.")
     return source
 
-def validate_year(year: int) -> int:
-    if not 2013<=year<=2023: # have to change the range if needed
-        raise HTTPException(status_code=400, detail=f"Invalid year for ERA5 timeseries data. Currently supporting years 2013-2023")
+def validate_year(year: int, source: str) -> int:
+    if year not in ALL_YEARS[source]:
+        raise HTTPException(status_code=400, detail=f"Invalid year for ERA5 data. Currently supporting years 2013-2023")
     return year
 
 def validate_n_neighbor(n_neighbor: int) -> int:
@@ -379,7 +388,7 @@ def _download_csv_core(
     lng = validate_lng(lng)
     source = validate_source(source)
     n_neighbors = validate_n_neighbor(n_neighbors)
-    years= [validate_year(year) for year in years]
+    years= [validate_year(year,source) for year in years]
     
     params = {
         "lat": lat,
@@ -404,11 +413,11 @@ def download_csv(
     lat: float = Query(..., description="Latitude of the location."),
     lng: float = Query(..., description="Longitude of the location."),
     n_neighbors: int = Query(..., description="number of neighbors of given location whose data is requested"),
+    years: List[int] = Query(SAMPLE_YEARS["s3_era5"], description="years of which the data to download"),
     source: str = Query("s3_era5", description="Source of the data.")
 ):
     try:
         # Getting DataFrame from core function
-        years = list(range(2020,2024))
         df = _download_csv_core(lat, lng, years, n_neighbors, source)
         
         # Converting DataFrame to CSV
@@ -457,11 +466,7 @@ def nearest_locations(
             source=source, lat=lat, lon=lng, n_neighbors=n_neighbors
         )
         
-        if n_neighbors == 1:
-            idx, glat, glon = result
-            locations = [GridLocation(index=str(idx), latitude=float(glat), longitude=float(glon))]
-        else:
-            locations = [GridLocation(index=str(i), latitude=float(a), longitude=float(o)) for i, a, o in result]
+        locations = [GridLocation(index=str(i), latitude=float(a), longitude=float(o)) for i, a, o in result]
 
         return NearestLocationsResponse(locations=locations)
     except Exception as e:
