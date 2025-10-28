@@ -1,15 +1,10 @@
 import { Stack, Typography } from "@mui/material";
+import { fetchJson } from "../../src/server/api";
 
 export const dynamic = "force-dynamic";
 
 async function getHealth() {
-  const base = process.env.WINDWATTS_API_BASE || (process.env.DOCKER === "1" ? "http://nginx/api" : "http://localhost:8080/api");
-  const res = await fetch(`${base}/healthcheck`, {
-    cache: "no-store",
-    headers: {}
-  });
-  if (!res.ok) throw new Error("Failed to fetch healthcheck");
-  return res.json() as Promise<{ status: string }>;
+  return fetchJson<{ status: string }>("/healthcheck");
 }
 
 export default async function HealthPage() {
