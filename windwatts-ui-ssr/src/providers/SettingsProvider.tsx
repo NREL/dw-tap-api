@@ -18,23 +18,20 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   const [settings, setSettings] = useState<StoredSettings>(() => {
     const params = parseUrlParams(searchParams);
-    if (hasLaunchParams(params)) {
-      return {
-        ...defaultValues,
-        currentPosition: params.lat && params.lng ? { lat: params.lat, lng: params.lng } : null,
-        zoom: params.zoom ?? URL_PARAM_DEFAULTS.zoom,
-        hubHeight: params.hubHeight ?? URL_PARAM_DEFAULTS.hubHeight,
-        powerCurve: params.powerCurve ?? URL_PARAM_DEFAULTS.powerCurve,
-        preferredModel: params.dataModel ?? URL_PARAM_DEFAULTS.dataModel,
-        ensemble: params.ensemble ?? URL_PARAM_DEFAULTS.ensemble,
-        lossAssumptionFactor: 1 - (params.lossAssumption ?? 0) / 100
-      };
-    }
-    return { ...defaultValues, currentPosition: null };
+    const hasPos = hasLaunchParams(params);
+    return {
+      ...defaultValues,
+      currentPosition: hasPos && params.lat && params.lng ? { lat: params.lat, lng: params.lng } : { lat: 39.7392, lng: -104.9903 },
+      zoom: params.zoom ?? URL_PARAM_DEFAULTS.zoom,
+      hubHeight: params.hubHeight ?? URL_PARAM_DEFAULTS.hubHeight,
+      powerCurve: params.powerCurve ?? URL_PARAM_DEFAULTS.powerCurve,
+      preferredModel: params.dataModel ?? URL_PARAM_DEFAULTS.dataModel,
+      ensemble: params.ensemble ?? URL_PARAM_DEFAULTS.ensemble,
+      lossAssumptionFactor: 1 - (params.lossAssumption ?? URL_PARAM_DEFAULTS.lossAssumption) / 100
+    };
   });
 
   useEffect(() => {
-    if (!settings.currentPosition) return;
     const url = buildUrlFromSettings({
       currentPosition: settings.currentPosition,
       zoom: settings.zoom,
@@ -44,8 +41,10 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       ensemble: settings.ensemble,
       lossAssumptionPercent: Math.round((1 - settings.lossAssumptionFactor) * 100)
     });
-    if (url !== pathname) router.replace(url);
-  }, [router, pathname, settings]);
+
+    const current = `${pathname}${searchParams?.toString() ? `?${searchParams.toString()}` : ""}`;
+    if (url !== current) router.replace(url);
+  }, [router, pathname, searchParams, settings]);
 
   const setCurrentPosition = useCallback(
     (
@@ -53,7 +52,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     ) => {
       setSettings((current) => ({
         ...current,
-        currentPosition: typeof position === "function" ? position(current.currentPosition) : position
+        currentPosition: typeof position === "function" ? position(current.currentPosition) : position || { lat: 39.7392, lng: -104.9903 }
       }));
     },
     []

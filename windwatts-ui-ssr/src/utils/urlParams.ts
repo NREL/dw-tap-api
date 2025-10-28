@@ -1,5 +1,5 @@
-import { ReadonlyURLSearchParams } from "next/navigation";
 import type { DataModel } from "../types/DataModel";
+import { ReadonlyURLSearchParams } from "next/navigation";
 
 export interface UrlParams {
   lat?: number;
@@ -91,27 +91,23 @@ export function buildUrlFromSettings(settings: {
   lossAssumptionPercent: number;
 }): string {
   const position = settings.currentPosition;
-  if (
-    !position ||
-    typeof position.lat !== "number" ||
-    typeof position.lng !== "number"
-  ) {
-    return "/";
-  }
+  // Always include sane defaults when position is missing
+  const lat = position?.lat ?? 39.7392;
+  const lng = position?.lng ?? -104.9903;
+
   const params = new URLSearchParams();
-  params.set("lat", position.lat.toFixed(4));
-  params.set("lng", position.lng.toFixed(4));
-  if (settings.zoom !== URL_PARAM_DEFAULTS.zoom)
-    params.set("zoom", Math.round(settings.zoom).toString());
-  if (settings.hubHeight !== URL_PARAM_DEFAULTS.hubHeight)
-    params.set("hubHeight", settings.hubHeight.toString());
-  if (settings.powerCurve !== URL_PARAM_DEFAULTS.powerCurve)
-    params.set("powerCurve", settings.powerCurve);
-  if (settings.preferredModel !== URL_PARAM_DEFAULTS.dataModel)
-    params.set("dataModel", settings.preferredModel);
-  if (settings.ensemble) params.set("ensemble", "true");
-  if (settings.lossAssumptionPercent > 0)
-    params.set("lossAssumption", settings.lossAssumptionPercent.toString());
+  params.set("lat", lat.toFixed(4));
+  params.set("lng", lng.toFixed(4));
+  params.set("zoom", Math.round(settings.zoom).toString());
+  params.set("hubHeight", settings.hubHeight.toString());
+  params.set("powerCurve", settings.powerCurve);
+  params.set("dataModel", settings.preferredModel);
+  params.set("ensemble", settings.ensemble ? "true" : "false");
+  params.set(
+    "lossAssumption",
+    String(Math.max(0, Math.min(100, settings.lossAssumptionPercent)))
+  );
+
   const queryString = params.toString();
   return queryString ? `/?${queryString}` : "/";
 }
