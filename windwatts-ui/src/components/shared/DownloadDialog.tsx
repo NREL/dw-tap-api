@@ -11,47 +11,82 @@ import {
   Alert,
   Skeleton,
 } from "@mui/material";
-import { DataModel } from "../../types";
+import { useState, useContext } from "react";
 import { DATA_MODEL_INFO } from "../../constants";
+import { useDownloadCSVFile, useNearestGridLocation } from "../../hooks";
+import { SettingsContext } from "../../providers/SettingsContext";
 
 interface DownloadDialogProps {
-  open: boolean;
   onClose: () => void;
-  onConfirm: () => void;
-  isDownloading: boolean;
-  lat: number;
-  lng: number;
-  nearestGridLocation: {
-    latitude: number;
-    longitude: number;
-  } | null;
-  dataModel: DataModel;
-  isLoadingGridLocation?: boolean;
-  gridLocationError?: string | null;
-  downloadError?: string | null;
+  onSuccess?: () => void;
 }
 
 export const DownloadDialog = ({
-  open,
   onClose,
-  onConfirm,
-  isDownloading,
-  lat,
-  lng,
-  nearestGridLocation,
-  dataModel,
-  isLoadingGridLocation = false,
-  gridLocationError = null,
-  downloadError = null,
+  onSuccess,
 }: DownloadDialogProps) => {
+  const [downloadError, setDownloadError] = useState<string | null>(null);
 
-  const downloadInfo = DATA_MODEL_INFO[dataModel];
+  const { currentPosition, preferredModel: dataModel } = useContext(SettingsContext);
+  const { lat, lng } = currentPosition || {};
+
+  const { isDownloading, downloadFile } = useDownloadCSVFile();
+  const {
+    gridLocation: nearestGridLocation,
+    isLoading: isLoadingGridLocation,
+    error: gridLocationError,
+  } = useNearestGridLocation();
+
+  const downloadInfo = dataModel ? DATA_MODEL_INFO[dataModel] : null;
   const canConfirm = !isLoadingGridLocation && !gridLocationError && !isDownloading && nearestGridLocation;
+
+  const handleConfirm = async () => {
+    if (!nearestGridLocation) return;
+
+    setDownloadError(null);
+    
+    try {
+      const result = await downloadFile(
+        nearestGridLocation.latitude,
+        nearestGridLocation.longitude
+      );
+
+      if (!result.success) {
+        const errorMessage = result.error instanceof Error ? result.error.message : "Download failed";
+        setDownloadError(errorMessage);
+        return;
+      }
+
+      onSuccess?.();
+      onClose();
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unexpected error occurred";
+      setDownloadError(errorMessage);
+    }
+  };
+
+  const handleClose = () => {
+    if (isDownloading || isLoadingGridLocation) return;
+    setDownloadError(null);
+    onClose();
+  };
+
+  const handleRetry = () => {
+    if (gridLocationError) {
+      // Retry is handled by SWR automatically when dialog reopens
+      handleClose();
+      setTimeout(() => {
+        // Parent will reopen, triggering SWR refetch
+      }, 100);
+    } else if (downloadError) {
+      handleConfirm();
+    }
+  };
 
   return (
     <Dialog
-      open={open}
-      onClose={onClose}
+      open={true}
+      onClose={handleClose}
       aria-labelledby="download-dialog-title"
       aria-describedby="download-dialog-description"
       maxWidth="sm"
@@ -168,21 +203,21 @@ export const DownloadDialog = ({
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
         <Button 
-          onClick={onClose}
+          onClick={handleClose}
           variant="outlined"
           sx={{ textTransform: "none" }}
         >
           Cancel
         </Button>
         <Button 
-          onClick={onConfirm} 
+          onClick={gridLocationError || downloadError ? handleRetry : handleConfirm} 
           variant="contained"
           disabled={!canConfirm}
           sx={{ textTransform: "none" }}
         >
           {isDownloading ? 'Downloading...' :
           isLoadingGridLocation ? 'Loading...' : 
-           gridLocationError ? 'Retry' : 'Download'}
+           gridLocationError || downloadError ? 'Retry' : 'Download'}
         </Button>
       </DialogActions>
     </Dialog>

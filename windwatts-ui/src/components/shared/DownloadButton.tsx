@@ -1,71 +1,10 @@
-import { useState, useContext } from "react";
+import { useState } from "react";
 import { Button } from "@mui/material";
 import DownloadIcon from "@mui/icons-material/Download";
-import { useDownloadCSVFile, useNearestGridLocation } from "../../hooks";
 import { DownloadDialog } from "./DownloadDialog";
-import { SettingsContext } from "../../providers/SettingsContext";
 
 export const DownloadButton = () => {
-  const [showDownloadDialog, setShowDownloadDialog] = useState(false);
-  const [downloadError, setDownloadError] = useState<string | null>(null);
-
-  const { currentPosition, preferredModel: dataModel } = useContext(SettingsContext);
-  const { lat, lng } = currentPosition || {};
-
-  const { canDownload, isDownloading, downloadFile } = useDownloadCSVFile();
-
-  // useNearestGridLocation hook to fetch and cache nearest grid location
-  const {
-    gridLocation: nearestGridLocation,
-    isLoading: isLoadingGridLocation,
-    error: gridLocationError,
-  } = useNearestGridLocation();
-
-  const handleDownloadClick = () => {
-    if (!canDownload) return;
-    setDownloadError(null);
-    setShowDownloadDialog(true);
-  };
-
-  const handleDownloadConfirm = async () => {
-    if (!canDownload || !nearestGridLocation) return;
-
-    setDownloadError(null);
-    
-    try {
-      const result = await downloadFile(
-        nearestGridLocation.latitude,
-        nearestGridLocation.longitude
-      );
-
-      if (!result.success) {
-        const errorMessage = result.error instanceof Error ? result.error.message : "Download failed";
-        setDownloadError(errorMessage);
-        return;
-      }
-
-      setShowDownloadDialog(false);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unexpected error occurred";
-      setDownloadError(errorMessage);
-    }
-  };
-
-  const handleDownloadCancel = () => {
-    if (isDownloading || isLoadingGridLocation) return;
-    setShowDownloadDialog(false);
-    setDownloadError(null);
-  };
-
-  const handleRetry = () => {
-    if (gridLocationError) {
-      // Retry is handled by SWR automatically when dialog reopens
-      setShowDownloadDialog(false);
-      setTimeout(() => setShowDownloadDialog(true), 100);
-    } else if (downloadError) {
-      handleDownloadConfirm();
-    }
-  };
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   return (
     <>
@@ -73,8 +12,7 @@ export const DownloadButton = () => {
         variant="contained"
         size="small"
         startIcon={<DownloadIcon />}
-        onClick={handleDownloadClick}
-        disabled={!canDownload || isDownloading}
+        onClick={() => setIsDialogOpen(true)}
         sx={{
           fontSize: "0.9em",
           textTransform: "none",
@@ -87,22 +25,12 @@ export const DownloadButton = () => {
           },
         }}
       >
-        {isDownloading ? "Downloading..." : "Download Hourly Data"}
+        Download Hourly Data
       </Button>
 
-      <DownloadDialog
-        open={showDownloadDialog}
-        onClose={handleDownloadCancel}
-        onConfirm={gridLocationError || downloadError ? handleRetry : handleDownloadConfirm}
-        isDownloading={isDownloading}
-        lat={lat ?? 0}
-        lng={lng ?? 0}
-        nearestGridLocation={nearestGridLocation}
-        dataModel={dataModel!}
-        isLoadingGridLocation={isLoadingGridLocation}
-        gridLocationError={gridLocationError}
-        downloadError={downloadError}
-      />
+      {isDialogOpen && (
+        <DownloadDialog onClose={() => setIsDialogOpen(false)} />
+      )}
     </>
   );
 };
