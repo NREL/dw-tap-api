@@ -72,7 +72,7 @@ SAMPLE_YEARS = {
     "s3_era5" : [2020, 2021, 2022, 2023]
 }
 
-# YEARS for which we have wtk data in the S3
+# YEARS for which we have era5 data in the S3
 ALL_YEARS = {
     "s3_era5" : list(range(2013,2024))
 }
