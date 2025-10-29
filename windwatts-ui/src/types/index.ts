@@ -4,7 +4,7 @@ export type {
   WindspeedByLatLngRequest,
   EnergyProductionRequest,
   NearestGridLocationRequest,
-  DownloadCSVRequest
+  WindCSVFileRequest
 } from "./Requests";
 export type { Heights } from "./Heights";
 export type { StoredUnits } from "./Units";

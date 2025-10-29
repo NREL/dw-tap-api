@@ -17,8 +17,18 @@ export const generateWindDataFilename = (gridLat: number, gridLng: number) =>{
     return `wind_data_${gridLat.toFixed(3)}_${gridLng.toFixed(3)}.csv`
 }
 
-export const downloadWindDataCSV = async (blob: Blob, gridLat: number, gridLng: number) => {
-  const filename = generateWindDataFilename(gridLat, gridLng);
-  downloadBlobAsFile(blob, filename);
-  return { success: true, filename };
+export const downloadWindDataCSV = async (
+  response: Response,
+  gridLat: number,
+  gridLng: number
+) => {
+  try {
+    const blob = await response.blob();
+    const filename = generateWindDataFilename(gridLat, gridLng);
+    downloadBlobAsFile(blob, filename);
+    return { success: true, filename };
+  } catch (error) {
+    console.error('Failed to process download:', error);
+    throw error;
+  }
 };

@@ -25,11 +25,9 @@ export interface NearestGridLocationRequest {
   dataModel: DataModel;
 }
 
-export interface DownloadCSVRequest {
+export interface WindCSVFileRequest {
   lat: number;
   lng: number;
   n_neighbors?: number;
   dataModel: DataModel;
-  gridLat: number;
-  gridLng: number;
 }

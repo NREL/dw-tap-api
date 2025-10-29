@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { downloadCSV, getNearestGridLocation } from "../services/api";
+import { getCSVFile, getNearestGridLocation } from "../services/api";
+import { downloadWindDataCSV } from "../services/download";
 import { DataModel } from "../types";
 
 export const useDownload = () => {
@@ -52,14 +53,13 @@ export const useDownload = () => {
   }) => {
     try {
       setIsDownloading(true);
-      await downloadCSV({
+      const response = await getCSVFile({
         lat,
         lng,
         n_neighbors: 1,
         dataModel,
-        gridLat,
-        gridLng,
       });
+      await downloadWindDataCSV(response, gridLat, gridLng);
       return { success: true };
     } catch (error) {
       console.error('Download failed:', error);

@@ -2,9 +2,8 @@ import {
   EnergyProductionRequest,
   WindspeedByLatLngRequest,
   NearestGridLocationRequest,
-  DownloadCSVRequest
+  WindCSVFileRequest
 } from "../types";
-import { downloadWindDataCSV } from "./download";
 
 export const fetchWrapper = async (url: string, options: RequestInit) => {
   const response = await fetch(url, options);
@@ -12,6 +11,14 @@ export const fetchWrapper = async (url: string, options: RequestInit) => {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
   return response.json();
+};
+
+export const fetchBlobWrapper = async (url: string, options: RequestInit) => {
+  const response = await fetch(url, options);
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  return response;
 };
 // time_period = "global" is default for windspeed in the era5_controller. But have to include "source" param as "athena_ensemble" for ensemble model result and "athena_era5" for regular era5 result which is default anyway.
 export const getWindspeedByLatLong = async ({
@@ -92,14 +99,12 @@ export const getNearestGridLocation = async ({
   return fetchWrapper(url, options);
 };
 
-export const downloadCSV = async ({
+export const getCSVFile = async ({
   lat,
   lng,
   n_neighbors = 1,
-  dataModel,
-  gridLat,
-  gridLng
-}: DownloadCSVRequest) => {
+  dataModel
+}: WindCSVFileRequest) => {
   
   const url = `/api/${dataModel}/download-csv?lat=${lat}&lng=${lng}&n_neighbors=${n_neighbors}`;
   
@@ -110,18 +115,5 @@ export const downloadCSV = async ({
     },
   };
 
-  try {
-
-    const response = await fetch(url, options);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const blob = await response.blob();
-    return await downloadWindDataCSV(blob, gridLat, gridLng);
-
-  } catch (error) {
-    console.error('Download failed:', error);
-    throw error;
-  }
+  return fetchBlobWrapper(url, options);
 };
