@@ -17,3 +17,17 @@ export interface EnergyProductionRequest {
   time_period?: string;
   ensemble?: boolean;
 }
+
+export interface NearestGridLocationRequest {
+  lat: number;
+  lng: number;
+  n_neighbors?: number;
+  dataModel: DataModel;
+}
+
+export interface WindCSVFileRequest {
+  lat: number;
+  lng: number;
+  n_neighbors?: number;
+  dataModel: DataModel;
+}

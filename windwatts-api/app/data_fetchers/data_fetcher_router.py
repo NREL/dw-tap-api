@@ -37,7 +37,28 @@ class DataFetcherRouter:
             return fetcher.fetch_data(**params)
         else:
             raise ValueError(f"No fetcher found for source={source}")
-        
+    
+    def find_nearest_locations(self, source: str, lat: float, lng: float, n_neighbors: int = 1):
+        """
+        Proxy to the underlying fetcher's nearest-neighbor lookup.
+
+        :param source: Registered fetcher name (e.g., "athena_wtk").
+        :param lat: Latitude in decimal degrees.
+        :param lng: Longitude in decimal degrees.
+        :param n_neighbors: Number of neighbors (>=1).
+        :return:
+            - if n_neighbors == 1: tuple(index, lat, lng)
+            - else: list[tuple(index, lat, lng)]
+        """
+        fetcher = self.fetchers.get(source)
+        if not fetcher:
+            raise ValueError(f"No fetcher found for source={source}")
+
+        # Ensure the fetcher supports nearest lookup
+        if not hasattr(fetcher, "find_nearest_locations"):
+            raise ValueError(f"Fetcher '{source}' does not support nearest-locations")
+
+        return fetcher.find_nearest_locations(lat=lat, lng=lng, n_neighbors=n_neighbors)
 
     def fetch_data_routing(self, params: dict, source: str = "athena_wtk"):
         """
