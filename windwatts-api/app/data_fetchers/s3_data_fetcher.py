@@ -40,29 +40,30 @@ class S3DataFetcher(AbstractDataFetcher):
         self.grid = grid
         self.base_client = ClientBase(athena_config, data_family=self.grid)
     
-    def find_nearest_locations(self, lat: float, lon: float, n_neighbors: int = 1):
+    def find_nearest_locations(self, lat: float, lng: float, n_neighbors: int = 1):
         """
         Find one or more nearest grid locations (index, latitude, and longitude) to a given coordinate.
 
         :param lat: Latitude of the target location in decimal degrees.
         :type lat: float
-        :param lon: Longitude of the target location in decimal degrees.
-        :type lon: float
+        :param lng: Longitude of the target location in decimal degrees.
+        :type lng: float
         :param n_neighbors: Number of nearest grid points to return. Defaults to 1.
         :type n_neighbors: int
 
         :return: 
             - If n_neighbors == 1: a list of single tuple [(index, latitude, longitude)] for the nearest grid point.  
             - If n_neighbors > 1: a list of tuples, each containing (index, latitude, longitude).
+            - The list will have length n_neighbors.
         :rtype: 
-            tuple[str, float, float] | list[tuple[str, float, float]]
+            :rtype: list[tuple[str, float, float]]
         """
         if n_neighbors == 1:
-            index, lat, lon = self.base_client.find_nearest_location(lat, lon)
-            return [(index, lat, lon)]
+            index, nearest_lat, nearest_lon = self.base_client.find_nearest_location(lat, lng)
+            return [(index, nearest_lat, nearest_lon)]
         else:
             # A list of tuples where each tuple contains: (grid_index, latitude, longitude)
-            tuples = self.base_client.find_n_nearest_locations(lat, lon, n_neighbors)
+            tuples = self.base_client.find_n_nearest_locations(lat, lng, n_neighbors)
             return tuples
     
     def generate_s3_keys(self, lat: float, lng: float, years: List[int], n_neighbors: int) -> List[str]:

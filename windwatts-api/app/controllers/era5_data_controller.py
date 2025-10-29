@@ -463,7 +463,7 @@ def nearest_locations(
             raise HTTPException(status_code=400, detail="Nearest-locations supported only for source='athena_era5'")
 
         result = data_fetcher_router.find_nearest_locations(
-            source=source, lat=lat, lon=lng, n_neighbors=n_neighbors
+            source=source, lat=lat, lng=lng, n_neighbors=n_neighbors
         )
         
         locations = [GridLocation(index=str(i), latitude=float(a), longitude=float(o)) for i, a, o in result]
