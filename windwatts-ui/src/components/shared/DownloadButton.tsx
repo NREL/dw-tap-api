@@ -1,23 +1,11 @@
 import { useState, useContext } from "react";
-import { Button, ButtonProps } from "@mui/material";
+import { Button } from "@mui/material";
 import DownloadIcon from "@mui/icons-material/Download";
 import { useDownloadCSVFile, useNearestGridLocation } from "../../hooks";
 import { DownloadDialog } from "./DownloadDialog";
 import { SettingsContext } from "../../providers/SettingsContext";
 
-interface DownloadButtonProps extends Omit<ButtonProps, 'onClick'> {
-  buttonText?: string;
-  downloadingText?: string;
-}
-
-export const DownloadButton = ({
-  buttonText = "Download Example Hourly Data",
-  downloadingText = "Downloading...",
-  variant = "contained",
-  size = "small",
-  sx,
-  ...buttonProps
-}: DownloadButtonProps) => {
+export const DownloadButton = () => {
   const [showDownloadDialog, setShowDownloadDialog] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
 
@@ -82,8 +70,8 @@ export const DownloadButton = ({
   return (
     <>
       <Button
-        variant={variant}
-        size={size}
+        variant="contained"
+        size="small"
         startIcon={<DownloadIcon />}
         onClick={handleDownloadClick}
         disabled={!canDownload || isDownloading}
@@ -93,15 +81,13 @@ export const DownloadButton = ({
           borderRadius: 2,
           px: 2,
           py: 0.5,
-          backgroundColor: variant === "contained" ? "primary.main" : undefined,
+          backgroundColor: "primary.main",
           "&:hover": {
-            backgroundColor: variant === "contained" ? "primary.dark" : undefined,
+            backgroundColor: "primary.dark",
           },
-          ...sx,
         }}
-        {...buttonProps}
       >
-        {isDownloading ? downloadingText : buttonText}
+        {isDownloading ? "Downloading..." : "Download Hourly Data"}
       </Button>
 
       <DownloadDialog

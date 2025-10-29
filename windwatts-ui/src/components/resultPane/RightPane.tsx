@@ -134,26 +134,7 @@ export const RightPane = () => {
 
         <AnalysisResults />
 
-        <DownloadButton
-          variant="contained"
-          size="small"
-          buttonText="Download Example Hourly Data"
-          downloadingText="Downloading..."
-          sx={{
-            alignSelf: "flex-end",
-            mt: 2,
-            mb: 2,
-            fontSize: "0.9em",
-            textTransform: "none",
-            borderRadius: 2,
-            px: 2,
-            py: 0.5,
-            backgroundColor: "primary.main",
-            "&:hover": {
-              backgroundColor: "primary.dark",
-            },
-          }}
-        />
+        <DownloadButton />
 
         <Box sx={{ display: "flex", alignItems: "center", mt: 2 }}>
           <Chip
