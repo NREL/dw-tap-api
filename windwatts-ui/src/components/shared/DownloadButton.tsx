@@ -1,24 +1,16 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { Button, ButtonProps } from "@mui/material";
 import DownloadIcon from "@mui/icons-material/Download";
-import { useDownload } from "../../hooks/useDownload";
+import { useDownloadCSVFile, useNearestGridLocation } from "../../hooks";
 import { DownloadDialog } from "./DownloadDialog";
-import { DataModel } from "../../types";
+import { SettingsContext } from "../../providers/SettingsContext";
 
 interface DownloadButtonProps extends Omit<ButtonProps, 'onClick'> {
-  lat: number;
-  lng: number;
-  dataModel: DataModel;
-  canDownload: boolean;
   buttonText?: string;
   downloadingText?: string;
 }
 
 export const DownloadButton = ({
-  lat,
-  lng,
-  dataModel,
-  canDownload,
   buttonText = "Download Example Hourly Data",
   downloadingText = "Downloading...",
   variant = "contained",
@@ -27,50 +19,24 @@ export const DownloadButton = ({
   ...buttonProps
 }: DownloadButtonProps) => {
   const [showDownloadDialog, setShowDownloadDialog] = useState(false);
-  const [nearestGridLocation, setNearestGridLocation] = useState<{
-    latitude: number;
-    longitude: number;
-  } | null>(null);
-
-  const [isLoadingGridLocation, setIsLoadingGridLocation] = useState(false);
-  const [gridLocationError, setGridLocationError] = useState<string | null>(null);
   const [downloadError, setDownloadError] = useState<string | null>(null);
 
+  const { currentPosition, preferredModel: dataModel } = useContext(SettingsContext);
+  const { lat, lng } = currentPosition || {};
+
+  const { canDownload, isDownloading, downloadFile } = useDownloadCSVFile();
+
+  // useNearestGridLocation hook to fetch and cache nearest grid location
   const {
-    isDownloading,
-    fetchNearestGridLocation,
-    downloadFile
-  } = useDownload();
+    gridLocation: nearestGridLocation,
+    isLoading: isLoadingGridLocation,
+    error: gridLocationError,
+  } = useNearestGridLocation();
 
-  const handleDownloadClick = async () => {
+  const handleDownloadClick = () => {
     if (!canDownload) return;
-
-    setGridLocationError(null);
     setDownloadError(null);
-    setIsLoadingGridLocation(true);
     setShowDownloadDialog(true);
-
-    try{
-        const gridLocation = await fetchNearestGridLocation({
-        lat,
-        lng,
-        dataModel
-        });
-
-        setNearestGridLocation(gridLocation);
-
-        if (!gridLocation) {
-            setGridLocationError("Unable to find nearest grid location for the selected coordinates.");
-        }
-    }
-    catch(error){
-        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
-        setGridLocationError(errorMessage);
-        setNearestGridLocation(null);
-    }
-    finally{
-        setIsLoadingGridLocation(false);
-    }
   };
 
   const handleDownloadConfirm = async () => {
@@ -78,44 +44,38 @@ export const DownloadButton = ({
 
     setDownloadError(null);
     
-    try{
-        const result = await downloadFile({
-        lat,
-        lng,
-        dataModel,
-        gridLat: nearestGridLocation?.latitude,
-        gridLng: nearestGridLocation?.longitude
-        });
+    try {
+      const result = await downloadFile(
+        nearestGridLocation.latitude,
+        nearestGridLocation.longitude
+      );
 
-        if (!result.success) {
-            const errorMessage = result.error instanceof Error ? result.error.message : "Download failed";
-            setDownloadError(errorMessage);
-            return;
-        }
-
-        setShowDownloadDialog(false);
-        setNearestGridLocation(null);
-    }
-    catch(error){
-        const errorMessage = error instanceof Error ? error.message : "Unexpected error occurred";
+      if (!result.success) {
+        const errorMessage = result.error instanceof Error ? result.error.message : "Download failed";
         setDownloadError(errorMessage);
+        return;
+      }
+
+      setShowDownloadDialog(false);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unexpected error occurred";
+      setDownloadError(errorMessage);
     }
   };
 
   const handleDownloadCancel = () => {
     if (isDownloading || isLoadingGridLocation) return;
-
     setShowDownloadDialog(false);
-    setNearestGridLocation(null);
-    setGridLocationError(null);
     setDownloadError(null);
   };
 
-  const handleRetry = async () => {
+  const handleRetry = () => {
     if (gridLocationError) {
-      await handleDownloadClick();
+      // Retry is handled by SWR automatically when dialog reopens
+      setShowDownloadDialog(false);
+      setTimeout(() => setShowDownloadDialog(true), 100);
     } else if (downloadError) {
-      await handleDownloadConfirm();
+      handleDownloadConfirm();
     }
   };
 
@@ -149,10 +109,10 @@ export const DownloadButton = ({
         onClose={handleDownloadCancel}
         onConfirm={gridLocationError || downloadError ? handleRetry : handleDownloadConfirm}
         isDownloading={isDownloading}
-        lat={lat}
-        lng={lng}
+        lat={lat ?? 0}
+        lng={lng ?? 0}
         nearestGridLocation={nearestGridLocation}
-        dataModel={dataModel}
+        dataModel={dataModel!}
         isLoadingGridLocation={isLoadingGridLocation}
         gridLocationError={gridLocationError}
         downloadError={downloadError}

@@ -30,13 +30,10 @@ export const RightPane = () => {
     currentPosition,
     hubHeight,
     powerCurve,
-    preferredModel,
     toggleSettings,
   } = useContext(SettingsContext);
 
   const { lat, lng } = currentPosition ?? {};
-  const canDownload = !!(lat && lng);
-  const downloadDataModel = preferredModel;
 
   const [showDisclaimer, setShowDisclaimer] = useState(false);
 
@@ -137,31 +134,26 @@ export const RightPane = () => {
 
         <AnalysisResults />
 
-        {canDownload && lat && lng && (
-          <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2, mb: 2 }}>
-            <DownloadButton
-              lat={lat}
-              lng={lng}
-              dataModel={downloadDataModel}
-              canDownload={canDownload}
-              variant="contained"
-              size="small"
-              buttonText="Download Example Hourly Data"
-              downloadingText="Downloading..."
-              sx={{
-                fontSize: "0.9em",
-                textTransform: "none",
-                borderRadius: 2,
-                px: 2,
-                py: 0.5,
-                backgroundColor: "primary.main",
-                "&:hover": {
-                  backgroundColor: "primary.dark",
-                },
-              }}
-            />
-          </Box>
-        )}
+        <DownloadButton
+          variant="contained"
+          size="small"
+          buttonText="Download Example Hourly Data"
+          downloadingText="Downloading..."
+          sx={{
+            alignSelf: "flex-end",
+            mt: 2,
+            mb: 2,
+            fontSize: "0.9em",
+            textTransform: "none",
+            borderRadius: 2,
+            px: 2,
+            py: 0.5,
+            backgroundColor: "primary.main",
+            "&:hover": {
+              backgroundColor: "primary.dark",
+            },
+          }}
+        />
 
         <Box sx={{ display: "flex", alignItems: "center", mt: 2 }}>
           <Chip
