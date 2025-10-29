@@ -1,3 +1,5 @@
+import { formatCoordinate } from "../utils";
+
 export const downloadBlobAsFile = (blob: Blob, filename: string) => {
     const downloadUrl = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -14,7 +16,7 @@ export const generateWindDataFilename = (gridLat: number, gridLng: number) =>{
     if (gridLat === undefined || gridLng === undefined){
         return `wind_data_${Date.now()}.csv`; // fallback with timestamp
     }
-    return `wind_data_${gridLat.toFixed(3)}_${gridLng.toFixed(3)}.csv`
+    return `wind_data_${formatCoordinate(gridLat)}_${formatCoordinate(gridLng)}.csv`
 }
 
 export const downloadWindDataCSV = async (

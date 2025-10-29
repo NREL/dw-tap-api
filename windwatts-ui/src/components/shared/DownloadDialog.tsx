@@ -15,30 +15,26 @@ import { useState, useContext } from "react";
 import { DATA_MODEL_INFO } from "../../constants";
 import { useDownloadCSVFile, useNearestGridLocation } from "../../hooks";
 import { SettingsContext } from "../../providers/SettingsContext";
+import { formatCoordinate } from "../../utils";
 
-interface DownloadDialogProps {
-  onClose: () => void;
-  onSuccess?: () => void;
-}
-
-export const DownloadDialog = ({
-  onClose,
-  onSuccess,
-}: DownloadDialogProps) => {
+export const DownloadDialog = ({ onClose }: { onClose: () => void }) => {
   const [downloadError, setDownloadError] = useState<string | null>(null);
 
-  const { currentPosition, preferredModel: dataModel } = useContext(SettingsContext);
-  const { lat, lng } = currentPosition || {};
-
-  const { isDownloading, downloadFile } = useDownloadCSVFile();
+  const { canDownload, isDownloading, downloadFile } = useDownloadCSVFile();
   const {
     gridLocation: nearestGridLocation,
     isLoading: isLoadingGridLocation,
     error: gridLocationError,
+    retry: retryGridLocation,
   } = useNearestGridLocation();
 
+  const { currentPosition, preferredModel: dataModel } = useContext(SettingsContext);
+  const { lat, lng } = currentPosition || {};
   const downloadInfo = dataModel ? DATA_MODEL_INFO[dataModel] : null;
-  const canConfirm = !isLoadingGridLocation && !gridLocationError && !isDownloading && nearestGridLocation;
+
+  const hasError = !!(gridLocationError || downloadError);
+  const isProcessing = isDownloading || isLoadingGridLocation;
+  const canConfirm = !isProcessing && !hasError && !!nearestGridLocation;
 
   const handleConfirm = async () => {
     if (!nearestGridLocation) return;
@@ -57,7 +53,6 @@ export const DownloadDialog = ({
         return;
       }
 
-      onSuccess?.();
       onClose();
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unexpected error occurred";
@@ -66,22 +61,20 @@ export const DownloadDialog = ({
   };
 
   const handleClose = () => {
-    if (isDownloading || isLoadingGridLocation) return;
+    if (isProcessing) return;
     setDownloadError(null);
     onClose();
   };
 
   const handleRetry = () => {
     if (gridLocationError) {
-      // Retry is handled by SWR automatically when dialog reopens
-      handleClose();
-      setTimeout(() => {
-        // Parent will reopen, triggering SWR refetch
-      }, 100);
+      retryGridLocation();
     } else if (downloadError) {
       handleConfirm();
     }
   };
+
+  const handleAction = hasError ? handleRetry : handleConfirm;
 
   return (
     <Dialog
@@ -94,16 +87,31 @@ export const DownloadDialog = ({
     >
       <DialogTitle id="download-dialog-title">
         Download Hourly Wind Data
-        {(isLoadingGridLocation || isDownloading) && (
-          <CircularProgress size={20} sx={{ ml: 2 }} />
-        )}
+        {isProcessing && <CircularProgress size={20} sx={{ ml: 2 }} />}
       </DialogTitle>
       <DialogContent>
         <DialogContentText id="download-dialog-description" component="div">
-          <Typography variant="body2" sx={{ mb: 1 }}>
-            <strong>Selected Coordinates:</strong> ({lat?.toFixed(3)}, {lng?.toFixed(3)})
-          </Typography>
           
+          {/* Missing data warning */}
+          {!canDownload && (
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              <Typography variant="body2">
+                <strong>Missing required information</strong>
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 1, fontSize: '0.85em' }}>
+                Please select a location and data model from the settings before downloading.
+              </Typography>
+            </Alert>
+          )}
+
+          {/* Selected coordinates */}
+          {canDownload && lat !== undefined && lng !== undefined && (
+            <Typography variant="body2" sx={{ mb: 1 }}>
+              <strong>Selected Coordinates:</strong> ({formatCoordinate(lat)}, {formatCoordinate(lng)})
+            </Typography>
+          )}
+          
+          {/* Grid location loading */}
           {isLoadingGridLocation && (
             <Box sx={{ mb: 1 }}>
               <Typography variant="body2" sx={{ mb: 1 }}>
@@ -114,6 +122,7 @@ export const DownloadDialog = ({
             </Box>
           )}
 
+          {/* Grid location error */}
           {gridLocationError && (
             <Alert severity="error" sx={{ mb: 2 }}>
               <Typography variant="body2">
@@ -125,6 +134,7 @@ export const DownloadDialog = ({
             </Alert>
           )}
 
+          {/* Download error */}
           {downloadError && (
             <Alert severity="error" sx={{ mb: 2 }}>
               <Typography variant="body2">
@@ -136,10 +146,11 @@ export const DownloadDialog = ({
             </Alert>
           )}
 
+          {/* Grid location success */}
           {nearestGridLocation && !isLoadingGridLocation && (
             <Box sx={{ mb: 1 }}>
               <Typography variant="body2">
-                <strong>Data Grid Coordinates:</strong> ({nearestGridLocation.latitude.toFixed(3)}, {nearestGridLocation.longitude.toFixed(3)})
+                <strong>Data Grid Coordinates:</strong> ({formatCoordinate(nearestGridLocation.latitude)}, {formatCoordinate(nearestGridLocation.longitude)})
               </Typography>
               <Typography 
                 variant="body2" 
@@ -156,6 +167,7 @@ export const DownloadDialog = ({
             </Box>
           )}
 
+          {/* Data model information */}
           {isLoadingGridLocation ? (
             <Box>
               <Skeleton variant="text" width="70%" height={20} sx={{ mb: 1 }} />
@@ -189,6 +201,7 @@ export const DownloadDialog = ({
             )
           )}
 
+          {/* Download progress */}
           {isDownloading && (
             <Alert severity="info" sx={{ mt: 2 }}>
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -210,14 +223,14 @@ export const DownloadDialog = ({
           Cancel
         </Button>
         <Button 
-          onClick={gridLocationError || downloadError ? handleRetry : handleConfirm} 
+          onClick={handleAction}
           variant="contained"
           disabled={!canConfirm}
           sx={{ textTransform: "none" }}
         >
           {isDownloading ? 'Downloading...' :
           isLoadingGridLocation ? 'Loading...' : 
-           gridLocationError || downloadError ? 'Retry' : 'Download'}
+           hasError ? 'Retry' : 'Download'}
         </Button>
       </DialogActions>
     </Dialog>

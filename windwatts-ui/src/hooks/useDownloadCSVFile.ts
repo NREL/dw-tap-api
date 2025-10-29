@@ -50,7 +50,7 @@ export const useNearestGridLocation = () => {
     return JSON.stringify({ lat, lng, dataModel, type: "nearest-grid" });
   }, [shouldFetch, lat, lng, dataModel]);
 
-  const { isLoading, data, error } = useSWR(
+  const { isLoading, data, error, mutate: retry } = useSWR(
     swrKey,
     () =>
       getNearestGridLocation({
@@ -79,5 +79,6 @@ export const useNearestGridLocation = () => {
     isLoading,
     error,
     hasData: !!gridLocation,
+    retry,
   };
 };
