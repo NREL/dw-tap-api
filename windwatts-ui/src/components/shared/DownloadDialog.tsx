@@ -11,8 +11,8 @@ import {
   Alert,
   Skeleton,
 } from "@mui/material";
-import { getDownloadInfo } from "../../constants/downloadInfo";
 import { DataModel } from "../../types";
+import { DATA_MODEL_INFO } from "../../constants";
 
 interface DownloadDialogProps {
   open: boolean;
@@ -45,7 +45,7 @@ export const DownloadDialog = ({
   downloadError = null,
 }: DownloadDialogProps) => {
 
-  const downloadInfo = getDownloadInfo(dataModel);
+  const downloadInfo = DATA_MODEL_INFO[dataModel];
   const canConfirm = !isLoadingGridLocation && !gridLocationError && !isDownloading && nearestGridLocation;
 
   return (
@@ -136,18 +136,18 @@ export const DownloadDialog = ({
                 </Typography>
                 
                 <Typography variant="body2" sx={{ mb: 1 }}>
-                  <strong>Year Range:</strong> {downloadInfo.yearRange}
+                  <strong>Year Range:</strong> {downloadInfo.year_range}
                 </Typography>
 
-                {downloadInfo.windspeed_heights && (
+                {downloadInfo.wind_speed_heights && (
                   <Typography variant="body2" sx={{ mb: 1 }}>
-                    <strong>Windspeed Heights:</strong> {downloadInfo.windspeed_heights.join(", ")}
+                    <strong>Windspeed Heights:</strong> {downloadInfo.wind_speed_heights.join(", ")}
                   </Typography>
                 )}
 
-                {downloadInfo.winddirection_heights && (
+                {downloadInfo.wind_direction_heights && (
                   <Typography variant="body2" sx={{ mb: 1 }}>
-                    <strong>Wind Direction Heights:</strong> {downloadInfo.winddirection_heights.join(", ")}
+                    <strong>Wind Direction Heights:</strong> {downloadInfo.wind_direction_heights.join(", ")}
                   </Typography>
                 )}
               </>
