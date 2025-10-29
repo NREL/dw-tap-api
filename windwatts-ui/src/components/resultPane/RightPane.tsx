@@ -35,7 +35,7 @@ export const RightPane = () => {
   } = useContext(SettingsContext);
 
   const { lat, lng } = currentPosition ?? {};
-  const canDownload = lat && lng;
+  const canDownload = !!(lat && lng);
   const downloadDataModel = preferredModel;
 
   const [showDisclaimer, setShowDisclaimer] = useState(false);
