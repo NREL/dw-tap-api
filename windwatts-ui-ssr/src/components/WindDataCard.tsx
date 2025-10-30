@@ -5,7 +5,7 @@ import { useContext } from "react";
 import { UnitsContext } from "../providers/UnitsContext";
 import ProductionCards from "./ProductionCards";
 import WindSpeedCard from "./WindSpeedCard";
-import ProductionDetailsTable from "./ProductionDetailsTable";
+import ProductionDataTable from "./ProductionDataTable";
 
 function formatNumber(num: number, digits = 1) {
   return Number(num).toLocaleString("en-US", { minimumFractionDigits: digits, maximumFractionDigits: digits });
@@ -24,7 +24,8 @@ export default function WindDataCard({ wind, production }: { wind: any; producti
     return `${formatNumber(Number(energyKwh), 0)} kWh`;
   })();
 
-  const tableData = production?.monthly_avg_energy_production || production?.yearly_avg_energy_production;
+  const monthly = production?.monthly_avg_energy_production;
+  const yearly = production?.yearly_avg_energy_production;
 
   return (
     <Card variant="outlined">
@@ -35,7 +36,11 @@ export default function WindDataCard({ wind, production }: { wind: any; producti
           <WindSpeedCard wind={wind} />
           <Typography>Estimated annual energy: {energyDisplay}</Typography>
           {production ? <ProductionCards production={production} /> : null}
-          {tableData ? <ProductionDetailsTable data={tableData} /> : null}
+          {monthly ? (
+            <ProductionDataTable title="Monthly Production Details" data={monthly} timeUnit="month" />
+          ) : yearly ? (
+            <ProductionDataTable title="Yearly Production Details" data={yearly} timeUnit="year" />
+          ) : null}
         </Stack>
       </CardContent>
     </Card>
