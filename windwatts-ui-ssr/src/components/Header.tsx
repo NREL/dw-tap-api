@@ -20,12 +20,8 @@ export default function Header() {
         <Box
           component="img"
           sx={{ height: 40 }}
-          src="/NREL-logo-reversed.png"
+          src="/NREL-logo-reversed.svg"
           alt="NREL Logo"
-          onError={(e: any) => {
-            // hide if not present yet
-            e.currentTarget.style.display = "none";
-          }}
         />
       </Toolbar>
     </AppBar>
