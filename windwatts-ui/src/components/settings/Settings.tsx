@@ -1,9 +1,4 @@
-import {
-  Box,
-  Modal,
-  Typography,
-  IconButton,
-} from "@mui/material";
+import { Box, Modal, Typography, IconButton } from "@mui/material";
 import { Close } from "@mui/icons-material";
 import { UnitsSettings } from "./UnitsSettings";
 import { useContext, useState } from "react";
@@ -19,8 +14,7 @@ import {
 import { EnsembleSettings } from "./EnsembleSettings";
 
 export const Settings = () => {
-  const { settingsOpen, toggleSettings } =
-    useContext(SettingsContext);
+  const { settingsOpen, toggleSettings } = useContext(SettingsContext);
   const [hasScrolled, setHasScrolled] = useState(false);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {

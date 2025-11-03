@@ -11,6 +11,7 @@ export interface UrlParams {
   ensemble?: boolean;
   lossAssumption?: number;
   partnerId?: string;
+  windspeedUnit?: string;
 }
 
 export const URL_PARAM_DEFAULTS = {
@@ -20,6 +21,7 @@ export const URL_PARAM_DEFAULTS = {
   dataModel: "era5" as DataModel,
   ensemble: false,
   lossAssumption: 0,
+  windspeedUnit: "mph",
 };
 
 export function parseUrlParams(searchParams?: URLSearchParams): UrlParams {
@@ -89,6 +91,13 @@ export function parseUrlParams(searchParams?: URLSearchParams): UrlParams {
     result.partnerId = partnerId.trim();
   }
 
+  const windspeedUnit = params.get("windspeedUnit");
+  if (windspeedUnit === "mph") {
+    result.windspeedUnit = "mph";
+  } else if (windspeedUnit === "ms") {
+    result.windspeedUnit = "m/s";
+  }
+
   return result;
 }
 
@@ -100,6 +109,7 @@ export function buildUrlFromSettings(settings: {
   preferredModel: DataModel;
   ensemble: boolean;
   lossAssumptionPercent: number;
+  windspeedUnit: string;
 }): string {
   const position = settings.currentPosition;
   if (
@@ -114,10 +124,6 @@ export function buildUrlFromSettings(settings: {
 
   params.set("lat", position.lat.toFixed(4));
   params.set("lng", position.lng.toFixed(4));
-
-  if (settings.zoom !== URL_PARAM_DEFAULTS.zoom) {
-    params.set("zoom", Math.round(settings.zoom).toString());
-  }
 
   if (settings.hubHeight !== URL_PARAM_DEFAULTS.hubHeight) {
     params.set("hubHeight", settings.hubHeight.toString());
@@ -137,6 +143,19 @@ export function buildUrlFromSettings(settings: {
 
   if (settings.lossAssumptionPercent > 0) {
     params.set("lossAssumption", settings.lossAssumptionPercent.toString());
+  }
+
+  if (settings.zoom !== URL_PARAM_DEFAULTS.zoom) {
+    params.set("zoom", Math.round(settings.zoom).toString());
+  }
+
+  if (
+    settings.windspeedUnit &&
+    settings.windspeedUnit !== URL_PARAM_DEFAULTS.windspeedUnit
+  ) {
+    // Convert "m/s" to "ms" for URL compatibility
+    const urlValue = settings.windspeedUnit === "m/s" ? "ms" : settings.windspeedUnit;
+    params.set("windspeedUnit", urlValue);
   }
 
   const queryString = params.toString();
