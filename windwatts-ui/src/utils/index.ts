@@ -9,7 +9,8 @@ export const getWindResource = (speed: number) => {
 };
 
 export const convertWindspeed = (speed = 0, units = "mph") => {
-  const value = units === "mph" ? (speed * 2.2369).toFixed(1) : speed.toFixed(1);
+  const value =
+    units === "mph" ? (speed * 2.2369).toFixed(1) : speed.toFixed(1);
   return `${value} ${units === "mph" ? "mph" : "m/s"}`;
 };
 
