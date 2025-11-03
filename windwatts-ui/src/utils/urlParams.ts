@@ -92,8 +92,10 @@ export function parseUrlParams(searchParams?: URLSearchParams): UrlParams {
   }
 
   const windspeedUnit = params.get("windspeedUnit");
-  if (windspeedUnit === "mph" || windspeedUnit === "m/s") {
-    result.windspeedUnit = windspeedUnit;
+  if (windspeedUnit === "mph") {
+    result.windspeedUnit = "mph";
+  } else if (windspeedUnit === "ms") {
+    result.windspeedUnit = "m/s";
   }
 
   return result;
@@ -151,7 +153,9 @@ export function buildUrlFromSettings(settings: {
     settings.windspeedUnit &&
     settings.windspeedUnit !== URL_PARAM_DEFAULTS.windspeedUnit
   ) {
-    params.set("windspeedUnit", settings.windspeedUnit);
+    // Convert "m/s" to "ms" for URL compatibility
+    const urlValue = settings.windspeedUnit === "m/s" ? "ms" : settings.windspeedUnit;
+    params.set("windspeedUnit", urlValue);
   }
 
   const queryString = params.toString();
