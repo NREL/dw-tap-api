@@ -85,10 +85,6 @@ class AthenaDataFetcher(AbstractDataFetcher):
         :rtype: 
             :rtype: list[tuple[str, float, float]]
         """
-        if n_neighbors == 1:
-            index, nearest_lat, nearest_lon = self.client.find_nearest_location(lat, lng)
-            return [(index, nearest_lat, nearest_lon)]
-        else:
-            # A list of tuples where each tuple contains: (grid_index, latitude, longitude)
-            tuples = self.client.find_n_nearest_locations(lat, lng, n_neighbors)
-            return tuples
+        # A list of tuples where each tuple contains: (grid_index, latitude, longitude)
+        tuples = self.client.find_n_nearest_locations(lat, lng, n_neighbors)
+        return tuples

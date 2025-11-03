@@ -1,4 +1,5 @@
 import { DataModel } from "./DataModel";
+import { GridLocation } from "./GridLocation";
 
 export interface WindspeedByLatLngRequest {
   lat: number;
@@ -26,8 +27,11 @@ export interface NearestGridLocationRequest {
 }
 
 export interface WindCSVFileRequest {
-  lat: number;
-  lng: number;
-  n_neighbors?: number;
+  gridIndex: string;
   dataModel: DataModel;
+}
+
+export interface WindCSVFilesRequest {
+  gridLocations: GridLocation[];
+  dataModel: string;
 }

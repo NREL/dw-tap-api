@@ -9,7 +9,7 @@ import {
   Typography,
   CircularProgress,
   Alert,
-  Skeleton,
+  Skeleton
 } from "@mui/material";
 import { useState, useContext } from "react";
 import { DATA_MODEL_INFO } from "../../constants";
@@ -19,42 +19,72 @@ import { formatCoordinate } from "../../utils";
 
 export const DownloadDialog = ({ onClose }: { onClose: () => void }) => {
   const [downloadError, setDownloadError] = useState<string | null>(null);
-
-  const { canDownload, isDownloading, downloadFile } = useDownloadCSVFile();
+  // change 1 to check for multiple file downloads
+  const [n_neighbors, setN_neighbors] = useState(1);
+  
+  const { canDownload, isDownloading, downloadFile, downloadMultipleFiles } = useDownloadCSVFile();
   const {
-    gridLocation: nearestGridLocation,
+    gridLocations,
     isLoading: isLoadingGridLocation,
     error: gridLocationError,
     retry: retryGridLocation,
-  } = useNearestGridLocation();
+  } = useNearestGridLocation(n_neighbors);
 
   const { currentPosition, preferredModel: dataModel } = useContext(SettingsContext);
   const { lat, lng } = currentPosition || {};
   const downloadInfo = dataModel ? DATA_MODEL_INFO[dataModel] : null;
 
+  const nearestGridLocation = gridLocations.length > 0 ? gridLocations[0] : null;
   const hasError = !!(gridLocationError || downloadError);
   const isProcessing = isDownloading || isLoadingGridLocation;
-  const canConfirm = !isProcessing && !hasError && !!nearestGridLocation;
+
+  const hasEnoughNeighbors =
+  (n_neighbors === 1 && gridLocations.length >= 1) ||
+  (n_neighbors > 1 && gridLocations.length >= n_neighbors);
+
+  const canConfirm = !isProcessing && !hasError && !!gridLocations && hasEnoughNeighbors;
 
   const handleConfirm = async () => {
-    if (!nearestGridLocation) return;
-
     setDownloadError(null);
+
+    if (gridLocations.length === 0) {
+    setDownloadError("No nearest grid locations available.");
+    return;
+    }
     
     try {
-      const result = await downloadFile(
-        nearestGridLocation.latitude,
-        nearestGridLocation.longitude
-      );
+      if (n_neighbors === 1 && nearestGridLocation) {
+        const result = await downloadFile(
+          nearestGridLocation.latitude,
+          nearestGridLocation.longitude,
+          nearestGridLocation.index
+        );
 
-      if (!result.success) {
-        const errorMessage = result.error instanceof Error ? result.error.message : "Download failed";
-        setDownloadError(errorMessage);
-        return;
+        if (!result.success) {
+          const errorMessage = result.error instanceof Error ? result.error.message : "Download failed";
+          setDownloadError(errorMessage);
+          return;
+        }
+
+        onClose();
       }
+      else if (n_neighbors > 1) {
+        const selection = gridLocations.slice(0, n_neighbors);
+        if (selection.length < 2) {
+          setDownloadError("Not enough neighbor grid points available for batch download.");
+          return;
+        }
+        const result = await downloadMultipleFiles(selection);
+        if (!result.success) {
+          const errorMessage = result.error instanceof Error ? result.error.message : "Batch download failed";
+          setDownloadError(errorMessage);
+          return;
+        }
 
-      onClose();
-    } catch (error) {
+        onClose();
+      }
+    }
+    catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unexpected error occurred";
       setDownloadError(errorMessage);
     }

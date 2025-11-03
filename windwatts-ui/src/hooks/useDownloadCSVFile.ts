@@ -1,8 +1,9 @@
 import { useState, useMemo, useContext } from "react";
 import useSWR from "swr";
-import { getCSVFile, getNearestGridLocation } from "../services/api";
-import { downloadWindDataCSV } from "../services/download";
+import { getCSVFile, getBatchCSVFiles, getNearestGridLocation } from "../services/api";
+import { downloadWindDataCSV, downloadWindDataZIP } from "../services/download";
 import { SettingsContext } from "../providers/SettingsContext";
+import { GridLocation } from "../types";
 
 export const useDownloadCSVFile = () => {
   const [isDownloading, setIsDownloading] = useState(false);
@@ -11,13 +12,11 @@ export const useDownloadCSVFile = () => {
 
   const canDownload = !!(lat && lng && dataModel);
 
-  const downloadFile = async (gridLat: number, gridLng: number) => {
+  const downloadFile = async (gridLat: number, gridLng: number, gridIndex: string) => {
     try {
       setIsDownloading(true);
       const response = await getCSVFile({
-        lat: lat!,
-        lng: lng!,
-        n_neighbors: 1,
+        gridIndex: gridIndex,
         dataModel: dataModel!,
       });
       await downloadWindDataCSV(response, gridLat, gridLng);
@@ -30,14 +29,32 @@ export const useDownloadCSVFile = () => {
     }
   };
 
+  const downloadMultipleFiles = async (gridLocations: GridLocation[]) => {
+    try {
+      setIsDownloading(true);
+      const response = await getBatchCSVFiles({
+        gridLocations: gridLocations,
+        dataModel: dataModel!,
+      });
+      await downloadWindDataZIP(response, lat, lng);
+      return { success: true };
+    } catch (error) {
+      console.error("Batch Download failed:", error);
+      return { success: false, error };
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   return {
     canDownload,
     isDownloading,
     downloadFile,
+    downloadMultipleFiles
   };
 };
 
-export const useNearestGridLocation = () => {
+export const useNearestGridLocation = (n_neighbors: number = 1) => {
   const { currentPosition, preferredModel: dataModel } =
     useContext(SettingsContext);
   const { lat, lng } = currentPosition || {};
@@ -47,8 +64,8 @@ export const useNearestGridLocation = () => {
   // Memoize the SWR key to prevent unnecessary re-renders
   const swrKey = useMemo(() => {
     if (!shouldFetch) return null;
-    return JSON.stringify({ lat, lng, dataModel, type: "nearest-grid" });
-  }, [shouldFetch, lat, lng, dataModel]);
+    return JSON.stringify({ lat, lng, n_neighbors, dataModel, type: "nearest-grid" });
+  }, [shouldFetch, lat, lng, n_neighbors, dataModel]);
 
   const { isLoading, data, error, mutate: retry } = useSWR(
     swrKey,
@@ -56,7 +73,7 @@ export const useNearestGridLocation = () => {
       getNearestGridLocation({
         lat: lat!,
         lng: lng!,
-        n_neighbors: 1,
+        n_neighbors: n_neighbors,
         dataModel: dataModel!,
       }),
     {
@@ -67,18 +84,17 @@ export const useNearestGridLocation = () => {
     }
   );
 
-  const gridLocation = data?.locations?.[0]
-    ? {
-        latitude: data.locations[0].latitude,
-        longitude: data.locations[0].longitude,
-      }
-    : null;
+  const gridLocations = data?.locations?.map(location => ({
+    latitude: location.latitude,
+    longitude: location.longitude,
+    index: location.index
+  })) || [];
 
   return {
-    gridLocation,
+    gridLocations,
     isLoading,
-    error,
-    hasData: !!gridLocation,
+    error: error?.message || error || null,
+    hasData: gridLocations.length > 0,
     retry,
   };
 };

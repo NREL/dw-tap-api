@@ -18,14 +18,20 @@ athena_config = config_manager.get_config()
 
 MIN_POOL_WORKERS = 1
 
+s3_key_templates = {
+    "era5" : "{prefix}/year={year}/index={index}/{year}_{index}.csv.gz",
+    "wtk" : "{prefix}/year={year}/varset=all/index={index}/{index}_{year}_all.csv.gz"
+}
+
 class S3DataFetcher(AbstractDataFetcher):
-    def __init__(self, bucket_name: str, prefix: str, grid: str):
+    def __init__(self, bucket_name: str, prefix: str, s3_key_template: str, grid: str):
         """
         Initializes the S3DataFetcher with the given bucket.
         Parameters:
             bucket_name (str): The s3 bucket name.
             prefix (str): The s3 prefix the specifies folder inside a bucket.
-            grid (str): The grid of the data. "era5" or "wtk"
+            s3_key_template(str): The s3 key template to download files.
+            grid (str): The grid of the data. "era5" or "wtk" (used for finding nearest grid locations)
         """
         print(f"Initializing S3 Data Fetcher: bucket: {bucket_name} prefix: {prefix} grid: {grid} ...")
         self.s3_client = boto3.client(
@@ -39,6 +45,9 @@ class S3DataFetcher(AbstractDataFetcher):
         self.prefix = prefix
         self.grid = grid
         self.base_client = ClientBase(athena_config, data_family=self.grid)
+        if s3_key_template not in s3_key_templates:
+            raise ValueError(f"Unknown s3_key_template '{s3_key_template}', expected one of {list(s3_key_templates)}")
+        self.s3_key_template = s3_key_templates[s3_key_template]
     
     def find_nearest_locations(self, lat: float, lng: float, n_neighbors: int = 1):
         """
@@ -58,35 +67,27 @@ class S3DataFetcher(AbstractDataFetcher):
         :rtype: 
             :rtype: list[tuple[str, float, float]]
         """
-        if n_neighbors == 1:
-            index, nearest_lat, nearest_lon = self.base_client.find_nearest_location(lat, lng)
-            return [(index, nearest_lat, nearest_lon)]
-        else:
-            # A list of tuples where each tuple contains: (grid_index, latitude, longitude)
-            tuples = self.base_client.find_n_nearest_locations(lat, lng, n_neighbors)
-            return tuples
+        # A list of tuples where each tuple contains: (grid_index, latitude, longitude)
+        tuples = self.base_client.find_n_nearest_locations(lat, lng, n_neighbors)
+        return tuples
     
-    def generate_s3_keys(self, lat: float, lng: float, years: List[int], n_neighbors: int) -> List[str]:
+    def generate_s3_keys(self, grid_Indices: List[str], years: List[int]) -> List[str]:
         """
-        Build S3 object keys for the given location, years, and nearest grid indices.
+        Build S3 object keys for the given years and nearest grid indices.
 
-        :param lat: Latitude of the target location.
-        :param lng: Longitude of the target location.
+        :param gridIndices: list of grid indices of neighbors.
         :param years: data of years to fetch.
-        :param n_neighbors: Number of nearest grid points to include.
         :return: List of S3 object keys.
         """
-        s3_keys: List[str] = []
-        
-        tuples = self.find_nearest_locations(lat, lng, n_neighbors)
-        nearest_indexes = [str(idx) for idx, _, _ in tuples]
+        keys: List[str] = []
 
         for year in years:
-            for index in nearest_indexes:
+            for index in grid_Indices:
                 # uri specific to era5 timeseries, might change for ensemble timeseries as it might not have year.
-                s3_keys.append(f"{self.prefix}/year={year}/index={index}/{year}_{index}.csv.gz")
+                key = self.s3_key_template.format(prefix=self.prefix, year=year, index=index)
+                keys.append(key)
         
-        return s3_keys
+        return keys
     
     def fetch_s3_file(self, key: str, cols: Optional[List[str]]):
         """
@@ -111,26 +112,22 @@ class S3DataFetcher(AbstractDataFetcher):
 
     def fetch_data(
         self,
-        lat: float,
-        lng: float,
+        gridIndices: List[str],
         years: List[int],
-        n_neighbors: int = 1,
         cols: Optional[List[str]] = None,
     ) -> pd.DataFrame:
         """
         Fetch data from S3 in parallel (optimized for ~5 files).
 
         Args:
-            lat (float): Latitude of the location.
-            lng (float): Longitude of the location.
+            gridIndexes (List(str)): Grid indices of neighbors with respect user selected coordinate.
             years (List[int]): Years of which the data is needed.
-            n_neighbors (int): Number of nearest grid points to include.
             cols (Optional[List[str]]): Optional column subset to read.
 
         Returns:
             pd.DataFrame: Concatenated DataFrame across requested files (may be empty).
         """
-        keys = self.generate_s3_keys(lat, lng, years, n_neighbors)
+        keys = self.generate_s3_keys(gridIndices, years)
         if not keys:
             return pd.DataFrame()
 
@@ -144,7 +141,7 @@ class S3DataFetcher(AbstractDataFetcher):
                 if df is not None and not df.empty:
                     frames.append(df)
         if not frames:
-            print(f"No data found for lat={lat}, lng={lng}, years={years}")
+            print(f"No data found for gridIndices {gridIndices}, years={years}")
             return pd.DataFrame()
         out = pd.concat(frames, ignore_index=True)
 
