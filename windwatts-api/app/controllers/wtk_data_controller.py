@@ -5,8 +5,8 @@ import os
 from typing import List
 import io
 from fastapi.responses import StreamingResponse
-
-
+import zipfile
+import tempfile
 # commented out the data functions until I can get local athena_config working
 from app.config_manager import ConfigManager
 from app.data_fetchers.s3_data_fetcher import S3DataFetcher
@@ -14,6 +14,7 @@ from app.data_fetchers.athena_data_fetcher import AthenaDataFetcher
 # from app.data_fetchers.database_data_fetcher import DatabaseDataFetcher
 from app.data_fetchers.data_fetcher_router import DataFetcherRouter
 # from app.database_manager import DatabaseManager
+from app.utils.data_fetcher_utils import format_coordinate, chunker
 
 from app.power_curve.global_power_curve_manager import power_curve_manager
 from app.schemas import (
@@ -344,23 +345,16 @@ def energy_production(
         raise HTTPException(status_code=500, detail="Internal server error.")
 
 def _download_csv_core(
-    lat: float,
-    lng: float,
+    gridIndices: List[str],
     years: List[int],
-    n_neighbors: int,
     source: str
 ):
-    lat = validate_lat(lat)
-    lng = validate_lng(lng)
     source = validate_source(source)
-    n_neighbors = validate_n_neighbor(n_neighbors)
     years= [validate_year(year,source) for year in years]
     
     params = {
-        "lat": lat,
-        "lng": lng,
-        "years": years,
-        "n_neighbors": n_neighbors
+        "gridIndices": gridIndices,
+        "years": years
     }
 
     df = data_fetcher_router.fetch_data(params, source=source)
@@ -373,34 +367,60 @@ def _download_csv_core(
     
 @router.get(
     "/download-csv",
-    summary="Download csv file for windspeed for a specific location at certain height(s) for certain year(s) with options n-neighbors data"
+    summary="Download csv file for windspeed for a specific location for certain year(s) with 1 neighbor"
 )
 def download_csv(
-    lat: float = Query(..., description="Latitude of the location."),
-    lng: float = Query(..., description="Longitude of the location."),
-    n_neighbors: int = Query(..., description="number of neighbors of given location whose data is requested"),
+    gridIndex: str = Query(..., description="Grid index with respect to user selected coordinate"),
     years: List[int] = Query(SAMPLE_YEARS["s3_wtk"], description="years of which the data to download"),
     source: str = Query("s3_wtk", description="Source of the data.")
 ):
     try:
         # Getting DataFrame from core function
-
-        df = _download_csv_core(lat, lng, years, n_neighbors, source)
+        df = _download_csv_core([gridIndex], years, source)
         
         # Converting DataFrame to CSV
         csv_io = io.StringIO()
         df.to_csv(csv_io, index=False)
         csv_io.seek(0)
         
-        # Generate filename
-        filename = f"wind_data_{lat}_{lng}.csv"
-        
         return StreamingResponse(
             iter([csv_io.getvalue()]),
-            media_type="text/csv; charset=utf-8",
-            headers={"Content-Disposition": f"attachment; filename={filename}"}
+            media_type="text/csv; charset=utf-8"
         )
         
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+@router.post(
+    "/download-csv-batch",
+    summary="Download multiple CSVs (one per neighbor) as a streamed ZIP",
+)
+def download_csv_batch(
+    payload: NearestLocationsResponse,
+    years: List[int] = Query(SAMPLE_YEARS["s3_wtk"], description="years of which the data to download"),
+    source: str = Query("s3_wtk", description="Source of the data."),
+):
+    try:
+        # Spooled file: stays in memory until threshold, then spills to disk automatically
+        spooled = tempfile.SpooledTemporaryFile(max_size=30 * 1024 * 1024, mode="w+b")  # 30MB threshold
+
+        with zipfile.ZipFile(spooled, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
+            for loc in payload.locations:
+                df = _download_csv_core([loc.index], years, source)
+                csv_io = io.StringIO()
+                df.to_csv(csv_io, index=False)
+                csv_io.seek(0)
+                file_name = f"wind_data_{format_coordinate(loc.latitude)}_{format_coordinate(loc.longitude)}.csv"
+                zf.writestr(file_name, csv_io.getvalue())
+
+        spooled.seek(0)
+
+        headers = {
+            "Content-Disposition": f'attachment; filename="wind_data_{len(payload.locations)}_points.zip"'
+        }
+
+        return StreamingResponse(chunker(spooled), media_type="application/zip", headers=headers)
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
