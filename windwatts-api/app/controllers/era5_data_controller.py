@@ -490,8 +490,15 @@ def nearest_locations(
             source=source, lat=lat, lng=lng, n_neighbors=n_neighbors
         )
         
-        locations = [GridLocation(index=str(i), latitude=float(a), longitude=float(o)) for i, a, o in result]
+        locations = [
+                {
+                    "index":str(i), 
+                    "latitude":float(a), 
+                    "longitude":float(o)
+                } 
+                for i, a, o in result
+            ]
 
-        return NearestLocationsResponse(locations=locations)
+        return {"locations": locations}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {e}")

@@ -137,9 +137,9 @@ class HealthCheckResponse(BaseModel):
     }
 
 class GridLocation(BaseModel):
-    index: str
-    latitude: float
-    longitude: float
+    index: str = Field(..., description="Grid point identifier/index")
+    latitude: float = Field(..., ge=-90, le=90, description="Latitude coordinate")
+    longitude: float = Field(..., ge=-180, le=180, description="Longitude coordinate")
 
     model_config = {
         "json_schema_extra": {
@@ -148,7 +148,12 @@ class GridLocation(BaseModel):
     }
 
 class NearestLocationsResponse(BaseModel):
-    locations: List[GridLocation]
+    locations: List[GridLocation] = Field(
+        ..., 
+        min_length=1, 
+        max_length=4, 
+        description="List of nearest grid locations (1-4 points)"
+    )
 
     model_config = {
         "json_schema_extra": {
