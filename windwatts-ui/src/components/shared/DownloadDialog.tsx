@@ -19,10 +19,11 @@ import { formatCoordinate } from "../../utils";
 
 export const DownloadDialog = ({ onClose }: { onClose: () => void }) => {
   const [downloadError, setDownloadError] = useState<string | null>(null);
-  // change 1 to check for multiple file downloads
-  const [n_neighbors, setN_neighbors] = useState(1);
+
+  const [n_neighbors, setN_neighbors] = useState(1); // single nearest neighbor
+  void setN_neighbors; // avoid unused variable warning
   
-  const { canDownload, isDownloading, downloadFile, downloadMultipleFiles } = useDownloadCSVFile();
+  const { canDownload, isDownloading, downloadFile, downloadBatchFiles } = useDownloadCSVFile();
   const {
     gridLocations,
     isLoading: isLoadingGridLocation,
@@ -74,7 +75,7 @@ export const DownloadDialog = ({ onClose }: { onClose: () => void }) => {
           setDownloadError("Not enough neighbor grid points available for batch download.");
           return;
         }
-        const result = await downloadMultipleFiles(selection);
+        const result = await downloadBatchFiles(selection);
         if (!result.success) {
           const errorMessage = result.error instanceof Error ? result.error.message : "Batch download failed";
           setDownloadError(errorMessage);
