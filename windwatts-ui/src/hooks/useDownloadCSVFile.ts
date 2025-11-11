@@ -29,14 +29,14 @@ export const useDownloadCSVFile = () => {
     }
   };
 
-  const downloadMultipleFiles = async (gridLocations: GridLocation[]) => {
+  const downloadBatchFiles = async (gridLocations: GridLocation[]) => {
     try {
       setIsDownloading(true);
       const response = await getBatchCSVFiles({
         gridLocations: gridLocations,
         dataModel: dataModel!,
       });
-      await downloadWindDataZIP(response, lat, lng);
+      await downloadWindDataZIP(response, lat!, lng!);
       return { success: true };
     } catch (error) {
       console.error("Batch Download failed:", error);
@@ -50,7 +50,7 @@ export const useDownloadCSVFile = () => {
     canDownload,
     isDownloading,
     downloadFile,
-    downloadMultipleFiles
+    downloadBatchFiles
   };
 };
 
@@ -84,7 +84,7 @@ export const useNearestGridLocation = (n_neighbors: number = 1) => {
     }
   );
 
-  const gridLocations = data?.locations?.map(location => ({
+  const gridLocations = data?.locations?.map((location: GridLocation) => ({
     latitude: location.latitude,
     longitude: location.longitude,
     index: location.index
