@@ -6,16 +6,6 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from botocore.config import Config
 from .abstract_data_fetcher import AbstractDataFetcher
 
-from windwatts_data import ClientBase
-from app.config_manager import ConfigManager
-
-# Initialize ConfigManager
-config_manager = ConfigManager(
-    secret_arn_env_var="WINDWATTS_DATA_CONFIG_SECRET_ARN",
-    local_config_path="./app/config/windwatts_data_config.json")
-
-athena_config = config_manager.get_config()
-
 MIN_POOL_WORKERS = 1
 
 s3_key_templates = {
@@ -31,7 +21,7 @@ class S3DataFetcher(AbstractDataFetcher):
             bucket_name (str): The s3 bucket name.
             prefix (str): The s3 prefix the specifies folder inside a bucket.
             s3_key_template(str): The s3 key template to download files.
-            grid (str): The grid of the data. "era5" or "wtk" (used for finding nearest grid locations)
+            grid (str): The grid of the data. "era5" or "wtk"
         """
         print(f"Initializing S3 Data Fetcher: bucket: {bucket_name} prefix: {prefix} grid: {grid} ...")
         self.s3_client = boto3.client(
@@ -44,32 +34,9 @@ class S3DataFetcher(AbstractDataFetcher):
         self.bucket = bucket_name
         self.prefix = prefix
         self.grid = grid
-        self.base_client = ClientBase(athena_config, data_family=self.grid)
         if s3_key_template not in s3_key_templates:
             raise ValueError(f"Unknown s3_key_template '{s3_key_template}', expected one of {list(s3_key_templates)}")
         self.s3_key_template = s3_key_templates[s3_key_template]
-    
-    def find_nearest_locations(self, lat: float, lng: float, n_neighbors: int = 1):
-        """
-        Find one or more nearest grid locations (index, latitude, and longitude) to a given coordinate.
-
-        :param lat: Latitude of the target location in decimal degrees.
-        :type lat: float
-        :param lng: Longitude of the target location in decimal degrees.
-        :type lng: float
-        :param n_neighbors: Number of nearest grid points to return. Defaults to 1.
-        :type n_neighbors: int
-
-        :return: 
-            - If n_neighbors == 1: a list of single tuple [(index, latitude, longitude)] for the nearest grid point.  
-            - If n_neighbors > 1: a list of tuples, each containing (index, latitude, longitude).
-            - The list will have length n_neighbors.
-        :rtype: 
-            :rtype: list[tuple[str, float, float]]
-        """
-        # A list of tuples where each tuple contains: (grid_index, latitude, longitude)
-        tuples = self.base_client.find_n_nearest_locations(lat, lng, n_neighbors)
-        return tuples
     
     def generate_s3_keys(self, grid_Indices: List[str], years: List[int]) -> List[str]:
         """

@@ -38,19 +38,15 @@ if not _skip_data_init:
     athena_config = config_manager.get_config()
 
 # Initialize DataFetchers
-# s3_data_fetcher_wtk = S3DataFetcher(bucket_name="wtk-led", prefix="1224", grid="wtk", s3_key_template="wtk")
-# athena_data_fetcher_wtk = AthenaDataFetcher(athena_config=athena_config, source_key='wtk')
+s3_data_fetcher_wtk = S3DataFetcher(bucket_name="wtk-led", prefix="1224", grid="wtk", s3_key_template="wtk")
+athena_data_fetcher_wtk = AthenaDataFetcher(athena_config=athena_config, source_key='wtk')
 # db_manager = DatabaseManager()
 # db_data_fetcher = DatabaseDataFetcher(db_manager=db_manager)
 
 # Register fetchers
 # data_fetcher_router.register_fetcher("database", db_data_fetcher)
-# data_fetcher_router.register_fetcher("s3_wtk", s3_data_fetcher_wtk)
-# data_fetcher_router.register_fetcher("athena_wtk", athena_data_fetcher_wtk)
-
-# Multiple average types for wind speed
-# wind_speed_avg_types = ["global", "monthly", "yearly", "hourly"]
-# production_avg_types = ["summary", "yearly", "monthly", "all"]
+data_fetcher_router.register_fetcher("s3_wtk", s3_data_fetcher_wtk)
+data_fetcher_router.register_fetcher("athena_wtk", athena_data_fetcher_wtk)
 
 VALID_AVG_TYPES = {
     "athena_wtk": {
@@ -441,27 +437,33 @@ def nearest_locations(
     source: str = Query(DEFAULT_SOURCE, description=f"Source of the data"),
 ):
     try:
-        
         lat = validate_lat(lat)
         lng = validate_lng(lng)
         n_neighbors = validate_n_neighbor(n_neighbors)
         source = validate_source(source)
 
-        if source != "athena_wtk":
-            raise HTTPException(status_code=400, detail="Nearest-locations supported only for source='athena_wtk' right now.")
+        grid_lookup_map = {
+            "athena_wtk": athena_data_fetcher_wtk,
+        }
+        
+        fetcher = grid_lookup_map.get(source)
+        if not fetcher:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Grid lookup not available for source='{source}'"
+            )
 
-        result = data_fetcher_router.find_nearest_locations(
-            source=source, lat=lat, lng=lng, n_neighbors=n_neighbors
-        )
+        # Call find_nearest_locations directly on the Athena fetcher
+        result = fetcher.find_nearest_locations(lat=lat, lng=lng, n_neighbors=n_neighbors)
         
         locations = [
-                {
-                    "index":str(i), 
-                    "latitude":float(a), 
-                    "longitude":float(o)
-                } 
-                for i, a, o in result
-            ]
+            {
+                "index": str(i), 
+                "latitude": float(a), 
+                "longitude": float(o)
+            } 
+            for i, a, o in result
+        ]
 
         return {"locations": locations}
     except Exception as e:
