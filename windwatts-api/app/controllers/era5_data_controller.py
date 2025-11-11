@@ -477,27 +477,33 @@ def nearest_locations(
     source: str = Query(DEFAULT_SOURCE, description=f"Source of the data"),
 ):
     try:
-        
         lat = validate_lat(lat)
         lng = validate_lng(lng)
         n_neighbors = validate_n_neighbor(n_neighbors)
         source = validate_source(source)
 
-        if source != "athena_era5":
-            raise HTTPException(status_code=400, detail="Nearest-locations supported only for source='athena_era5'")
+        grid_lookup_map = {
+            "athena_era5": athena_data_fetcher_era5,
+        }
+        
+        fetcher = grid_lookup_map.get(source)
+        if not fetcher:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Nearest locations lookup not available for source='{source}'"
+            )
 
-        result = data_fetcher_router.find_nearest_locations(
-            source=source, lat=lat, lng=lng, n_neighbors=n_neighbors
-        )
+        # Call find_nearest_locations on the Athena fetcher
+        result = fetcher.find_nearest_locations(lat=lat, lng=lng, n_neighbors=n_neighbors)
         
         locations = [
-                {
-                    "index":str(i), 
-                    "latitude":float(a), 
-                    "longitude":float(o)
-                } 
-                for i, a, o in result
-            ]
+            {
+                "index": str(i), 
+                "latitude": float(a), 
+                "longitude": float(o)
+            } 
+            for i, a, o in result
+        ]
 
         return {"locations": locations}
     except Exception as e:
