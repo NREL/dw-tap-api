@@ -4,18 +4,12 @@ FROM python:3.13-slim-trixie
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
 ENV APP_HOME=/app
-ENV PROJ_LIB=/usr/share/proj
 ENV PYTHONPATH=/app
 
 # Set the working directory
 WORKDIR $APP_HOME
 
-# Install system dependencies and upgrade package list
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gdal-bin libgdal-dev libproj-dev libgeos-dev \
-    gcc python3-dev libffi-dev curl openssl libtiff6 \
-    && apt-get upgrade -y \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
 
 # Install dependencies
 COPY requirements.txt .
